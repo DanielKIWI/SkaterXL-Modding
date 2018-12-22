@@ -14,3 +14,8 @@ Basic UI for changing following values:
 - Pop Force,
 - Push Force,
 - Disable Push Reduction for first 2 Pushes
+
+
+Thanks to dsc, RafahelBF, Commander klepto who wrote parts of this code.
+
+Check out the discord channel https://discord.gg/czdNBm for more Infos and Tutorials.
