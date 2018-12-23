@@ -2,31 +2,14 @@ using System;
 using UnityEngine;
 
 // Token: 0x0200021A RID: 538
-public class SkateTrainer : MonoBehaviour {
-    // Token: 0x060016AE RID: 5806
-    public void Start() {
-        this.showMenu = false;
-        this.colorHax = default(Color);
-        ColorUtility.TryParseHtmlString("#00FF00", out this.colorHax);
-        this.fontLarge = new GUIStyle();
-        this.fontMed = new GUIStyle();
-        this.fontSmall = new GUIStyle();
-        this.fontLarge.fontSize = 32;
-        this.fontLarge.normal.textColor = Color.white;
-        this.fontMed.fontSize = 14;
-        this.fontMed.normal.textColor = this.colorHax;
-        this.fontSmall.fontSize = 12;
-        this.fontSmall.normal.textColor = this.colorHax;
-        PlayerController.Instance.popForce = 3f;
-        this.autoSlowmo = false;
-        this.baseTimeScale = 1f;
-        this.sloMoTimeFactor = 0.6f;
-    }
-
-    // Token: 0x060016B0 RID: 5808
-    public void Update() {
+public class SkateTrainer : MonoBehaviour
+{
+    // Token: 0x060016AF RID: 5807
+    public void Update()
+    {
         float realtimeSinceStartup = Time.realtimeSinceStartup;
-        if (Input.GetKey(KeyCode.F8) && (double)(realtimeSinceStartup - this.btnLastPressed) > 0.15) {
+        if (Input.GetKey(KeyCode.F8) && (double)(realtimeSinceStartup - this.btnLastPressed) > 0.15)
+        {
             this.btnLastPressed = realtimeSinceStartup;
             this.showMenu = !this.showMenu;
         }
@@ -41,18 +24,22 @@ public class SkateTrainer : MonoBehaviour {
         this.ControllTime();
     }
 
-    // Token: 0x060016B1 RID: 5809
-    private void showMessage(string msg) {
+    // Token: 0x060016B0 RID: 5808
+    public void showMessage(string msg)
+    {
         float realtimeSinceStartup = Time.realtimeSinceStartup;
-        this.tmpMessage = new SkateTrainer.TmpMessage {
+        this.tmpMessage = new SkateTrainer.TmpMessage
+        {
             msg = msg,
             epoch = realtimeSinceStartup
         };
     }
 
-    // Token: 0x060016B2 RID: 5810
-    private void OnGUI() {
-        if (!this.showMenu) {
+    // Token: 0x060016B1 RID: 5809
+    private void OnGUI()
+    {
+        if (!this.showMenu)
+        {
             return;
         }
         GUI.color = this.colorHax;
@@ -85,52 +72,87 @@ public class SkateTrainer : MonoBehaviour {
         num4 += 20f;
         GUI.Label(new Rect(x, num3 - 20f, width, 40f), "v0.2 by dsc, RafahelBF, Kiwi", this.fontSmall);
         GUI.Label(new Rect(x, num3 - 0f, width, 40f), "Commander klepto", this.fontSmall);
-        if (this.tmpMessage != null) {
+        if (this.tmpMessage != null)
+        {
             float realtimeSinceStartup = Time.realtimeSinceStartup;
             GUI.color = Color.white;
             GUI.Label(new Rect(20f, (float)(Screen.height - 50), 600f, 100f), this.tmpMessage.msg, this.fontLarge);
-            if (realtimeSinceStartup - this.tmpMessage.epoch > 1f) {
+            if (realtimeSinceStartup - this.tmpMessage.epoch > 1f)
+            {
                 this.tmpMessage = null;
             }
         }
     }
 
-    // Token: 0x060016B3 RID: 5811
-    private void ControllTime() {
-        if (this.autoSlowmo) {
-            if (!PlayerController.Instance.boardController.AllDown) {
+    // Token: 0x060016B2 RID: 5810
+    private void ControllTime()
+    {
+        if (this.autoSlowmo)
+        {
+            if (!PlayerController.Instance.boardController.AllDown)
+            {
                 this.timeScaleTarget = this.sloMoTimeFactor;
-            } else {
+            }
+            else
+            {
                 this.timeScaleTarget = this.baseTimeScale;
             }
-        } else {
+        }
+        else
+        {
             this.timeScaleTarget = this.baseTimeScale;
         }
-        if (PlayerController.Instance.inputController.player.GetButton("LB")) {
+        if (PlayerController.Instance.inputController.player.GetButton("LB"))
+        {
             this.timeScaleTarget *= this.sloMoTimeFactor;
         }
-        if (PlayerController.Instance.inputController.player.GetButton("RB")) {
+        if (PlayerController.Instance.inputController.player.GetButton("RB"))
+        {
             this.timeScaleTarget *= this.sloMoTimeFactor;
         }
-        if (Math.Round((double)Time.timeScale, 1) != (double)this.timeScaleTarget) {
+        if (Math.Round((double)Time.timeScale, 1) != (double)this.timeScaleTarget)
+        {
             Time.timeScale += (this.timeScaleTarget - Time.timeScale) * Time.deltaTime * 15f;
             return;
         }
         Time.timeScale = this.timeScaleTarget;
     }
 
-    // Token: 0x060016B4 RID: 5812
-    public void Awake() {
+    // Token: 0x060016B3 RID: 5811
+    public void Awake()
+    {
         SkateTrainer.CoachFrank = this;
+        base.gameObject.AddComponent<ReplayController>();
+        this.showMenu = false;
+        this.colorHax = default(Color);
+        ColorUtility.TryParseHtmlString("#00FF00", out this.colorHax);
+        this.fontLarge = new GUIStyle();
+        this.fontMed = new GUIStyle();
+        this.fontSmall = new GUIStyle();
+        this.fontLarge.fontSize = 32;
+        this.fontLarge.normal.textColor = Color.white;
+        this.fontMed.fontSize = 14;
+        this.fontMed.normal.textColor = this.colorHax;
+        this.fontSmall.fontSize = 12;
+        this.fontSmall.normal.textColor = this.colorHax;
+        PlayerController.Instance.popForce = 3f;
+        this.autoSlowmo = false;
+        this.baseTimeScale = 1f;
+        this.sloMoTimeFactor = 0.6f;
     }
 
-    // Token: 0x060016B5 RID: 5813
-    private float InputFloatChange(string description, KeyCode key, float value, float delta, float min, float max, float defaultValue = 1f, float deadTime = 0.15f) {
-        if (Input.GetKey(key) && (double)(Time.realtimeSinceStartup - this.btnLastPressed) > (double)deadTime) {
+    // Token: 0x060016B4 RID: 5812
+    private float InputFloatChange(string description, KeyCode key, float value, float delta, float min, float max, float defaultValue = 1f, float deadTime = 0.15f)
+    {
+        if (Input.GetKey(key) && (double)(Time.realtimeSinceStartup - this.btnLastPressed) > (double)deadTime)
+        {
             this.btnLastPressed = Time.realtimeSinceStartup;
-            if (Input.GetKey(KeyCode.LeftShift)) {
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
                 value -= delta;
-            } else {
+            }
+            else
+            {
                 value += delta;
             }
             value = Mathf.Clamp(value, min, max);
@@ -150,9 +172,11 @@ public class SkateTrainer : MonoBehaviour {
         return value;
     }
 
-    // Token: 0x060016B6 RID: 5814
-    private bool InputBoolChange(string description, KeyCode key, bool value, float deadTime = 0.2f) {
-        if (Input.GetKey(key) && (double)(Time.realtimeSinceStartup - this.btnLastPressed) > (double)deadTime) {
+    // Token: 0x060016B5 RID: 5813
+    private bool InputBoolChange(string description, KeyCode key, bool value, float deadTime = 0.2f)
+    {
+        if (Input.GetKey(key) && (double)(Time.realtimeSinceStartup - this.btnLastPressed) > (double)deadTime)
+        {
             this.btnLastPressed = Time.realtimeSinceStartup;
             value = !value;
             this.showMessage(description + (value ? "ON" : "OFF"));
@@ -160,61 +184,62 @@ public class SkateTrainer : MonoBehaviour {
         return value;
     }
 
-    // Token: 0x040010C2 RID: 4290
+    // Token: 0x040010C1 RID: 4289
     private string grindString;
 
-    // Token: 0x040010C3 RID: 4291
+    // Token: 0x040010C2 RID: 4290
     private float timeScaleTarget;
 
-    // Token: 0x040010C4 RID: 4292
+    // Token: 0x040010C3 RID: 4291
     private bool autoSlowmo;
 
-    // Token: 0x040010C5 RID: 4293
+    // Token: 0x040010C4 RID: 4292
     private SkateTrainer.TmpMessage tmpMessage;
 
-    // Token: 0x040010C6 RID: 4294
+    // Token: 0x040010C5 RID: 4293
     private float btnLastPressed;
 
-    // Token: 0x040010C7 RID: 4295
+    // Token: 0x040010C6 RID: 4294
     private bool showMenu;
 
-    // Token: 0x040010C8 RID: 4296
+    // Token: 0x040010C7 RID: 4295
     private Color colorHax;
 
-    // Token: 0x040010C9 RID: 4297
+    // Token: 0x040010C8 RID: 4296
     private GUIStyle fontLarge;
 
-    // Token: 0x040010CA RID: 4298
+    // Token: 0x040010C9 RID: 4297
     private GUIStyle fontMed;
 
-    // Token: 0x040010CB RID: 4299
+    // Token: 0x040010CA RID: 4298
     private GUIStyle fontSmall;
 
-    // Token: 0x040010CC RID: 4300
+    // Token: 0x040010CB RID: 4299
     private float sloMoTimeFactor = 0.5f;
 
-    // Token: 0x040010CD RID: 4301
+    // Token: 0x040010CC RID: 4300
     private float baseTimeScale;
 
-    // Token: 0x040010CE RID: 4302
+    // Token: 0x040010CD RID: 4301
     public static SkateTrainer CoachFrank;
 
-    // Token: 0x040010CF RID: 4303
+    // Token: 0x040010CE RID: 4302
     public bool disablePushPowerDecrement;
 
-    // Token: 0x040010D0 RID: 4304
+    // Token: 0x040010CF RID: 4303
     public bool respawnOnMarker;
 
     // Token: 0x0200021B RID: 539
-    private class TmpMessage {
+    private class TmpMessage
+    {
         // Token: 0x1700059E RID: 1438
-        // (get) Token: 0x060016B7 RID: 5815
-        // (set) Token: 0x060016B8 RID: 5816
+        // (get) Token: 0x060016B6 RID: 5814
+        // (set) Token: 0x060016B7 RID: 5815
         public string msg { get; set; }
 
         // Token: 0x1700059F RID: 1439
-        // (get) Token: 0x060016B9 RID: 5817
-        // (set) Token: 0x060016BA RID: 5818
+        // (get) Token: 0x060016B8 RID: 5816
+        // (set) Token: 0x060016B9 RID: 5817
         public float epoch { get; set; }
     }
 }
