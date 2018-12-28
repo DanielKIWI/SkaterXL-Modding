@@ -10,6 +10,8 @@ public class ReplayManager : MonoBehaviour
         ReplayManager._instance = this;
         PromptController.Instance.menuthing.enabled = false;
         this.recorder = base.gameObject.AddComponent<ReplayRecorder>();
+        this.replayCamera = base.gameObject.AddComponent<ReplayCameraController>();
+        this.replayCamera.enabled = false;
         this.guiColor = Color.white;
         this.fontLarge = new GUIStyle();
         this.fontMed = new GUIStyle();
@@ -20,7 +22,6 @@ public class ReplayManager : MonoBehaviour
         this.fontMed.normal.textColor = this.guiColor;
         this.fontSmall.fontSize = 12;
         this.fontSmall.normal.textColor = this.guiColor;
-        this.windSpeed = 2f;
         this.isEditorActive = false;
     }
 
@@ -61,7 +62,7 @@ public class ReplayManager : MonoBehaviour
             {
                 this.guiHidden = !this.guiHidden;
             }
-            if (PlayerController.Instance.inputController.player.GetButtonDown("B"))
+            if (PlayerController.Instance.inputController.player.GetButtonDown("B") || Input.GetKeyDown(KeyCode.Escape))
             {
                 this.ExitReplayEditor();
             }
@@ -84,10 +85,10 @@ public class ReplayManager : MonoBehaviour
             {
                 this.SetPlaybackTime(this.playbackTime + 5f);
             }
-            float axis = PlayerController.Instance.inputController.player.GetAxis("DPadX");
-            if ((double)Mathf.Abs(axis) > 0.001)
+            float f = PlayerController.Instance.inputController.player.GetAxis("RT") - PlayerController.Instance.inputController.player.GetAxis("LT");
+            if ((double)Mathf.Abs(f) > 0.001)
             {
-                this.SetPlaybackTime(this.playbackTime + axis * Time.unscaledDeltaTime * this.windSpeed);
+                this.playBackTimeScale = f;
             }
         }
     }
@@ -105,58 +106,80 @@ public class ReplayManager : MonoBehaviour
     // Token: 0x060016AC RID: 5804
     public void OnGUI()
     {
-        if (!this.isEditorActive)
+        try
         {
-            return;
+            if (this.isEditorActive)
+            {
+                if (GUI.Button(new Rect((float)Screen.width / 2f - 10f, (float)Screen.height - 20f, 20f, 20f), this.guiHidden ? "▲" : "▼"))
+                {
+                    this.guiHidden = !this.guiHidden;
+                }
+                if (!this.guiHidden)
+                {
+                    GUIStyle guistyle = new GUIStyle(GUI.skin.horizontalSlider);
+                    int num = Screen.width - 40;
+                    int num2 = Screen.height - 20 - 50;
+                    float recordedTime = this.recorder.recordedTime;
+                    Rect position = new Rect(20f, (float)num2, (float)num, 50f);
+                    float num3 = GUI.HorizontalSlider(position, this.playbackTime, this.recorder.startTime, recordedTime, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb);
+                    num2 += 50;
+                    if (this.playbackTime != 0f && Mathf.Abs(num3 - this.playbackTime) > recordedTime / 200f)
+                    {
+                        this.SetPlaybackTime(num3);
+                    }
+                    int horizontal = guistyle.border.horizontal;
+                    int horizontal2 = guistyle.margin.horizontal;
+                    int horizontal3 = guistyle.padding.horizontal;
+                    foreach (ReplayCameraController.KeyStone keyStone in this.replayCamera.keyStones)
+                    {
+                        float t = keyStone.time / recordedTime;
+                        float xMin = position.xMin;
+                        float xMax = position.xMax;
+                        if (GUI.Button(new Rect(Mathf.Lerp(0f, recordedTime, t), (float)(num2 - 6), 12f, 18f), string.Empty))
+                        {
+                            this.playbackTime = keyStone.time;
+                        }
+                    }
+                    Rect position2 = new Rect(20f, (float)num2 - 30f, 200f, 20f);
+                    GUI.Box(position2, "");
+                    GUI.Label(position2, string.Concat(new object[]
+                    {
+                        this.playbackTime.ToString("0.#"),
+                        "s / ",
+                        this.recorder.recordedTime.ToString("0.#"),
+                        "s     ",
+                        this.playBackTimeScale.ToString("0.#"),
+                        "s/s"
+                    }), this.fontMed);
+                    float num4 = 40f;
+                    float num5 = 40f;
+                    float num6 = this.playBackTimeScale;
+                    if (GUI.Button(new Rect((float)Screen.width / 2f - 5f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "◀◀"))
+                    {
+                        this.playBackTimeScale = -2f;
+                    }
+                    if (GUI.Button(new Rect((float)Screen.width / 2f - 3f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "◀"))
+                    {
+                        this.playBackTimeScale = -1f;
+                    }
+                    if (GUI.Button(new Rect((float)Screen.width / 2f - 1f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▮▮"))
+                    {
+                        this.playBackTimeScale = 0f;
+                    }
+                    if (GUI.Button(new Rect((float)Screen.width / 2f + 1f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▶"))
+                    {
+                        this.playBackTimeScale = 1f;
+                    }
+                    if (GUI.Button(new Rect((float)Screen.width / 2f + 3f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▶▶"))
+                    {
+                        this.playBackTimeScale = 2f;
+                    }
+                }
+            }
         }
-        if (GUI.Button(new Rect((float)Screen.width / 2f - 10f, (float)Screen.height - 20f, 20f, 20f), this.guiHidden ? "▲" : "▼"))
+        catch (Exception e)
         {
-            this.guiHidden = !this.guiHidden;
-        }
-        if (!this.guiHidden)
-        {
-            int num = Screen.width - 40;
-            int num2 = Screen.height - 20 - 50;
-            float recordedTime = this.recorder.recordedTime;
-            float num3 = GUI.HorizontalSlider(new Rect(20f, (float)num2, (float)num, 50f), this.playbackTime, 0f, recordedTime, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb);
-            if (this.playbackTime != 0f && Mathf.Abs(num3 - this.playbackTime) > recordedTime / 200f)
-            {
-                this.SetPlaybackTime(num3);
-            }
-            Rect position = new Rect(20f, (float)num2 - 30f, 200f, 20f);
-            GUI.Box(position, "");
-            GUI.Label(position, string.Concat(new object[]
-            {
-                this.playbackTime.ToString("0.#"),
-                "s / ",
-                this.recorder.recordedTime.ToString("0.#"),
-                "s     ",
-                this.playBackTimeScale.ToString("0.#"),
-                "s/s"
-            }), this.fontMed);
-            float num4 = 40f;
-            float num5 = 40f;
-            float num6 = this.playBackTimeScale;
-            if (GUI.Button(new Rect((float)Screen.width / 2f - 5f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "◀◀"))
-            {
-                this.playBackTimeScale = -2f;
-            }
-            if (GUI.Button(new Rect((float)Screen.width / 2f - 3f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "◀"))
-            {
-                this.playBackTimeScale = -1f;
-            }
-            if (GUI.Button(new Rect((float)Screen.width / 2f - 1f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▮▮"))
-            {
-                this.playBackTimeScale = 0f;
-            }
-            if (GUI.Button(new Rect((float)Screen.width / 2f + 1f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▶"))
-            {
-                this.playBackTimeScale = 1f;
-            }
-            if (GUI.Button(new Rect((float)Screen.width / 2f + 3f * num4 / 2f, (float)num2 - num5 - 10f, num4, num5), "▶▶"))
-            {
-                this.playBackTimeScale = 2f;
-            }
+            GUIConsole.LogException(e);
         }
     }
 
@@ -172,6 +195,7 @@ public class ReplayManager : MonoBehaviour
     // Token: 0x060016AE RID: 5806
     public void StartReplayEditor()
     {
+        Cursor.visible = true;
         this.recorder.StopRecording();
         this.isEditorActive = true;
         this.playBackTimeScale = 1f;
@@ -179,12 +203,15 @@ public class ReplayManager : MonoBehaviour
         this.previousFrame = this.recorder.frameCount - 1;
         this.playbackTime = this.recorder.recordedTime;
         PlayerController.Instance.animationController.skaterAnim.enabled = false;
+        PlayerController.Instance.cameraController.enabled = false;
         InputController.Instance.enabled = false;
+        this.replayCamera.OnStartReplayEditor();
     }
 
     // Token: 0x060016AF RID: 5807
     public void ExitReplayEditor()
     {
+        Cursor.visible = false;
         if (!this.isEditorActive)
         {
             return;
@@ -194,7 +221,9 @@ public class ReplayManager : MonoBehaviour
         Time.timeScale = 1f;
         this.recorder.isRecording = true;
         PlayerController.Instance.animationController.skaterAnim.enabled = true;
+        PlayerController.Instance.cameraController.enabled = true;
         InputController.Instance.enabled = true;
+        this.replayCamera.OnExitReplayEditor();
     }
 
     // Token: 0x040010BB RID: 4283
@@ -231,8 +260,8 @@ public class ReplayManager : MonoBehaviour
     private bool isEditorActive;
 
     // Token: 0x040010C6 RID: 4294
-    private float windSpeed;
+    public bool guiHidden;
 
     // Token: 0x040010C7 RID: 4295
-    private bool guiHidden;
+    private ReplayCameraController replayCamera;
 }
