@@ -7,13 +7,16 @@ A Collection of modded Files.
 ### ReplayEditor
 #### Features:
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
-- Creating KeyStones for animated Camera Movement
+- Using KeyStones for animated Camera Movement
 #### WIP Features:
 - Saving as JSON to enable loading and further editing
 - Saving as Video
 - Recording Sound
 #### Planned Features:
 - Camera Zoom
+#### Controlls:
+Start opens the ReplayEditor. B closes it.
+All other Controlls are displayed on the right, while the Editor is active.
 
 ## Old Mods without UnityModManager
 Classes inside this files have to be inserted into the Assembly-CSharp.dll manually.
