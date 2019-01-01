@@ -1,23 +1,40 @@
 # SkaterXL-Modding
 A Collection of modded Files.
-They can be inserted into the Assembly-Csharp.dll, by decompiling it with dnSpy.
 
 
-Working Features:
+## Available Mods for UnityModManager:
 
-SloMo Buttons (RB/R1, LB/L1)
+### ReplayEditor
+#### Features:
+- Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
+- Using KeyStones for animated Camera Movement
+#### WIP Features:
+- Saving as JSON to enable loading and further editing
+- Saving as Video
+- Recording Sound
+#### Planned Features:
+- Camera Zoom
+#### Controlls:
+Start opens the ReplayEditor. B closes it.
+All other Controlls are displayed on the right, while the Editor is active.
 
-Basic UI for changing following values:
+## Old Mods without UnityModManager
+Classes inside this files have to be inserted into the Assembly-CSharp.dll manually.
+### SkateTrainer
+#### Features
+- SloMo Buttons (RB/R1, LB/L1)
 - AutoSloMo
 - SloMo Factor,
 - BaseTimeScale,
-- RespawnNearBail / RespawnOnMarker,
+- RespawnNearBail,
 - Pop Force,
 - Push Force,
 - Disable Push Reduction for first 2 Pushes
 
-Simple Replay Editor
 
 Thanks to dsc, RafahelBF, Commander klepto who wrote parts of this code.
+And to blendermf who brought up the idea to use the UnityModManager(https://github.com/newman55/unity-mod-manager), which is an awesome Tool.
+
+For a Tutorial on how to load Mods via UnityModManager check out https://github.com/blendermf/XLShredLoader and https://www.nexusmods.com/site/mods/21
 
 Check out the discord channel https://discord.gg/czdNBm for more Infos and Tutorials.
