@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-    // Token: 0x0200021B RID: 539
+
     public class ReplayRecorder : MonoBehaviour {
-        // Token: 0x060016B2 RID: 5810 RVA: 0x00071448 File Offset: 0x0006F648
+
         public void Start() {
             List<Transform> list = new List<Transform>(PlayerController.Instance.respawn.getSpawn);
             foreach (object obj in Enum.GetValues(typeof(HumanBodyBones))) {
@@ -27,7 +27,7 @@ namespace XLShredReplayEditor {
             this.StartRecording();
         }
 
-        // Token: 0x060016B3 RID: 5811 RVA: 0x0001150D File Offset: 0x0000F70D
+
         public void StartRecording() {
             if (this.isRecording) {
                 return;
@@ -38,7 +38,7 @@ namespace XLShredReplayEditor {
             this.RecordFrame();
         }
 
-        // Token: 0x060016B4 RID: 5812 RVA: 0x00011536 File Offset: 0x0000F736
+
         public void StopRecording() {
             if (!this.isRecording) {
                 return;
@@ -46,13 +46,13 @@ namespace XLShredReplayEditor {
             this.isRecording = false;
         }
 
-        // Token: 0x060016B5 RID: 5813 RVA: 0x00011548 File Offset: 0x0000F748
+
         private void ClearRecording() {
             this.recordedFrames.Clear();
             this.startTime = this.endTime;
         }
 
-        // Token: 0x060016B6 RID: 5814 RVA: 0x0007154C File Offset: 0x0006F74C
+
         public void Update() {
             if (!this.isRecording) {
                 return;
@@ -67,25 +67,25 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x1700059F RID: 1439
-        // (get) Token: 0x060016B7 RID: 5815 RVA: 0x00011561 File Offset: 0x0000F761
+
+
         public int frameCount {
             get {
                 return this.recordedFrames.Count;
             }
         }
 
-        // Token: 0x060016B8 RID: 5816 RVA: 0x0001156E File Offset: 0x0000F76E
+
         public void ApplyRecordedFrame(int frame) {
             this.recordedFrames[frame].ApplyTo(this.transformsToBeRecorded);
         }
 
-        // Token: 0x060016B9 RID: 5817 RVA: 0x00011587 File Offset: 0x0000F787
+
         private void RecordFrame() {
             this.recordedFrames.Add(new ReplaySkaterState(this.transformsToBeRecorded, this.endTime));
         }
 
-        // Token: 0x060016BA RID: 5818 RVA: 0x000715D0 File Offset: 0x0006F7D0
+
         public void OnGUI() {
             if (this.isRecording) {
                 string text = "● Rec";
@@ -94,7 +94,7 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x060016BB RID: 5819 RVA: 0x00071634 File Offset: 0x0006F834
+
         public int GetFrameIndex(float time, int lastFrame = 0) {
             if (lastFrame < 0) {
                 lastFrame = 0;
@@ -115,7 +115,7 @@ namespace XLShredReplayEditor {
             return num;
         }
 
-        // Token: 0x060016BD RID: 5821 RVA: 0x000716C8 File Offset: 0x0006F8C8
+
         public void ApplyRecordedTime(int frameIndex, float time) {
             if (this.recordedFrames.Count != 0) {
                 if (this.recordedFrames.Count == 1) {
@@ -128,25 +128,25 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x040010CF RID: 4303
+
         public Transform[] transformsToBeRecorded;
 
-        // Token: 0x040010D0 RID: 4304
+
         public bool isRecording;
 
-        // Token: 0x040010D1 RID: 4305
+
         public List<ReplaySkaterState> recordedFrames;
 
-        // Token: 0x040010D2 RID: 4306
+
         public float endTime;
 
-        // Token: 0x040010D3 RID: 4307
+
         private GUIStyle recSkin;
 
-        // Token: 0x040010D4 RID: 4308
+
         public float startTime;
 
-        // Token: 0x040010D5 RID: 4309
+
         public float MaxRecordedTime;
     }
 

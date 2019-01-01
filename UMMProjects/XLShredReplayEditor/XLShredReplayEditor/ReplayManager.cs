@@ -2,14 +2,14 @@
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-    // Token: 0x0200021A RID: 538
+
     public class ReplayManager : MonoBehaviour {
-        // Token: 0x060016A8 RID: 5800 RVA: 0x000114F0 File Offset: 0x0000F6F0
+
         public ReplayManager() {
             this.showKeys = true;
         }
 
-        // Token: 0x060016A9 RID: 5801 RVA: 0x00070830 File Offset: 0x0006EA30
+
         public void Awake() {
             ReplayManager._instance = this;
             PromptController.Instance.menuthing.enabled = false;
@@ -38,7 +38,7 @@ namespace XLShredReplayEditor {
             this.PlaybackTimeJumpDelta = 5f;
         }
 
-        // Token: 0x060016AA RID: 5802 RVA: 0x00070970 File Offset: 0x0006EB70
+
         public void Update() {
             this.CheckInput();
             if (this.isEditorActive && this.playBackTimeScale != 0f) {
@@ -59,7 +59,7 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x060016AB RID: 5803 RVA: 0x00070A74 File Offset: 0x0006EC74
+
         private void CheckInput() {
             if (!this.isEditorActive && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 this.StartReplayEditor();
@@ -119,10 +119,9 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x060016AC RID: 5804 RVA: 0x00070D7C File Offset: 0x0006EF7C
+
         public void OnGUI() {
             if (this.isEditorActive) {
-                Cursor.visible = !this.guiHidden;
                 if (GUI.Button(new Rect((float)Screen.width / 2f - 10f, (float)Screen.height - 20f, 20f, 20f), this.guiHidden ? "▲" : "▼")) {
                     this.guiHidden = !this.guiHidden;
                 }
@@ -174,14 +173,14 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x060016AD RID: 5805 RVA: 0x0007108C File Offset: 0x0006F28C
+
         public void SetPlaybackTime(float t) {
             this.playbackTime = Mathf.Clamp(t, this.clipStartTime, this.clipEndTime);
             this.previousFrame = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrame);
             this.recorder.ApplyRecordedTime(this.previousFrame, this.playbackTime);
         }
 
-        // Token: 0x060016AE RID: 5806 RVA: 0x000710E8 File Offset: 0x0006F2E8
+
         public void StartReplayEditor() {
             Cursor.visible = true;
             this.recorder.StopRecording();
@@ -199,7 +198,7 @@ namespace XLShredReplayEditor {
             SoundManager.Instance.deckSounds.MuteAll();
         }
 
-        // Token: 0x060016AF RID: 5807 RVA: 0x000711B4 File Offset: 0x0006F3B4
+
         public void ExitReplayEditor() {
             Cursor.visible = false;
             if (this.isEditorActive) {
@@ -215,7 +214,7 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x060016B0 RID: 5808 RVA: 0x00071250 File Offset: 0x0006F450
+
         private void GUIClipSliders() {
             this.clipStartTime = Mathf.Clamp(GUI.HorizontalSlider(ReplaySkin.DefaultSkin.sliderRect, this.clipStartTime, this.recorder.startTime, this.recorder.endTime, ReplaySkin.DefaultSkin.clipStartSliderStyle, ReplaySkin.DefaultSkin.sliderClipBorderThumbStyle), this.recorder.startTime, this.clipEndTime);
             this.clipEndTime = Mathf.Clamp(GUI.HorizontalSlider(ReplaySkin.DefaultSkin.sliderRect, this.clipEndTime, this.recorder.startTime, this.recorder.endTime, ReplaySkin.DefaultSkin.clipEndSliderStyle, ReplaySkin.DefaultSkin.sliderClipBorderThumbStyle), this.clipStartTime, this.recorder.endTime);
@@ -233,72 +232,72 @@ namespace XLShredReplayEditor {
             }
         }
 
-        // Token: 0x1700059E RID: 1438
-        // (get) Token: 0x060016B1 RID: 5809 RVA: 0x00011506 File Offset: 0x0000F706
+
+
         public static ReplayManager Instance {
             get {
                 return ReplayManager._instance;
             }
         }
 
-        // Token: 0x040010BB RID: 4283
+
         private bool showKeys;
 
-        // Token: 0x040010BC RID: 4284
+
         private GUIStyle fontLarge;
 
-        // Token: 0x040010BD RID: 4285
+
         private GUIStyle fontMed;
 
-        // Token: 0x040010BE RID: 4286
+
         private GUIStyle fontSmall;
 
-        // Token: 0x040010BF RID: 4287
+
         private Color guiColor;
 
-        // Token: 0x040010C0 RID: 4288
+
         private static ReplayManager _instance;
 
-        // Token: 0x040010C1 RID: 4289
+
         public ReplayRecorder recorder;
 
-        // Token: 0x040010C2 RID: 4290
+
         public float playbackTime;
 
-        // Token: 0x040010C3 RID: 4291
+
         public float playBackTimeScale;
 
-        // Token: 0x040010C4 RID: 4292
+
         public int previousFrame;
 
-        // Token: 0x040010C5 RID: 4293
+
         private bool isEditorActive;
 
-        // Token: 0x040010C6 RID: 4294
+
         public bool guiHidden;
 
-        // Token: 0x040010C7 RID: 4295
+
         public ReplayCameraController cameraController;
 
-        // Token: 0x040010C8 RID: 4296
+
         private bool isPlaying;
 
-        // Token: 0x040010C9 RID: 4297
+
         public float clipStartTime;
 
-        // Token: 0x040010CA RID: 4298
+
         public float clipEndTime;
 
-        // Token: 0x040010CB RID: 4299
+
         private float timeScaleAddend;
 
-        // Token: 0x040010CC RID: 4300
+
         private bool dpadCentered = true;
 
-        // Token: 0x040010CD RID: 4301
+
         public float PlaybackTimeJumpDelta;
 
-        // Token: 0x040010CE RID: 4302
+
         public ReplaySaver saver;
     }
 

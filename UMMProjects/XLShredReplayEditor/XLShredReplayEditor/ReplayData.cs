@@ -4,11 +4,8 @@ using System.IO;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-
-    // Token: 0x0200022F RID: 559
     [Serializable]
     public class ReplayData {
-        // Token: 0x06001727 RID: 5927 RVA: 0x00073878 File Offset: 0x00071A78
         public ReplayData() {
             List<ReplaySkaterState> list = ReplayManager.Instance.recorder.recordedFrames.FindAll((ReplaySkaterState f) => f.time >= ReplayManager.Instance.clipStartTime && f.time <= ReplayManager.Instance.clipEndTime);
             this.recordedFrames = list.ToArray();
@@ -29,8 +26,7 @@ namespace XLShredReplayEditor {
                 }
             }
         }
-
-        // Token: 0x06001728 RID: 5928 RVA: 0x000739B0 File Offset: 0x00071BB0
+        
         public void Load() {
             ReplayManager.Instance.recorder.recordedFrames = new List<ReplaySkaterState>(this.recordedFrames);
             ReplayManager.Instance.clipStartTime = 0f;
@@ -45,8 +41,7 @@ namespace XLShredReplayEditor {
             }
             ReplayManager.Instance.cameraController.keyStones = new List<ReplayCameraController.KeyStone>(this.cameraKeyStones);
         }
-
-        // Token: 0x06001729 RID: 5929 RVA: 0x00073A80 File Offset: 0x00071C80
+        
         public void SaveToFile(string path) {
             if (!path.EndsWith(".json")) {
                 path += ".json";
@@ -55,25 +50,24 @@ namespace XLShredReplayEditor {
             File.WriteAllText(path, contents);
         }
 
-        // Token: 0x0600172A RID: 5930 RVA: 0x00011A1A File Offset: 0x0000FC1A
+
         public static void SaveCurrentToFile(string path) {
             new ReplayData().SaveToFile(path);
         }
 
-        // Token: 0x0600172B RID: 5931 RVA: 0x00011A27 File Offset: 0x0000FC27
+
         public static void LoadFromFile(string path) {
             JsonUtility.FromJson<ReplayData>(File.ReadAllText(path)).Load();
         }
 
-        // Token: 0x0400112E RID: 4398
         [SerializeField]
         public ReplaySkaterState[] recordedFrames;
 
-        // Token: 0x0400112F RID: 4399
+
         [SerializeField]
         public ReplayCameraController.KeyStone[] cameraKeyStones;
 
-        // Token: 0x04001130 RID: 4400
+
         [SerializeField]
         public float recordedTime;
     }
