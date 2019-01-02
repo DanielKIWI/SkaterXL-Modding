@@ -1,19 +1,18 @@
 # SkaterXL-Modding
-A Collection of modded Files.
-
 
 ## Available Mods for UnityModManager:
 
 ### ReplayEditor
 #### Features:
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
+- Changing camera field of view (NEW)
 - Using KeyStones for animated Camera Movement
 #### WIP Features:
 - Saving as JSON to enable loading and further editing
 - Saving as Video
 - Recording Sound
 #### Planned Features:
-- Camera Zoom
+- Easing
 #### Controlls:
 Start opens the ReplayEditor. B closes it.
 All other Controlls are displayed on the right, while the Editor is active.
