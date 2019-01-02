@@ -13,6 +13,7 @@
 - Recording Sound
 #### Planned Features:
 - Easing
+- Changing Focus Center
 #### Controlls:
 Start opens the ReplayEditor. B closes it.
 All other Controlls are displayed on the right, while the Editor is active.
