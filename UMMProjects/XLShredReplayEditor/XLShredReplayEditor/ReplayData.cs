@@ -7,7 +7,7 @@ namespace XLShredReplayEditor {
     [Serializable]
     public class ReplayData {
         public ReplayData() {
-            List<ReplaySkaterState> list = ReplayManager.Instance.recorder.recordedFrames.FindAll((ReplaySkaterState f) => f.time >= ReplayManager.Instance.clipStartTime && f.time <= ReplayManager.Instance.clipEndTime);
+            List<ReplayRecordedFrame> list = ReplayManager.Instance.recorder.recordedFrames.FindAll((ReplayRecordedFrame f) => f.time >= ReplayManager.Instance.clipStartTime && f.time <= ReplayManager.Instance.clipEndTime);
             this.recordedFrames = list.ToArray();
             float time = this.recordedFrames[0].time;
             float time2 = this.recordedFrames[this.recordedFrames.Length - 1].time;
@@ -28,18 +28,18 @@ namespace XLShredReplayEditor {
         }
         
         public void Load() {
-            ReplayManager.Instance.recorder.recordedFrames = new List<ReplaySkaterState>(this.recordedFrames);
+            ReplayManager.Instance.recorder.recordedFrames = new List<ReplayRecordedFrame>(this.recordedFrames);
             ReplayManager.Instance.clipStartTime = 0f;
             ReplayManager.Instance.clipEndTime = this.recordedTime;
             ReplayManager.Instance.playbackTime = 0f;
-            ReplayManager.Instance.previousFrame = 0;
+            ReplayManager.Instance.previousFrameIndex = 0;
             float time = this.recordedFrames[0].time;
             float time2 = this.recordedFrames[this.recordedFrames.Length - 1].time;
             this.recordedTime = time2 - time;
             for (int i = 0; i < this.recordedFrames.Length; i++) {
                 this.recordedFrames[i].time -= time;
             }
-            ReplayManager.Instance.cameraController.keyStones = new List<ReplayCameraController.KeyStone>(this.cameraKeyStones);
+            ReplayManager.Instance.cameraController.keyStones = new List<KeyStone>(this.cameraKeyStones);
         }
         
         public void SaveToFile(string path) {
@@ -61,11 +61,11 @@ namespace XLShredReplayEditor {
         }
 
         [SerializeField]
-        public ReplaySkaterState[] recordedFrames;
+        public ReplayRecordedFrame[] recordedFrames;
 
 
         [SerializeField]
-        public ReplayCameraController.KeyStone[] cameraKeyStones;
+        public KeyStone[] cameraKeyStones;
 
 
         [SerializeField]

@@ -15,8 +15,8 @@ namespace XLShredReplayEditor {
             this.RotateSpeed = 20f;
             this.FOVChangeSpeed = 20f;
             this.mode = ReplayCameraController.CameraMode.Orbit;
-            this.keyStones = new List<ReplayCameraController.KeyStone>();
-            this.orbitRadialCoord = new ReplayCameraController.Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
+            this.keyStones = new List<KeyStone>();
+            this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
         }
 
         public void Update() {
@@ -210,16 +210,16 @@ namespace XLShredReplayEditor {
                 return;
             }
             int num = this.FindLeftKeyStoneIndex();
-            ReplayCameraController.KeyStone keyStone = this.keyStones[num];
-            ReplayCameraController.KeyStone keyStone2 = this.keyStones[num + 1];
-            if (keyStone is ReplayCameraController.FreeCameraKeyStone || keyStone2 is ReplayCameraController.FreeCameraKeyStone) {
-                ReplayCameraController.FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+            KeyStone keyStone = this.keyStones[num];
+            KeyStone keyStone2 = this.keyStones[num + 1];
+            if (keyStone is FreeCameraKeyStone || keyStone2 is FreeCameraKeyStone) {
+                FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
-            if (keyStone is ReplayCameraController.TripodCameraKeyStone || keyStone2 is ReplayCameraController.TripodCameraKeyStone) {
-                ReplayCameraController.TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+            if (keyStone is TripodCameraKeyStone || keyStone2 is TripodCameraKeyStone) {
+                TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
-            if (keyStone is ReplayCameraController.OrbitCameraKeyStone && keyStone2 is ReplayCameraController.OrbitCameraKeyStone) {
-                ReplayCameraController.OrbitCameraKeyStone.Lerp(keyStone as ReplayCameraController.OrbitCameraKeyStone, keyStone2 as ReplayCameraController.OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+            if (keyStone is OrbitCameraKeyStone && keyStone2 is OrbitCameraKeyStone) {
+                OrbitCameraKeyStone.Lerp(keyStone as OrbitCameraKeyStone, keyStone2 as OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
         }
 
@@ -237,16 +237,16 @@ namespace XLShredReplayEditor {
 
         private void AddKeyStone(float time) {
             int index = this.FindKeyStoneInsertIndex(time);
-            ReplayCameraController.KeyStone item;
+            KeyStone item;
             switch (this.mode) {
                 case ReplayCameraController.CameraMode.Free:
-                    item = new ReplayCameraController.FreeCameraKeyStone(this.cameraTransform, cameraFOV, time);
+                    item = new FreeCameraKeyStone(this.cameraTransform, cameraFOV, time);
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    item = new ReplayCameraController.OrbitCameraKeyStone(this.orbitRadialCoord, cameraFOV, time);
+                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, cameraFOV, time);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    item = new ReplayCameraController.TripodCameraKeyStone(this.cameraTransform, cameraFOV, time);
+                    item = new TripodCameraKeyStone(this.cameraTransform, cameraFOV, time);
                     break;
                 default:
                     return;
@@ -274,18 +274,18 @@ namespace XLShredReplayEditor {
 
 
 
-        public ReplayCameraController.KeyStone FindNextKeyStone(float time, bool left) {
+        public KeyStone FindNextKeyStone(float time, bool left) {
             if (this.keyStones.Count == 0) {
                 return null;
             }
             if (left) {
-                foreach (ReplayCameraController.KeyStone ks in this.keyStones) {
+                foreach (KeyStone ks in this.keyStones) {
                     if (ks.time < time) {
                         return ks;
                     }
                 }
             } else {
-                foreach (ReplayCameraController.KeyStone ks in this.keyStones) {
+                foreach (KeyStone ks in this.keyStones) {
                     if (ks.time > time) {
                         return ks;
                     }
@@ -301,7 +301,7 @@ namespace XLShredReplayEditor {
             }
             base.enabled = true;
             if (this.mode == ReplayCameraController.CameraMode.Orbit) {
-                this.orbitRadialCoord = new ReplayCameraController.Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
+                this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             }
             this.cameraParent = this.cameraTransform.parent;
             PlayerController.Instance.cameraController._actualCam.SetParent(null);
@@ -330,7 +330,7 @@ namespace XLShredReplayEditor {
             }
             this.mode = newValue;
             if (newValue == ReplayCameraController.CameraMode.Orbit) {
-                this.orbitRadialCoord = new ReplayCameraController.Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.transform.position);
+                this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.transform.position);
             }
         }
 
@@ -342,7 +342,7 @@ namespace XLShredReplayEditor {
 
         public Vector3 lookDirection;
 
-        public ReplayCameraController.Vector3Radial orbitRadialCoord;
+        public Vector3Radial orbitRadialCoord;
 
         public float RotateSpeed;
 
@@ -359,7 +359,7 @@ namespace XLShredReplayEditor {
 
         private float keyStoneDeleteTolerance = 0.1f;
 
-        public List<ReplayCameraController.KeyStone> keyStones;
+        public List<KeyStone> keyStones;
 
         private Transform cameraParent;
 
@@ -371,137 +371,6 @@ namespace XLShredReplayEditor {
             Free,
             Orbit,
             Tripod
-        }
-
-        public struct Vector3Radial {
-            public Vector3Radial(float p, float t, float r) {
-                this.phi = p;
-                this.theta = t;
-                this.radius = r;
-            }
-
-            public Vector3Radial(Vector3 source) {
-                this.radius = source.magnitude;
-                this.phi = Mathf.Atan2(source.x, source.z);
-                this.theta = Mathf.Acos(source.y / source.magnitude);
-            }
-
-            public Vector3 cartesianCoords {
-                get {
-                    return new Vector3(this.radius * Mathf.Sin(this.theta) * Mathf.Sin(this.phi), this.radius * Mathf.Cos(this.theta), this.radius * Mathf.Sin(this.theta) * Mathf.Cos(this.phi));
-                }
-            }
-
-            public static ReplayCameraController.Vector3Radial Lerp(ReplayCameraController.Vector3Radial l, ReplayCameraController.Vector3Radial r, float t) {
-                return new ReplayCameraController.Vector3Radial(Mathf.LerpAngle(l.phi, r.phi, t), Mathf.LerpAngle(l.theta, r.theta, t), Mathf.Lerp(l.radius, r.radius, t));
-            }
-
-            public float phi;
-
-            public float theta;
-
-            public float radius;
-        }
-
-        [Serializable]
-        public class KeyStone {
-            public virtual void ApplyTo(Transform t) {
-                t.position = this.position;
-                t.rotation = this.rotation;
-            }
-
-            public float time;
-
-            public Vector3 position;
-
-            public Quaternion rotation;
-            public float cameraFOV;
-        }
-
-        [Serializable]
-        public class FreeCameraKeyStone : ReplayCameraController.KeyStone {
-            public FreeCameraKeyStone(Transform cameraTransform, float fov, float t) {
-                this.position = cameraTransform.position;
-                this.rotation = cameraTransform.rotation;
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-
-            public FreeCameraKeyStone(Vector3 p, Quaternion r, float fov, float t) {
-                this.position = p;
-                this.rotation = r;
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-
-            public static ReplayCameraController.FreeCameraKeyStone Lerp(ReplayCameraController.KeyStone a, ReplayCameraController.KeyStone b, float time) {
-                float t = (time - a.time) / (b.time - a.time);
-                return new ReplayCameraController.FreeCameraKeyStone(Vector3.Lerp(a.position, b.position, t), Quaternion.Lerp(a.rotation, b.rotation, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
-            }
-
-            public FreeCameraKeyStone(ReplayCameraController.KeyStone ks) {
-                this.position = ks.position;
-                this.rotation = ks.rotation;
-                this.time = ks.time;
-                this.cameraFOV = ks.cameraFOV;
-            }
-        }
-
-        [Serializable]
-        public class OrbitCameraKeyStone : ReplayCameraController.KeyStone {
-            public OrbitCameraKeyStone(ReplayCameraController.Vector3Radial radialPos, float fov, float t) {
-                this.radialPos = radialPos;
-                this.position = PlayerController.Instance.skaterController.skaterTransform.position + radialPos.cartesianCoords;
-                this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-            public OrbitCameraKeyStone(Vector3 v, float fov, float t) {
-                this.radialPos = new ReplayCameraController.Vector3Radial(v);
-                this.position = PlayerController.Instance.skaterController.skaterTransform.position + this.radialPos.cartesianCoords;
-                this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-
-            public override void ApplyTo(Transform t) {
-                t.position = PlayerController.Instance.skaterController.skaterTransform.position + this.radialPos.cartesianCoords;
-                t.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
-            }
-
-            public static ReplayCameraController.OrbitCameraKeyStone Lerp(ReplayCameraController.OrbitCameraKeyStone a, ReplayCameraController.OrbitCameraKeyStone b, float time) {
-                float t = (time - a.time) / (b.time - a.time);
-                return new ReplayCameraController.OrbitCameraKeyStone(ReplayCameraController.Vector3Radial.Lerp(a.radialPos, b.radialPos, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
-            }
-
-
-            public ReplayCameraController.Vector3Radial radialPos;
-        }
-
-        [Serializable]
-        public class TripodCameraKeyStone : ReplayCameraController.KeyStone {
-            public TripodCameraKeyStone(Vector3 p, float fov, float t) {
-                this.position = p;
-                this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-            public TripodCameraKeyStone(Transform cameraTransform, float fov, float t) {
-                this.position = cameraTransform.position;
-                this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
-                this.time = t;
-                this.cameraFOV = fov;
-            }
-
-            public override void ApplyTo(Transform t) {
-                t.position = this.position;
-                t.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
-            }
-
-            public static ReplayCameraController.TripodCameraKeyStone Lerp(ReplayCameraController.KeyStone a, ReplayCameraController.KeyStone b, float time) {
-                float t = (time - a.time) / (b.time - a.time);
-                return new ReplayCameraController.TripodCameraKeyStone(Vector3.Lerp(a.position, b.position, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
-            }
         }
     }
 }

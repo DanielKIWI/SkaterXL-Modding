@@ -1,12 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-
-
-
+    
     [Serializable]
-    public class ReplaySkaterState {
+    public class ReplayRecordedFrame {
 
         public void ApplyTo(Transform[] transforms) {
             for (int i = 0; i < transforms.Length; i++) {
@@ -15,7 +14,7 @@ namespace XLShredReplayEditor {
         }
 
 
-        public ReplaySkaterState(Transform[] transforms, float time) {
+        public ReplayRecordedFrame(Transform[] transforms, float time) {
             this.time = time;
             this.transformInfos = new TransformInfo[transforms.Length];
             for (int i = 0; i < transforms.Length; i++) {
@@ -24,24 +23,24 @@ namespace XLShredReplayEditor {
         }
 
 
-        public ReplaySkaterState(TransformInfo[] transforms, float time) {
+        public ReplayRecordedFrame(TransformInfo[] transforms, float time) {
             this.time = time;
             this.transformInfos = transforms;
         }
 
 
-        public static ReplaySkaterState Lerp(ReplaySkaterState a, ReplaySkaterState b, float time) {
+        public static ReplayRecordedFrame Lerp(ReplayRecordedFrame a, ReplayRecordedFrame b, float time) {
             if (time <= a.time) {
                 return a;
             }
             if (time >= b.time) {
                 return b;
             }
-            return new ReplaySkaterState(a, b, time);
+            return new ReplayRecordedFrame(a, b, time);
         }
 
 
-        public ReplaySkaterState(ReplaySkaterState a, ReplaySkaterState b, float time) {
+        public ReplayRecordedFrame(ReplayRecordedFrame a, ReplayRecordedFrame b, float time) {
             float t = (time - a.time) / (b.time - a.time);
             this.time = time;
             this.transformInfos = new TransformInfo[a.transformInfos.Length];
@@ -53,8 +52,6 @@ namespace XLShredReplayEditor {
 
         public TransformInfo[] transformInfos;
 
-
         public float time;
     }
-
 }
