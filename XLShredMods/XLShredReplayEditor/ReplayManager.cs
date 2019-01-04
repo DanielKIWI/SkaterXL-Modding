@@ -1,20 +1,74 @@
 ﻿using System;
 using UnityEngine;
+using XLShredLib;
 
 namespace XLShredReplayEditor {
 
     public enum ReplayState {
-        NONE, INITIALIZING, RECORDING, PAUSE, PLAYBACK
+        PAUSE, RECORDING, PLAYBACK
     }
 
     public class ReplayManager : MonoBehaviour {
-        private static ReplayState _currentState = ReplayState.NONE;
+        private static ReplayState _currentState = ReplayState.PAUSE;
         public static ReplayState CurrentState { get { return _currentState; } }
         private static void SetState(ReplayState s) {
             _currentState = s;
         }
+        
+        public static ReplayManager Instance {
+            get {
+                return ReplayManager._instance;
+            }
+        }
+        private static ReplayManager _instance;
+
+        private GUIStyle fontLarge;
+        private GUIStyle fontMed;
+        private GUIStyle fontSmall;
+        private Color guiColor;
+
+
+        public ReplayRecorder recorder;
+        public ReplayAudioRecorder audioRecorder;
+
+        public float playbackTime;
+        private float playbackSpeed;
+        public float playbackTimeScale {
+            get {
+                float timeScale = this.timeScaleAddend;
+                if (this.isPlaying) {
+                    timeScale += this.playbackSpeed;
+                }
+                return timeScale;
+            }
+        }
+
+        public int previousFrameIndex;
+        public ReplayRecordedFrame CurrentFrame {
+            get {
+                return recorder.recordedFrames[previousFrameIndex];
+            }
+        }
+
+        public bool guiHidden;
+
+        public ReplayCameraController cameraController;
+
+        private bool isPlaying;
+
+        public float clipStartTime;
+
+        public float clipEndTime;
+
+        private float timeScaleAddend;
+
+        private bool dpadCentered = true;
+
+        public float PlaybackTimeJumpDelta;
+
+        public ReplaySaver saver;
+
         public ReplayManager() {
-            this.showKeys = true;
         }
 
         public void Awake() {
@@ -43,7 +97,6 @@ namespace XLShredReplayEditor {
             this.fontMed.normal.textColor = this.guiColor;
             this.fontSmall.fontSize = 12;
             this.fontSmall.normal.textColor = this.guiColor;
-            this.isEditorActive = false;
             this.PlaybackTimeJumpDelta = 5f;
         }
         public void Start() {
@@ -54,37 +107,33 @@ namespace XLShredReplayEditor {
 
         public void Update() {
             if (!Main.enabled) {
-                DebugGUI.Log("Replay is disabled!!!");
+                Debug.Log("Replay is disabled!!!");
                 ReplayManager.SetState(ReplayState.PAUSE);
                 return;
             }
-            try {
-                this.CheckInput();
-                if (this.isEditorActive && this.playbackSpeed != 0f) {
-                    if (this.playbackTime < this.clipStartTime && this.playbackSpeed < 0f) {
-                        this.isPlaying = false;
-                        this.playbackTime = this.clipStartTime;
-                    } else if (this.playbackTime > this.clipEndTime && this.playbackSpeed > 0f) {
-                        this.isPlaying = false;
-                        this.playbackTime = this.clipEndTime;
-                    }
-                    this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
-                    this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
-                    float num = this.playbackTime;
-                    this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
+            this.CheckInput();
+            if (CurrentState == ReplayState.PLAYBACK) {
+                if (this.playbackTime < this.clipStartTime && this.playbackSpeed < 0f) {
+                    this.isPlaying = false;
+                    this.playbackTime = this.clipStartTime;
+                } else if (this.playbackTime > this.clipEndTime && this.playbackSpeed > 0f) {
+                    this.isPlaying = false;
+                    this.playbackTime = this.clipEndTime;
                 }
-            } catch (Exception e) {
-                DebugGUI.LogException(e);
+                this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
+                this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
+                float num = this.playbackTime;
             }
+            this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
         }
 
 
         private void CheckInput() {
-            if (!this.isEditorActive && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
+            if (CurrentState != ReplayState.PLAYBACK && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 this.StartReplayEditor();
                 return;
             }
-            if (this.isEditorActive) {
+            if (CurrentState == ReplayState.PLAYBACK) {
                 if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button")) {
                     this.guiHidden = !this.guiHidden;
                 }
@@ -140,7 +189,7 @@ namespace XLShredReplayEditor {
 
 
         public void OnGUI() {
-            if (this.isEditorActive) {
+            if (CurrentState == ReplayState.PLAYBACK) {
                 if (!this.guiHidden) {
                     int width = Screen.width;
                     float num = (float)(Screen.height - 20);
@@ -198,10 +247,10 @@ namespace XLShredReplayEditor {
 
 
         public void StartReplayEditor() {
+            Debug.Log("Started Replay Editor");
             Cursor.visible = true;
             ReplayManager.SetState(ReplayState.PLAYBACK);
             audioRecorder.StartPlayback();
-            this.isEditorActive = true;
             this.playbackSpeed = 1f;
             Time.timeScale = 0f;
             this.previousFrameIndex = this.recorder.frameCount - 1;
@@ -213,23 +262,22 @@ namespace XLShredReplayEditor {
             InputController.Instance.enabled = false;
             this.cameraController.OnStartReplayEditor();
             SoundManager.Instance.deckSounds.MuteAll();
+            ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
         }
 
 
         public void ExitReplayEditor() {
             Cursor.visible = false;
-            if (this.isEditorActive) {
-                this.isEditorActive = false;
-                Time.timeScale = 1f;
-                ReplayManager.SetState(ReplayState.RECORDING);
-                audioRecorder.StopPlayback();
-                PlayerController.Instance.animationController.skaterAnim.enabled = true;
-                PlayerController.Instance.cameraController.enabled = true;
-                InputController.Instance.enabled = true;
-                this.cameraController.OnExitReplayEditor();
-                this.recorder.ApplyRecordedFrame(this.recorder.frameCount - 1);
-            }
+            Time.timeScale = 1f;
+            ReplayManager.SetState(ReplayState.RECORDING);
+            audioRecorder.StopPlayback();
+            PlayerController.Instance.animationController.skaterAnim.enabled = true;
+            PlayerController.Instance.cameraController.enabled = true;
+            InputController.Instance.enabled = true;
+            this.cameraController.OnExitReplayEditor();
+            this.recorder.ApplyRecordedFrame(this.recorder.frameCount - 1);
             SoundManager.Instance.deckSounds.UnMuteAll();
+            ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
         }
 
 
@@ -251,69 +299,6 @@ namespace XLShredReplayEditor {
         }
 
 
-
-        public static ReplayManager Instance {
-            get {
-                return ReplayManager._instance;
-            }
-        }
-
-        private bool showKeys;
-
-        private GUIStyle fontLarge;
-
-        private GUIStyle fontMed;
-
-        private GUIStyle fontSmall;
-
-        private Color guiColor;
-
-        private static ReplayManager _instance;
-
-        public ReplayRecorder recorder;
-
-        public ReplayAudioRecorder audioRecorder;
-
-        public float playbackTime;
-
-        private float playbackSpeed;
-
-        public float playbackTimeScale {
-            get {
-                float timeScale = this.timeScaleAddend;
-                if (this.isPlaying) {
-                    timeScale += this.playbackSpeed;
-                }
-                return timeScale;
-            }
-        }
-
-        public int previousFrameIndex;
-        public ReplayRecordedFrame CurrentFrame {
-            get {
-                return recorder.recordedFrames[previousFrameIndex];
-            }
-        }
-
-        public bool isEditorActive;
-
-        public bool guiHidden;
-
-        public ReplayCameraController cameraController;
-
-        private bool isPlaying;
-
-        public float clipStartTime;
-
-        public float clipEndTime;
-
-        private float timeScaleAddend;
-
-        private bool dpadCentered = true;
-
-        public float PlaybackTimeJumpDelta;
-
-        public ReplaySaver saver;
     }
 
 }

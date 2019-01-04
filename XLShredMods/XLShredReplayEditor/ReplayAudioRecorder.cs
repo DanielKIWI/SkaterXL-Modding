@@ -25,14 +25,15 @@ namespace XLShredReplayEditor {
         private int channels = 2;
 
         // the audio stream instance
+        private int samplesWritten = 0;
         private FileStream fileOutputStream;
         private MemoryStream outputStream;
         private BinaryWriter outputWriter;
         private AudioSourceDataForwarder[] audioSourceDataForwarders;
+        public float desyncTolerance = 0.05f;
 
         private int startingAudioSourceID;
         private float[] audioBuffer;
-        double lastDSPTime = -1;
         double dspEndTime = 0.0;
 
         public void Awake() {
@@ -59,19 +60,19 @@ namespace XLShredReplayEditor {
             if (ReplayManager.CurrentState == ReplayState.PLAYBACK) {
                 playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.playbackTime) > 0.1f) {
-                    DebugGUI.Log("Audio time wasn't sync: Changing time from " + playBackAudioSource.time + " to " + ReplayManager.Instance.playbackTime);
                     try {
                         SetPlaybackTime(ReplayManager.Instance.playbackTime);
-                    } catch (Exception e) { DebugGUI.LogException(e); }
+                    } catch (Exception e) { Debug.LogException(e); }
                 }
             }
+            //Debug.Log("replayrecorder.endtime: " + ReplayManager.Instance.recorder.endTime + ", dspendtime: " + dspEndTime);
         }
         //void OnAudioFilterRead(float[] data, int channels) {
         //    if (lastDSPTime != -1) {
         //        double deltaTime = AudioSettings.dspTime - lastDSPTime;
         //        if (ReplayManager.CurrentState == ReplayState.RECORDING) {
         //            dspEndTime += deltaTime;
-        //            DebugGUI.Log("ReplayRecorder.endTime: " + ReplayManager.Instance.recorder.endTime + ", dspEndTime: " + dspEndTime);
+        //            Debug.Log("ReplayRecorder.endTime: " + ReplayManager.Instance.recorder.endTime + ", dspEndTime: " + dspEndTime);
         //        }
         //    }
         //    lastDSPTime = AudioSettings.dspTime;
@@ -79,15 +80,17 @@ namespace XLShredReplayEditor {
 
         public void ReceivedAudioData(float[] data, int channels, AudioSource source) {
             if (ReplayManager.CurrentState != ReplayState.RECORDING) {
+                audioBuffer = null;
                 return;
             }
             if (this.channels != channels) {
-                DebugGUI.LogWarning("channels mismatch: " + this.channels + " != " + channels);
+                Debug.LogWarning("channels mismatch: " + this.channels + " != " + channels);
             }
             this.channels = channels;
-            if (startingAudioSourceID == source.GetInstanceID() || audioBuffer == null) {
+            if ((startingAudioSourceID == source.GetInstanceID()) || (audioBuffer == null)) {
                 if (audioBuffer != null) {
-                    Write(audioBuffer);
+                    float offset = getSyncingOffset();
+                    Write(audioBuffer, offset);
                 }
                 audioBuffer = new float[data.Length];
                 startingAudioSourceID = source.GetInstanceID();
@@ -113,28 +116,64 @@ namespace XLShredReplayEditor {
             playBackAudioSource.clip = null;
         }
         public void SetPlaybackTime(float t) {
-            if (playBackAudioSource.clip == null && playBackAudioClip != null) {
+            if (playBackAudioClip == null) {
+                Debug.LogError("playBackAudioClip is null");
+                return;
+            }
+            if (playBackAudioSource.clip == null) {
                 playBackAudioSource.clip = playBackAudioClip;
             }
             if (!playBackAudioSource.isPlaying) {
                 playBackAudioSource.Play();
             }
+            Debug.Log("Changing PlaybackTime from " + playBackAudioSource.time + " to " + t + ", length: " + playBackAudioClip.length + ", " + (playBackAudioSource.clip == playBackAudioClip) + "," + (playBackAudioClip != null));
             playBackAudioSource.time = t;
         }
-        /// Write a chunk of data to the output stream.
-        public void Write(float[] audioData) {
-            if (outputStream.Length == 0) {
-                DebugGUI.Log("First AudioData written at FrameTime " + ReplayManager.Instance.recorder.endTime);
+
+        private float getSyncingOffset() {
+            //Synchronising if more audio than visual recorded
+            if ((float)dspEndTime - ReplayManager.Instance.recorder.endTime > desyncTolerance) {
+                float offset = (float)(dspEndTime - ReplayManager.Instance.recorder.endTime) * sampleRate;
+                Debug.Log("Cut of " + offset.ToString("0.##") + " samples of Audio for syncing");
+                return offset;
             }
-            int sample = 0;
-            while (dspEndTime <= ReplayManager.Instance.recorder.endTime && (sample + 1) * channels <= audioData.Length) {
+            //Synchronising if more visual than audio recorded
+            int i = 0;
+            while (ReplayManager.Instance.recorder.endTime - (float)dspEndTime > desyncTolerance) {
                 for (int c = 0; c < channels; c++) {
-                    this.outputWriter.Write((short)(Mathf.Clamp(audioData[sample * channels + c] * volumeFactor, -1f, 1f) * (float)Int16.MaxValue));
+                    this.outputWriter.Write((short)(0f * (float)Int16.MaxValue));
                 }
-                sample++;
-                dspEndTime += sampleDeltaTime;
+                samplesWritten++;
+                i++;
+                dspEndTime = samplesWritten * sampleDeltaTime;
             }
+            if (i != 0)
+                Debug.Log("Added " + i + "empty samples for syncing");
+            return 0f;
         }
+        /// Write a chunk of data to the output stream.
+        public void Write(float[] audioData, float sampleOffset) {
+            if (Time.timeScale <= 0.0001f) return;
+            int sampleCount = audioData.Length / channels;
+            float sample = sampleOffset;
+            int sampleIndex = (int)sampleOffset;
+            if (sampleIndex < 0) sampleIndex = 0;
+            float scale = Time.timeScale;
+            if (scale != 1f)
+                Debug.Log("scale: " + scale);
+            while (sampleIndex < sampleCount) {
+                for (int c = 0; c < channels; c++) {
+                    short value = (short)(Mathf.Clamp(audioData[sampleIndex * channels + c] * volumeFactor, -1f, 1f) * (float)Int16.MaxValue);
+                    this.outputWriter.Write(value);
+                }
+                samplesWritten++;
+                sample += scale; //(float)sampleCount / (float)targetSampleCount;
+                sampleIndex = (int)sample;
+            }
+            dspEndTime = samplesWritten * sampleDeltaTime;
+        }
+
+        #region File I/O
         private IEnumerator LoadFromTemp() {
             UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file:///" + tempAudioPath, AudioType.WAV);
             Debug.Log("Starting Request to " + www.url);
@@ -145,7 +184,7 @@ namespace XLShredReplayEditor {
                 Debug.Log("Request finished");
                 try {
                     playBackAudioClip = DownloadHandlerAudioClip.GetContent(www);
-
+                    Debug.Log("Audio LoadState: " + playBackAudioClip.loadState.ToString());
                     playBackAudioSource.clip = playBackAudioClip;
                     Debug.Log("Loaded Clip: " + playBackAudioSource.clip + ", length: " + playBackAudioSource.clip.length);
                     playBackAudioSource.Play();
@@ -155,37 +194,42 @@ namespace XLShredReplayEditor {
                 }
             }
         }
-
-        #region File I/O
         public void SaveToTemp() {
             if (!Directory.Exists(tempAudioDirectory)) {
                 Directory.CreateDirectory(tempAudioDirectory);
+            }
+            if (playBackAudioClip != null) {
+                playBackAudioClip.UnloadAudioData();
+                playBackAudioClip = null;
             }
             Save(tempAudioPath);
         }
         public bool Save(string path) {
             if (path.Length <= 0) {
-                DebugGUI.LogError("filename is empty");
+                Debug.LogError("filename is empty");
                 return false;
             }
             if (outputStream.Length <= 0) {
-                DebugGUI.LogWarning("There is no audio data to save!");
+                Debug.LogWarning("There is no audio data to save!");
                 return false;
             }
-            if (File.Exists(path))
-                Debug.LogWarning("Overwriting " + path + "...");
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
             fileOutputStream = File.OpenWrite(path);
 
+            //TODO change start Position if startTime > 0, //TODO adjust playbackTime handling
+            outputStream.Position = 0;
             // add a header to the file so we can send it to the SoundPlayer
             this.AddHeader();
-
             // copy over the actual audio data
             this.outputStream.WriteTo(fileOutputStream);
 
             fileOutputStream.Close();
 
+            outputStream.Position = outputStream.Length - 1;
             // for debugging only
-            DebugGUI.Log("Finished saving to " + path + ".");
+            Debug.Log("Finished saving to " + path + ".");
             return true;
 
         }
@@ -198,12 +242,9 @@ namespace XLShredReplayEditor {
         /// See this page for details on canonical wave files: 
         /// http://www.lightlink.com/tjweber/StripWav/Canon.html
         private void AddHeader() {
-            // reset the output stream
-            outputStream.Position = 0;
-
             // calculate the number of samples in the data chunk
-            long numberOfSamples = outputStream.Length / (BITS_PER_SAMPLE / 8);
-
+            long numberOfSamples = (outputStream.Length - outputStream.Position) / (BITS_PER_SAMPLE / 8);
+            Debug.LogWarning("(" + outputStream.Length + " - " + outputStream.Position + ") / (" + BITS_PER_SAMPLE + "/ 8) = numberOfSamples: " + numberOfSamples + ", samplesWritten * channels: " + (channels * samplesWritten) + ", channels: " + channels);
             // create a new MemoryStream that will have both the audio data AND the header
             BinaryWriter writer = new BinaryWriter(fileOutputStream);
 

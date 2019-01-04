@@ -1,3 +1,4 @@
-UMMProjects/XLShredReplayEditor/XLShredReplayEditor/bin/
-UMMProjects/XLShredReplayEditor/XLShredReplayEditor/obj/
-UMMProjects/XLShredReplayEditor/.vs/
+.vs/
+obj/
+bin/
+references/

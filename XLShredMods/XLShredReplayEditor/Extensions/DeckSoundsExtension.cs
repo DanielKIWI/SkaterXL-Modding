@@ -21,7 +21,7 @@ namespace XLShredReplayEditor.Extensions {
             for (int i = 0; i< sources.Count; i++) {
                 if (sources[i] == null) {
                     sources.RemoveAt(i);
-                    DebugGUI.LogWarning("AudioSource at index " + i + " is null");
+                    Debug.LogWarning("AudioSource at index " + i + " is null");
                 }
             }
             return sources.ToArray();

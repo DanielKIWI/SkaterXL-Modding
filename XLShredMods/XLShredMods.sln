@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredReplayEditor", "XLShredReplayEditor\XLShredReplayEditor.csproj", "{22526BFF-FE10-4710-934C-98DA78F7125E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugGUI", "DebugGUI\DebugGUI.csproj", "{D6B64159-F670-4BCC-951E-C1C192F498F9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredLib", "..\..\XLShredLoader\XLShredLib\XLShredLib.csproj", "{421325E5-D304-4B9B-B207-E511E4423F56}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{22526BFF-FE10-4710-934C-98DA78F7125E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22526BFF-FE10-4710-934C-98DA78F7125E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22526BFF-FE10-4710-934C-98DA78F7125E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22526BFF-FE10-4710-934C-98DA78F7125E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{421325E5-D304-4B9B-B207-E511E4423F56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{421325E5-D304-4B9B-B207-E511E4423F56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{421325E5-D304-4B9B-B207-E511E4423F56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{421325E5-D304-4B9B-B207-E511E4423F56}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6E2EB15E-55D4-4F49-8668-6068045E22B6}
+	EndGlobalSection
+EndGlobal
