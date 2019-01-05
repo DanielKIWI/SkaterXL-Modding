@@ -7,13 +7,12 @@
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
 - Changing camera field of view (NEW)
 - Using KeyStones for animated Camera Movement
-#### WIP Features:
+- Audio Recording and Playback 
+- Changing Focus Center
+#### Planned Features:
 - Saving as JSON to enable loading and further editing
 - Saving as Video
-- Recording Sound
-#### Planned Features:
 - Easing
-- Changing Focus Center
 #### Controlls:
 Start opens the ReplayEditor. B closes it.
 All other Controlls are displayed on the right, while the Editor is active.
