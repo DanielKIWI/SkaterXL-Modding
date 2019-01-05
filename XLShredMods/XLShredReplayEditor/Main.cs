@@ -51,7 +51,8 @@ namespace XLShredReplayEditor {
         }
         static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Maximum Time to be recorded: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label("Maximum Time to be recorded: " + settings.MaxRecordedTime, GUILayout.ExpandWidth(false));
+            GUILayout.Space(10);
             settings.MaxRecordedTime = GUILayout.HorizontalSlider(settings.MaxRecordedTime, 0, 300);
             GUILayout.EndHorizontal();
         }
