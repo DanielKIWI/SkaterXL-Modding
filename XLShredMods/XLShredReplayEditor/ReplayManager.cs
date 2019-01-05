@@ -272,6 +272,7 @@ namespace XLShredReplayEditor {
 #if STANDALONE
             Time.timeScale = 0f;
 #else
+            XLShredDataRegistry.SetData("kiwi.Replay", "isReplayEditorActive", true);
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
             ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK) ? 1 : 0);
 #endif
@@ -292,6 +293,7 @@ namespace XLShredReplayEditor {
             Cursor.visible = false;
             Time.timeScale = 1f;
 #else
+            XLShredDataRegistry.SetData("blendermf.ReplayModMenuCompatibility", "isReplayEditorActive", false);
             ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
             ModMenu.Instance.UnregisterShowCursor(Main.modId);
             Time.timeScale = 1f;
