@@ -278,7 +278,7 @@ namespace XLShredReplayEditor {
 #if STANDALONE
             Time.timeScale = 0f;
 #else
-            XLShredDataRegistry.SetData("kiwi.Replay", "isReplayEditorActive", true);
+            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
             ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK) ? 1 : 0);
 #endif
