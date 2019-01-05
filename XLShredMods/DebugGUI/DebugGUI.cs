@@ -14,8 +14,10 @@ namespace DebugGUI {
         private bool consoleVisible = true;
         private GUIStyle boxStyle;
         private bool b_guiStyled;
-
+        private Vector2 scrollPosition;
         private Dictionary<LogType, bool> showLogType;
+        public bool autoScroll;
+        public float maxHeight;
         public void Awake() {
             this.messages = new List<DebugGUI.Message>();
             LogType[] logTypes = Enum.GetValues(typeof(LogType)).Cast<LogType>().ToArray();
@@ -40,36 +42,54 @@ namespace DebugGUI {
                 this.boxStyle = new GUIStyle(GUI.skin.box);
             }
             float boxMinY = (float)Screen.height - 10f;
-            float width = (float)Screen.width - 20f;
+            float boxWidth = (float)Screen.width - 20f;
             if (this.messages.Count > 0) {
-                float num = 30f;
-                float height = num;
-                foreach (DebugGUI.Message message in this.messages) {
-                    GUIContent content = new GUIContent(message.text);
-                    height += this.font.CalcHeight(content, width - 20f);
+                float topMargin = 40f;
+                float messageWidth = boxWidth - 20f;
+                float height = messages.CalcHeight(this.font, messageWidth);
+                //Calculating Height of Messages
+                foreach (DebugGUI.StaticMessage message in this.messages) {
+                    height += this.font.CalcHeight(message.getGuiContent(), messageWidth);
                 }
-                if (this.font == null) {
-                    throw new Exception("font is null");
+                if (height < Screen.height - 30 - topMargin) {
+                    boxMinY = (float)Screen.height - height - 10f;
+                } else {
+                    boxMinY = 30f;
                 }
-                if (this.boxStyle == null) {
-                    throw new Exception("boxStyle is null");
-                }
-                boxMinY = (float)Screen.height - height - 10f;
-                GUI.Box(new Rect(10f, boxMinY, width, height), "Console", this.boxStyle);
-                foreach (DebugGUI.Message message2 in this.messages) {
+                Rect boxRect = new Rect() {
+                    x = 10f,
+                    yMin = boxMinY,
+                    width = boxWidth,
+                    yMax = Screen.height - 20f
+                };
+                Rect viewRect = new Rect(10f, 10f, messageWidth, height);
+                GUI.Box(boxRect, "Console", this.boxStyle);
+
+                scrollPosition = GUI.BeginScrollView(boxRect, scrollPosition, viewRect, false, true);
+                float yOffset = 20f;
+                foreach (DebugGUI.StaticMessage message2 in this.messages) {
                     this.font.normal.textColor = message2.color;
-                    float num5 = this.font.CalcHeight(new GUIContent(message2.text), width - 20f);
-                    GUI.Label(new Rect(20f, boxMinY + num, width - 20f, num5), message2.text, this.font);
-                    num += num5;
+                    float messageHeight = message2.CalcHeight(font, messageWidth);
+                    GUI.Label(new Rect(20f, yOffset, messageWidth, messageHeight), message2.getGuiContent(), this.font);
+                    yOffset += messageHeight;
                 }
+                GUI.EndScrollView(true);
+                //float 
+                //    GUI.VerticalSlider()
             }
             LogType[] logTypes = Enum.GetValues(typeof(LogType)).Cast<LogType>().ToArray();
-            float w = 100f;
             float x = 20f;
+            float w = 0f;
             foreach (var type in logTypes) {
-                showLogType[type] = GUI.Toggle(new Rect(x, boxMinY - 20f, w, 20f), showLogType[type], Enum.GetName(typeof(LogType), type));
+                GUIContent c1 = new GUIContent(Enum.GetName(typeof(LogType), type));
+                w = GUI.skin.toggle.CalcSize(c1).x;
+                showLogType[type] = GUI.Toggle(new Rect(x, boxMinY - 20f, w, 20f), showLogType[type], c1);
                 x += w;
             }
+            GUIContent c2 = new GUIContent("autoScrollToBottom");
+            w = GUI.skin.toggle.CalcSize(c2).x;
+            autoScroll = GUI.Toggle(new Rect(x, boxMinY - 20f, w, 20f), autoScroll, c2);
+            x += w;
         }
         
         public static DebugGUI Instance {
@@ -81,8 +101,13 @@ namespace DebugGUI {
             }
         }
         private void Update() {
-            if (this.messages.Count > 0 && Time.unscaledTime - this.messages[0].time > Main.settings.MessageLifeTime) {
-                this.messages.RemoveAt(0);
+            if (!Main.enabled) return;
+            UnityEngine.Debug.unityLogger.logEnabled = true;
+            //Remove messages older than lifetime
+            foreach (StaticMessage msg in messages) {
+                if (Time.unscaledTime - this.messages[0].time > Main.settings.MessageLifeTime) {
+                    this.messages.RemoveAt(0);
+                }
             }
             if (Input.GetKeyDown(KeyCode.F9)) {
                 this.consoleVisible = !this.consoleVisible;
@@ -97,7 +122,8 @@ namespace DebugGUI {
         }
         
         private void AddMessage(string message, Color color) {
-            this.messages.Add(new DebugGUI.Message(message, color));
+            this.messages.Add(new DebugGUI.StaticMessage(message, color));
+
             if (this.messages.Count > Main.settings.MaxLogsCount) {
                 this.messages.RemoveAt(0);
             }
@@ -106,7 +132,7 @@ namespace DebugGUI {
             switch (type) {
                 case LogType.Exception: return Color.red;
                 case LogType.Error: return Color.red;
-                case LogType.Assert: return Color.yellow;
+                case LogType.Assert: return Color.black;
                 case LogType.Warning: return Color.yellow;
                 case LogType.Log: return Color.white;
                 default: return Color.white;
@@ -124,37 +150,71 @@ namespace DebugGUI {
             parentHandler.LogException(exception, context);
             if (!Main.enabled) return;
             StackTrace stackTrace = new StackTrace(exception, true);
-            string text = "";
+            string text = "Exception: " + exception.Message;
             for (int i = 0; i < Mathf.Min(stackTrace.FrameCount, 4); i++) {
                 text = text + "\n" + stackTrace.GetFrame(i).ToString();
             }
+            AddMessage(text, colorForLogType(LogType.Exception));
         }
 
 
-        // Token: 0x02000234 RID: 564
-        private struct Message {
-            // Token: 0x06001725 RID: 5925 RVA: 0x00011973 File Offset: 0x0000FB73
-            public Message(string txt) {
+        public abstract class Message {
+            public virtual float CalcHeight(GUIStyle style, float width) {
+                return style.CalcHeight(getGuiContent(), width);
+            }
+            public abstract GUIContent getGuiContent();
+            
+            public float time;
+            
+            public Color color;
+        }
+
+        public class StaticMessage: Message {
+            public StaticMessage(string txt) {
                 this.text = txt;
                 this.time = Time.unscaledTime;
                 this.color = Color.white;
             }
-
-            // Token: 0x06001726 RID: 5926 RVA: 0x00011992 File Offset: 0x0000FB92
-            public Message(string txt, Color color) {
+            
+            public StaticMessage(string txt, Color color) {
                 this.text = txt;
                 this.time = Time.unscaledTime;
                 this.color = color;
             }
+            public override GUIContent getGuiContent() {
+                return new GUIContent(text);
+            }
+            private string text;
+        }
+
+        public class DynamicMessage : Message {
+            public DynamicMessage(Func<string> func) {
+                this.textFunc = func;
+                this.time = Time.unscaledTime;
+                this.color = Color.white;
+            }
+            
+            public DynamicMessage(Func<string> func, Color color) {
+                this.textFunc = func;
+                this.time = Time.unscaledTime;
+                this.color = color;
+            }
+            public override GUIContent getGuiContent() {
+                return new GUIContent(textFunc());
+            }
 
             // Token: 0x04001141 RID: 4417
-            public string text;
+            private Func<string> textFunc;
+        }
 
-            // Token: 0x04001142 RID: 4418
-            public float time;
-
-            // Token: 0x04001143 RID: 4419
-            public Color color;
+    }
+    public static class MessageListExtension {
+        public static float CalcHeight(this IEnumerable<DebugGUI.Message> messages, GUIStyle style, float width) {
+            float height = 0f;
+            foreach (DebugGUI.Message message in messages) {
+                height += message.CalcHeight(style, width);
+            }
+            return height;
         }
     }
 }

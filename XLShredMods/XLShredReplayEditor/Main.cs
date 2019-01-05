@@ -42,7 +42,6 @@ namespace XLShredReplayEditor {
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             enabled = value;
-            Debug.Log("Changed ReplayMod enabled to " + value);
             return true;
         }
         static void OnSaveGUI(UnityModManager.ModEntry modEntry) {
