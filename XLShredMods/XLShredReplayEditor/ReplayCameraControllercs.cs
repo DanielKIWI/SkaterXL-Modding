@@ -9,14 +9,15 @@ namespace XLShredReplayEditor {
         public void Awake() {
             this.manager = base.GetComponent<ReplayManager>();
             this.cameraTransform = PlayerController.Instance.cameraController._actualCam;
-            camera = cameraTransform.GetComponent<Camera>();
-            this.FreeMoveSpeed = 5f;
+            this.camera = cameraTransform.GetComponent<Camera>();
+            this.TranslationSpeed = 5f;
             this.OrbitMoveSpeed = 5f;
             this.RotateSpeed = 20f;
             this.FOVChangeSpeed = 20f;
             this.mode = ReplayCameraController.CameraMode.Orbit;
             this.keyStones = new List<KeyStone>();
             this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
+            this.FocusOffsetY = 0f;
         }
 
         public void Update() {
@@ -28,6 +29,20 @@ namespace XLShredReplayEditor {
             }
             if (PlayerController.Instance.inputController.player.GetButton("RB")) {
                 InputCameraFOV();
+                switch (this.mode) {
+                    case ReplayCameraController.CameraMode.Free:
+                        InputRollRotation();
+                        break;
+                    case ReplayCameraController.CameraMode.Orbit:
+                        InputFocusOffsetY();
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.cartesianCoords;
+                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
+                        break;
+                    case ReplayCameraController.CameraMode.Tripod:
+                        InputFocusOffsetY();
+                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
+                        break;
+                }
             } else {
                 switch (this.mode) {
                     case ReplayCameraController.CameraMode.Free:
@@ -36,15 +51,15 @@ namespace XLShredReplayEditor {
                         break;
                     case ReplayCameraController.CameraMode.Orbit:
                         this.InputOrbitMode();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.cartesianCoords;
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.cartesianCoords;
+                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                     case ReplayCameraController.CameraMode.Tripod:
                         this.InputFreePosition(true, true);
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
+                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                 }
-            }
+            }   
         }
 
         public void OnGUI() {
@@ -82,17 +97,23 @@ namespace XLShredReplayEditor {
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "RightStick: Rotate");
                     y += 20f;
+                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickX Rotate around forward axis");
+                    y += 20f;
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStickX + RightStickY: Orbit around Skater");
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStickY: Change Orbit Radius");
                     y += 20f;
+                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
+                    y += 20f;
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStick: Move(xz)");
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "DpadY or RightStickY: Move(y)");
+                    y += 20f;
+                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
                     y += 20f;
                     break;
             }
@@ -101,7 +122,7 @@ namespace XLShredReplayEditor {
             y += 20f;
             GUI.Label(new Rect(x, boxY + y, w, 20f), "Free Move Speed");
             y += 20f;
-            FreeMoveSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), FreeMoveSpeed, 0, 10);
+            TranslationSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), TranslationSpeed, 0, 10);
             y += 20f;
             GUI.Label(new Rect(x, boxY + y, w, 20f), "Free Rotate Speed");
             y += 20f;
@@ -126,6 +147,9 @@ namespace XLShredReplayEditor {
                 camera.fieldOfView += dpadX * FOVChangeSpeed * Time.unscaledDeltaTime;
             }
         }
+        private void InputFocusOffsetY() {
+            FocusOffsetY += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * TranslationSpeed * Time.unscaledDeltaTime;
+        }
         private void InputOrbitMode() {
             float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
             float axis2 = PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
@@ -133,7 +157,7 @@ namespace XLShredReplayEditor {
             float axis3 = PlayerController.Instance.inputController.player.GetAxis("RightStickY");
             this.orbitRadialCoord.phi = Mathf.Repeat(this.orbitRadialCoord.phi + axis * this.OrbitMoveSpeed / this.orbitRadialCoord.radius * Time.unscaledDeltaTime, 6.28318548f);
             this.orbitRadialCoord.theta = Mathf.Clamp(this.orbitRadialCoord.theta - axis3 * this.OrbitMoveSpeed / this.orbitRadialCoord.radius * Time.unscaledDeltaTime, 0.04f, 3.1f);
-            this.orbitRadialCoord.radius = Mathf.Clamp(this.orbitRadialCoord.radius - axis2 * this.FreeMoveSpeed * Time.unscaledDeltaTime, 0.5f, 100f);
+            this.orbitRadialCoord.radius = Mathf.Clamp(this.orbitRadialCoord.radius - axis2 * this.TranslationSpeed * Time.unscaledDeltaTime, 0.5f, 100f);
         }
 
         private void InputFreePosition(bool useDpadYForY = true, bool useRightStickForY = true) {
@@ -141,21 +165,25 @@ namespace XLShredReplayEditor {
             float axis2 = PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
             float num = 0f;
             if (useDpadYForY) {
-                num += PlayerController.Instance.inputController.player.GetAxis("DPadY") * FreeMoveSpeed * Time.unscaledDeltaTime;
+                num += PlayerController.Instance.inputController.player.GetAxis("DPadY") * TranslationSpeed * Time.unscaledDeltaTime;
             }
             if (useRightStickForY) {
-                num += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * FreeMoveSpeed * Time.unscaledDeltaTime;
+                num += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * TranslationSpeed * Time.unscaledDeltaTime;
             }
             Vector3 point = new Vector3(axis, num, axis2);
             Vector3 a = Quaternion.Euler(0f, this.cameraTransform.eulerAngles.y, 0f) * point;
-            this.cameraTransform.position += a * this.FreeMoveSpeed * Time.unscaledDeltaTime;
+            this.cameraTransform.position += a * this.TranslationSpeed * Time.unscaledDeltaTime;
         }
 
         private void InputFreeRotation() {
-            float axis = PlayerController.Instance.inputController.player.GetAxis("RightStickX");
-            float axis2 = PlayerController.Instance.inputController.player.GetAxis("RightStickY");
-            this.cameraTransform.rotation.SetLookRotation(this.cameraTransform.forward, Vector3.up);
-            this.cameraTransform.Rotate(-axis2 * this.RotateSpeed * Time.unscaledDeltaTime, axis * this.RotateSpeed * Time.unscaledDeltaTime, 0f);
+            float stickX = PlayerController.Instance.inputController.player.GetAxis("RightStickX");
+            float stickY = PlayerController.Instance.inputController.player.GetAxis("RightStickY");
+            this.cameraTransform.transform.rotation = Quaternion.AngleAxis(stickY * this.RotateSpeed * Time.unscaledDeltaTime, Vector3.ProjectOnPlane(-cameraTransform.right, Vector3.up)) * cameraTransform.rotation;
+            this.cameraTransform.transform.rotation = Quaternion.AngleAxis(stickX * this.RotateSpeed * Time.unscaledDeltaTime, Vector3.up) * cameraTransform.rotation;
+        }
+        private void InputRollRotation() {
+            float stickX = PlayerController.Instance.inputController.player.GetAxis("RightStickX");
+            this.cameraTransform.transform.rotation = Quaternion.AngleAxis(stickX * this.RotateSpeed * Time.unscaledDeltaTime, cameraTransform.forward) * cameraTransform.rotation;
         }
 
         private void InputModeChange() {
@@ -174,7 +202,7 @@ namespace XLShredReplayEditor {
             if (PlayerController.Instance.inputController.player.GetButton("X") && Time.unscaledTime - this.xDownTime > 1.5f) {
                 this.DeleteKeyStone();
             }
-            if (PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 1.5f) {
+            if (PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 0.5f) {
                 this.AddKeyStone(this.manager.playbackTime);
             }
         }
@@ -243,10 +271,10 @@ namespace XLShredReplayEditor {
                     item = new FreeCameraKeyStone(this.cameraTransform, cameraFOV, time);
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, cameraFOV, time);
+                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, cameraFOV, FocusOffsetY, time);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    item = new TripodCameraKeyStone(this.cameraTransform, cameraFOV, time);
+                    item = new TripodCameraKeyStone(this.cameraTransform, cameraFOV, FocusOffsetY, time);
                     break;
                 default:
                     return;
@@ -344,9 +372,11 @@ namespace XLShredReplayEditor {
 
         public Vector3Radial orbitRadialCoord;
 
+        public float FocusOffsetY;
+
         public float RotateSpeed;
 
-        public float FreeMoveSpeed;
+        public float TranslationSpeed;
 
         public float OrbitMoveSpeed;
         public float FOVChangeSpeed;

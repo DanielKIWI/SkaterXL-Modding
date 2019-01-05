@@ -22,7 +22,6 @@ namespace XLShredReplayEditor {
             this.recSkin.fontSize = 20;
             this.recSkin.normal.textColor = Color.red;
             this.recordedFrames = new List<ReplayRecordedFrame>();
-            this.MaxRecordedTime = 300f;
             this.startTime = 0f;
             this.endTime = 0f;
         }
@@ -38,8 +37,8 @@ namespace XLShredReplayEditor {
             }
             this.endTime += Time.deltaTime;
             this.RecordFrame();
-            if (this.endTime - startTime > this.MaxRecordedTime) {
-                this.startTime = this.endTime - this.MaxRecordedTime;
+            if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
+                this.startTime = this.endTime - Main.settings.MaxRecordedTime;
                 while (this.recordedFrames.Count > 0 && this.recordedFrames[0].time < this.startTime) {
                     this.recordedFrames.RemoveAt(0);
                 }
@@ -121,9 +120,6 @@ namespace XLShredReplayEditor {
 
 
         public float startTime;
-
-
-        public float MaxRecordedTime;
     }
 
 }

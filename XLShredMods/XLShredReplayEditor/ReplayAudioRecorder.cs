@@ -191,7 +191,9 @@ namespace XLShredReplayEditor {
             long prevPos = outputStream.Position;
 
             //TODO change start Position if startTime > 0, //TODO adjust playbackTime handling
-            outputStream.Position = 0;
+            long startPos = outputStream.Length - (long)(Main.settings.MaxRecordedTime * sampleRate);
+            outputStream.Position = startPos > 0 ? startPos : 0;
+            
             // add a header to the file so we can send it to the SoundPlayer
             this.AddHeader();
             // copy over the actual audio data
@@ -201,7 +203,7 @@ namespace XLShredReplayEditor {
 
             outputStream.Position = prevPos;
             // for debugging only
-            Debug.LogWarning("Finished saving to " + path + ", outputStream.Length: " + outputStream.Length + ", prevPos: " + prevPos);
+            Debug.Log("Finished saving to " + path + ", outputStream.Length: " + outputStream.Length + ", prevPos: " + prevPos);
             return true;
 
         }
@@ -216,7 +218,7 @@ namespace XLShredReplayEditor {
         private void AddHeader() {
             // calculate the number of samples in the data chunk
             long numberOfSamples = (outputStream.Length - outputStream.Position) / (BITS_PER_SAMPLE / 8);
-            Debug.LogWarning("(" + outputStream.Length + " - " + outputStream.Position + ") / (" + BITS_PER_SAMPLE + "/ 8) = numberOfSamples: " + numberOfSamples + ", samplesWritten * channels: " + (channels * samplesWritten) + ", channels: " + channels);
+            Debug.Log("(" + outputStream.Length + " - " + outputStream.Position + ") / (" + BITS_PER_SAMPLE + "/ 8) = numberOfSamples: " + numberOfSamples + ", samplesWritten * channels: " + (channels * samplesWritten) + ", channels: " + channels);
             // create a new MemoryStream that will have both the audio data AND the header
             BinaryWriter writer = new BinaryWriter(fileOutputStream);
 

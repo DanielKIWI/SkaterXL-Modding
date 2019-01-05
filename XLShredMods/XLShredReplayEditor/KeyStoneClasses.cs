@@ -11,11 +11,8 @@ namespace XLShredReplayEditor {
             t.position = this.position;
             t.rotation = this.rotation;
         }
-
         public float time;
-
         public Vector3 position;
-
         public Quaternion rotation;
         public float cameraFOV;
     }
@@ -48,61 +45,78 @@ namespace XLShredReplayEditor {
             this.cameraFOV = ks.cameraFOV;
         }
     }
-
+    public abstract class KeyStoneWithYOffset : KeyStone {
+        public float focusOffsetY;
+    }
     [Serializable]
-    public class OrbitCameraKeyStone : KeyStone {
-        public OrbitCameraKeyStone(Vector3Radial radialPos, float fov, float t) {
+    public class OrbitCameraKeyStone : KeyStoneWithYOffset {
+        public Vector3Radial radialPos;
+
+        public OrbitCameraKeyStone(Vector3Radial radialPos, float yOffset, float fov, float t) {
             this.radialPos = radialPos;
-            this.position = PlayerController.Instance.skaterController.skaterTransform.position + radialPos.cartesianCoords;
-            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
+            this.position = PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up + radialPos.cartesianCoords;
+            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up - this.position, Vector3.up);
             this.time = t;
             this.cameraFOV = fov;
+            this.focusOffsetY = yOffset;
         }
-        public OrbitCameraKeyStone(Vector3 v, float fov, float t) {
+        public OrbitCameraKeyStone(Vector3 v, float yOffset, float fov, float t) {
             this.radialPos = new Vector3Radial(v);
-            this.position = PlayerController.Instance.skaterController.skaterTransform.position + this.radialPos.cartesianCoords;
-            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
+            this.position = PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up + this.radialPos.cartesianCoords;
+            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up - this.position, Vector3.up);
             this.time = t;
             this.cameraFOV = fov;
+            this.focusOffsetY = yOffset;
         }
 
         public override void ApplyTo(Transform t) {
-            t.position = PlayerController.Instance.skaterController.skaterTransform.position + this.radialPos.cartesianCoords;
-            t.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
+            t.position = PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up + this.radialPos.cartesianCoords;
+            t.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
         }
 
         public static OrbitCameraKeyStone Lerp(OrbitCameraKeyStone a, OrbitCameraKeyStone b, float time) {
             float t = (time - a.time) / (b.time - a.time);
-            return new OrbitCameraKeyStone(Vector3Radial.Lerp(a.radialPos, b.radialPos, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
+            return new OrbitCameraKeyStone(Vector3Radial.Lerp(a.radialPos, b.radialPos, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), Mathf.Lerp(a.focusOffsetY, b.focusOffsetY, t), time);
         }
-
-
-        public Vector3Radial radialPos;
     }
 
     [Serializable]
-    public class TripodCameraKeyStone : KeyStone {
-        public TripodCameraKeyStone(Vector3 p, float fov, float t) {
+    public class TripodCameraKeyStone : KeyStoneWithYOffset {
+        public TripodCameraKeyStone(Vector3 p, float yOffset, float fov, float t) {
             this.position = p;
-            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
+            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up - this.position, Vector3.up);
             this.time = t;
             this.cameraFOV = fov;
+            this.focusOffsetY = yOffset;
         }
-        public TripodCameraKeyStone(Transform cameraTransform, float fov, float t) {
+        public TripodCameraKeyStone(Transform cameraTransform, float yOffset, float fov, float t) {
             this.position = cameraTransform.position;
-            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - this.position, Vector3.up);
+            this.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up - this.position, Vector3.up);
             this.time = t;
             this.cameraFOV = fov;
+            this.focusOffsetY = yOffset;
         }
 
         public override void ApplyTo(Transform t) {
             t.position = this.position;
-            t.LookAt(PlayerController.Instance.skaterController.skaterTransform, Vector3.up);
+            t.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
         }
 
         public static TripodCameraKeyStone Lerp(KeyStone a, KeyStone b, float time) {
             float t = (time - a.time) / (b.time - a.time);
-            return new TripodCameraKeyStone(Vector3.Lerp(a.position, b.position, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
+            float yOffset = 0f;
+            KeyStoneWithYOffset ayo = a as KeyStoneWithYOffset;
+            KeyStoneWithYOffset byo = b as KeyStoneWithYOffset;
+            if (ayo != null) {
+                if (byo != null) {
+                    yOffset = Mathf.Lerp(ayo.focusOffsetY, byo.focusOffsetY, t);
+                } else {
+                    yOffset = ayo.focusOffsetY;
+                }
+            } else if (byo != null) {
+                yOffset = byo.focusOffsetY;
+            }
+            return new TripodCameraKeyStone(Vector3.Lerp(a.position, b.position, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), yOffset, time);
         }
     }
 }

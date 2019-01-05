@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
-using Harmony12;
 using System.Reflection;
 using UnityModManagerNet;
 using System;
+#if !STANDALONE
 using XLShredLib;
+#endif
 
 namespace XLShredReplayEditor {
 
@@ -11,7 +12,7 @@ namespace XLShredReplayEditor {
     public class Settings : UnityModManager.ModSettings {
 
         public bool adjustAudioPitch = true;
-
+        public float MaxRecordedTime = 300f;
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
@@ -34,11 +35,13 @@ namespace XLShredReplayEditor {
             }
             ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
             PromptController.Instance.menuthing.enabled = false;
+#if !STANDALONE
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
             uiBoxKiwi.AddLabel("Start - Replay Editor", ModUIBox.Side.right, () => UnityModManager.FindMod("XLShredReplayEditor").Enabled);
             ModMenu.Instance.RegisterShowCursor("XLShredReplayEditor", () => {
                 return ReplayManager.CurrentState == ReplayState.PLAYBACK ? 1 : 0;
             });
+#endif
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             enabled = value;
