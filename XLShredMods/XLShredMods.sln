@@ -5,6 +5,7 @@ VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredReplayEditor", "XLShredReplayEditor\XLShredReplayEditor.csproj", "{22526BFF-FE10-4710-934C-98DA78F7125E}"
 	ProjectSection(ProjectDependencies) = postProject
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D} = {1F40B834-E402-4DC0-8724-3C065F3BB83D}
 		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
 	EndProjectSection
 EndProject
@@ -14,6 +15,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugGUI", "DebugGUI\DebugG
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredLib", "..\..\XLShredLoader\XLShredLib\XLShredLib.csproj", "{421325E5-D304-4B9B-B207-E511E4423F56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredMenuMod", "..\..\XLShredLoader\XLShredMenuMod\XLShredMenuMod.csproj", "{1F40B834-E402-4DC0-8724-3C065F3BB83D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredAdjustAudioPitch", "XLShredAdjustAudioPitch\XLShredAdjustAudioPitch.csproj", "{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C077EC3D-3AF2-4F54-8C08-BE4210EDAB57}"
+	ProjectSection(SolutionItems) = preProject
+		config.json = config.json
+		post_build.ps1 = post_build.ps1
+		pre_build.ps1 = pre_build.ps1
+		repository.json = repository.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,13 +49,22 @@ Global
 		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
-		{D6B64159-F670-4BCC-951E-C1C192F498F9}.Standalone|Any CPU.Build.0 = Release|Any CPU
 		{421325E5-D304-4B9B-B207-E511E4423F56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{421325E5-D304-4B9B-B207-E511E4423F56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{421325E5-D304-4B9B-B207-E511E4423F56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{421325E5-D304-4B9B-B207-E511E4423F56}.Release|Any CPU.Build.0 = Release|Any CPU
 		{421325E5-D304-4B9B-B207-E511E4423F56}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
-		{421325E5-D304-4B9B-B207-E511E4423F56}.Standalone|Any CPU.Build.0 = Release|Any CPU
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F40B834-E402-4DC0-8724-3C065F3BB83D}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
+		{F6EFAD5C-B930-4BEC-BF3F-F60417440E6A}.Standalone|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityModManagerNet;
 #if !STANDALONE
 using XLShredLib;
 #endif
@@ -36,6 +37,11 @@ namespace XLShredReplayEditor {
         public ReplayAudioRecorder audioRecorder;
 
         public float playbackTime;
+        public float displayedPlaybackTime {
+            get {
+                return playbackTime - recorder.startTime;
+            }
+        }
         private float playbackSpeed;
         public float playbackTimeScale {
             get {
@@ -116,19 +122,19 @@ namespace XLShredReplayEditor {
                 return;
             }
             this.CheckInput();
+            this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
             if (CurrentState == ReplayState.PLAYBACK) {
-                if (this.playbackTime < this.clipStartTime && this.playbackSpeed < 0f) {
+                if (this.playbackTime < this.clipStartTime && this.playbackTimeScale < 0f) {
                     this.isPlaying = false;
                     this.playbackTime = this.clipStartTime;
-                } else if (this.playbackTime > this.clipEndTime && this.playbackSpeed > 0f) {
+                } else if (this.playbackTime > this.clipEndTime && this.playbackTimeScale > 0f) {
                     this.isPlaying = false;
                     this.playbackTime = this.clipEndTime;
                 }
+                //Settin SkaterTransforms
                 this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
                 this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
-                float num = this.playbackTime;
             }
-            this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
         }
 
 
@@ -206,11 +212,11 @@ namespace XLShredReplayEditor {
                     GUI.Box(position, "");
                     GUI.Label(position, string.Concat(new object[]
                     {
-                    this.playbackTime.ToString("0.#"),
+                    (displayedPlaybackTime).ToString("0.#"),
                     "s / ",
-                    this.recorder.endTime.ToString("0.#"),
+                    (this.recorder.recordedTime).ToString("0.#"),
                     "s     ",
-                    this.playbackSpeed.ToString("0.#"),
+                    this.playbackTimeScale.ToString("0.#"),
                     "s/s"
                     }), this.fontMed);
                     float num2 = 40f;
@@ -295,7 +301,6 @@ namespace XLShredReplayEditor {
 #else
             XLShredDataRegistry.SetData("blendermf.ReplayModMenuCompatibility", "isReplayEditorActive", false);
             ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
-            ModMenu.Instance.UnregisterShowCursor(Main.modId);
             Time.timeScale = 1f;
 #endif
         }

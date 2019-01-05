@@ -59,9 +59,9 @@ namespace XLShredReplayEditor {
         public void Update() {
             if (ReplayManager.CurrentState == ReplayState.PLAYBACK) {
                 playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
-                if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.playbackTime) > 0.1f) {
+                if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
-                        SetPlaybackTime(ReplayManager.Instance.playbackTime);
+                        SetPlaybackTime(ReplayManager.Instance.displayedPlaybackTime);
                     } catch (Exception e) { Debug.LogException(e); }
                 }
             }
@@ -146,8 +146,6 @@ namespace XLShredReplayEditor {
             int sampleIndex = (int)sampleOffset;
             if (sampleIndex < 0) sampleIndex = 0;
             float scale = Time.timeScale;
-            if (scale != 1f)
-                Debug.Log("scale: " + scale);
             while (sampleIndex < sampleCount) {
                 for (int c = 0; c < channels; c++) {
                     short value = (short)(Mathf.Clamp(audioData[sampleIndex * channels + c] * volumeFactor, -1f, 1f) * (float)Int16.MaxValue);
@@ -189,20 +187,21 @@ namespace XLShredReplayEditor {
             }
             fileOutputStream = File.OpenWrite(path);
             long prevPos = outputStream.Position;
-
-            //TODO change start Position if startTime > 0, //TODO adjust playbackTime handling
-            long startPos = outputStream.Length - (long)(Main.settings.MaxRecordedTime * sampleRate);
+            
+            long startPos = outputStream.Length - (long)(Main.settings.MaxRecordedTime * sampleRate * channels * BITS_PER_SAMPLE / 8);
+            //Making sure startPos is even
+            if (startPos % 2 == 1) startPos += 1;
             outputStream.Position = startPos > 0 ? startPos : 0;
             
             // add a header to the file so we can send it to the SoundPlayer
             this.AddHeader();
             // copy over the actual audio data
-            this.outputStream.WriteTo(fileOutputStream);
+            this.outputStream.CopyTo(fileOutputStream);
 
             fileOutputStream.Close();
 
             outputStream.Position = prevPos;
-            // for debugging only
+
             Debug.Log("Finished saving to " + path + ", outputStream.Length: " + outputStream.Length + ", prevPos: " + prevPos);
             return true;
 
@@ -268,7 +267,7 @@ namespace XLShredReplayEditor {
                     playBackAudioSource.clip = playBackAudioClip;
                     Debug.Log("Loaded Clip: " + playBackAudioSource.clip + ", length: " + playBackAudioSource.clip.length);
                     playBackAudioSource.Play();
-                    playBackAudioSource.time = ReplayManager.Instance.playbackTime;
+                    playBackAudioSource.time = ReplayManager.Instance.displayedPlaybackTime;
                 } catch (Exception e) {
                     Debug.LogException(e);
                 }

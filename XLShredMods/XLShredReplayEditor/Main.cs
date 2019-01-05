@@ -4,15 +4,15 @@ using UnityModManagerNet;
 using System;
 #if !STANDALONE
 using XLShredLib;
+using XLShredLib.UI;
 #endif
 
 namespace XLShredReplayEditor {
 
     [Serializable]
     public class Settings : UnityModManager.ModSettings {
-
-        public bool adjustAudioPitch = true;
-        public float MaxRecordedTime = 300f;
+        
+        public float MaxRecordedTime = 120f;
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
@@ -25,21 +25,20 @@ namespace XLShredReplayEditor {
         public static String modId;
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
-            try {
-                settings = Settings.Load<Settings>(modEntry);
-                modId = modEntry.Info.Id;
-                modEntry.OnSaveGUI = OnSaveGUI;
-                modEntry.OnToggle = OnToggle;
-            } catch (Exception e) {
-                Debug.LogException(e);
-            }
+            settings = Settings.Load<Settings>(modEntry);
+            modId = modEntry.Info.Id;
+            modEntry.OnSaveGUI = OnSaveGUI;
+            modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnSettingsGUI;
             ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
+            //Disabling the Tutorial
             PromptController.Instance.menuthing.enabled = false;
 #if !STANDALONE
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
-            uiBoxKiwi.AddLabel("Start - Replay Editor", ModUIBox.Side.right, () => UnityModManager.FindMod("XLShredReplayEditor").Enabled);
-            ModMenu.Instance.RegisterShowCursor("XLShredReplayEditor", () => {
-                return ReplayManager.CurrentState == ReplayState.PLAYBACK ? 1 : 0;
+            uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
+            uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
+            ModMenu.Instance.RegisterShowCursor(modId, () => {
+                return (ReplayManager.CurrentState == ReplayState.PLAYBACK) ? 1 : 0;
             });
 #endif
         }
@@ -49,6 +48,12 @@ namespace XLShredReplayEditor {
         }
         static void OnSaveGUI(UnityModManager.ModEntry modEntry) {
             settings.Save(modEntry);
+        }
+        static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Maximum Time to be recorded: ", GUILayout.ExpandWidth(false));
+            settings.MaxRecordedTime = GUILayout.HorizontalSlider(settings.MaxRecordedTime, 0, 300);
+            GUILayout.EndHorizontal();
         }
     }
 }

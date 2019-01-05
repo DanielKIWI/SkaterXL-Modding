@@ -120,6 +120,11 @@ namespace XLShredReplayEditor {
 
 
         public float startTime;
+        public float recordedTime {
+            get {
+                return endTime - startTime;
+            }
+        }
     }
 
 }

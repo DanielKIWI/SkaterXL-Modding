@@ -237,6 +237,13 @@ namespace XLShredReplayEditor {
                 this.keyStones[0].ApplyTo(this.cameraTransform);
                 return;
             }
+            if (manager.playbackTime < this.keyStones[0].time) {
+                this.keyStones[0].ApplyTo(this.cameraTransform);
+                return;
+            } else if (manager.playbackTime > keyStones[keyStones.Count - 1].time) {
+                this.keyStones[keyStones.Count - 1].ApplyTo(this.cameraTransform);
+                return;
+            }
             int num = this.FindLeftKeyStoneIndex();
             KeyStone keyStone = this.keyStones[num];
             KeyStone keyStone2 = this.keyStones[num + 1];
@@ -268,13 +275,13 @@ namespace XLShredReplayEditor {
             KeyStone item;
             switch (this.mode) {
                 case ReplayCameraController.CameraMode.Free:
-                    item = new FreeCameraKeyStone(this.cameraTransform, cameraFOV, time);
+                    item = new FreeCameraKeyStone(this.cameraTransform, camera.fieldOfView, time);
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, cameraFOV, FocusOffsetY, time);
+                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, camera.fieldOfView, FocusOffsetY, time);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    item = new TripodCameraKeyStone(this.cameraTransform, cameraFOV, FocusOffsetY, time);
+                    item = new TripodCameraKeyStone(this.cameraTransform, camera.fieldOfView, FocusOffsetY, time);
                     break;
                 default:
                     return;
@@ -380,10 +387,7 @@ namespace XLShredReplayEditor {
 
         public float OrbitMoveSpeed;
         public float FOVChangeSpeed;
-        private float cameraFOV;
         private float defaultCameraFOV;
-
-        private bool dpadCentered = true;
 
         private float xDownTime;
 

@@ -1,12 +1,12 @@
-{
-  "Id": "kiwi.XLShredReplayEditor",
-  "DisplayName": "XL Shred Replay Editor",
+﻿{
+  "Id": "kiwi.XLShredAdjustAudioPitch",
+  "DisplayName": "XL Shred Adjust Audio Pitch",
   "Author": "Kiwi",
-  "Version": "0.0.3",
+  "Version": "0.0.1",
   "ManagerVersion": "0.12.3",
   "Requirements": [ "blendermf.XLShredMenu-0.0.4" ],
-  "AssemblyName": "XLShredReplayEditor.dll",
-  "EntryMethod": "XLShredReplayEditor.Main.Load",
+  "AssemblyName": "XLShredAdjustAudioPitch.dll",
+  "EntryMethod": "XLShredAdjustAudioPitch.Main.Load",
   "HomePage": "https://github.com/DanielKIWI/SkaterXL-Modding",
   "Repository": "https://raw.githubusercontent.com/DanielKIWI/SkaterXL-Modding/master/XLShredMods/repository.json"
 }

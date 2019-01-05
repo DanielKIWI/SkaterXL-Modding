@@ -14,10 +14,5 @@ namespace XLShredReplayEditor {
             if (receiver != null)
                 receiver.Invoke(data, channels, audioSource);
         }
-        
-        public void Update() {
-            if (Main.settings.adjustAudioPitch)
-                audioSource.pitch = Time.timeScale;
-        }
     }
 }
