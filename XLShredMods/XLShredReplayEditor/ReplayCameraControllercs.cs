@@ -278,10 +278,10 @@ namespace XLShredReplayEditor {
                     item = new FreeCameraKeyStone(this.cameraTransform, camera.fieldOfView, time);
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, camera.fieldOfView, FocusOffsetY, time);
+                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    item = new TripodCameraKeyStone(this.cameraTransform, camera.fieldOfView, FocusOffsetY, time);
+                    item = new TripodCameraKeyStone(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time);
                     break;
                 default:
                     return;

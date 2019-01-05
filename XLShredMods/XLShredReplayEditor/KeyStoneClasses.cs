@@ -76,7 +76,7 @@ namespace XLShredReplayEditor {
 
         public static OrbitCameraKeyStone Lerp(OrbitCameraKeyStone a, OrbitCameraKeyStone b, float time) {
             float t = (time - a.time) / (b.time - a.time);
-            return new OrbitCameraKeyStone(Vector3Radial.Lerp(a.radialPos, b.radialPos, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), Mathf.Lerp(a.focusOffsetY, b.focusOffsetY, t), time);
+            return new OrbitCameraKeyStone(Vector3Radial.Lerp(a.radialPos, b.radialPos, t), Mathf.Lerp(a.focusOffsetY, b.focusOffsetY, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
         }
     }
 
