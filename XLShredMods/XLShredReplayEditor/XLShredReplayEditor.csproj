@@ -133,6 +133,9 @@
       <Name>XLShredLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="IdeasForFeatures.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\"</PostBuildEvent>

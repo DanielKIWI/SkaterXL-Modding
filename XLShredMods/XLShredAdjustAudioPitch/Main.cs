@@ -11,16 +11,20 @@ namespace XLShredAdjustAudioPitch {
     static class Main {
         public static List<AudioSourcePitchAdjuster> pitchAdjusters;
         public static bool enabled;
+        public static bool doPitch;
         public static String modId;
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
             modId = modEntry.Info.Id;
             modEntry.OnToggle = OnToggle;
             pitchAdjusters = new List<AudioSourcePitchAdjuster>();
-
+            doPitch = true;
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
-            uiBoxKiwi.AddToggle("Adjust Audio Pitch corresponding to TimeScale", Side.left, () => enabled, true, (toggle) => {
-                OnToggle(modEntry, toggle);
+            uiBoxKiwi.AddToggle("Adjust Audio Pitch corresponding to TimeScale", Side.left, () => enabled, true, (v) => {
+                doPitch = v;
+                foreach (AudioSourcePitchAdjuster pitchAdjuster in pitchAdjusters) {
+                    pitchAdjuster.enabled = v;
+                }
             });
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
