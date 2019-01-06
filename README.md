@@ -17,6 +17,12 @@
 Start opens the ReplayEditor. B closes it.
 All other Controlls are displayed on the right, while the Editor is active.
 
+### Session Marker Manager
+#### Features:
+- Save manage and restore multiple Session Markers.
+#### Controlls:
+Press Key T to open the Menu. The rest sould be self-explanatory.
+
 ## Old Mods without UnityModManager
 Classes inside this files have to be inserted into the Assembly-CSharp.dll manually.
 ### SkateTrainer
