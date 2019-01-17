@@ -34,7 +34,7 @@ namespace XLShredReplayEditor {
             //Disabling the Tutorial
             PromptController.Instance.menuthing.enabled = false;
 #if !STANDALONE
-            ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
+            ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("kiwi", "Kiwi");
             uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
             uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
             ModMenu.Instance.RegisterShowCursor(modId, () => {

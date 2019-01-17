@@ -35,7 +35,7 @@ namespace XLShredReplayEditor {
                         break;
                     case ReplayCameraController.CameraMode.Orbit:
                         InputFocusOffsetY();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.cartesianCoords;
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.CartesianCoords;
                         this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                     case ReplayCameraController.CameraMode.Tripod:
@@ -51,7 +51,7 @@ namespace XLShredReplayEditor {
                         break;
                     case ReplayCameraController.CameraMode.Orbit:
                         this.InputOrbitMode();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.cartesianCoords;
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.CartesianCoords;
                         this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                     case ReplayCameraController.CameraMode.Tripod:
@@ -216,6 +216,7 @@ namespace XLShredReplayEditor {
                 return;
             }
             this.keyStones.RemoveAt(index);
+            KeyStoneCurves.RemoveKeyframes(index);
         }
 
         private bool FindKeyStoneDeleteIndex(out int index) {
@@ -234,27 +235,28 @@ namespace XLShredReplayEditor {
                 return;
             }
             if (this.keyStones.Count == 1) {
-                this.keyStones[0].ApplyTo(this.cameraTransform);
+                //this.keyStones[0].ApplyTo(this.cameraTransform);
                 return;
             }
             if (manager.playbackTime < this.keyStones[0].time) {
-                this.keyStones[0].ApplyTo(this.cameraTransform);
+                //this.keyStones[0].ApplyTo(this.cameraTransform);
                 return;
             } else if (manager.playbackTime > keyStones[keyStones.Count - 1].time) {
-                this.keyStones[keyStones.Count - 1].ApplyTo(this.cameraTransform);
+                //this.keyStones[keyStones.Count - 1].ApplyTo(this.cameraTransform);
                 return;
             }
             int num = this.FindLeftKeyStoneIndex();
-            KeyStone keyStone = this.keyStones[num];
+            KeyStone keyStone = this.keyStones[num]; 
             KeyStone keyStone2 = this.keyStones[num + 1];
             if (keyStone is FreeCameraKeyStone || keyStone2 is FreeCameraKeyStone) {
-                FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                //FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                KeyStoneCurves.EvaluateCurves(this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
             if (keyStone is TripodCameraKeyStone || keyStone2 is TripodCameraKeyStone) {
-                TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                //TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
             if (keyStone is OrbitCameraKeyStone && keyStone2 is OrbitCameraKeyStone) {
-                OrbitCameraKeyStone.Lerp(keyStone as OrbitCameraKeyStone, keyStone2 as OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                //OrbitCameraKeyStone.Lerp(keyStone as OrbitCameraKeyStone, keyStone2 as OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
         }
 
@@ -287,6 +289,7 @@ namespace XLShredReplayEditor {
                     return;
             }
             this.keyStones.Insert(index, item);
+            keyStones[index].AddKeyframes();
         }
 
         private int FindKeyStoneInsertIndex(float time) {
