@@ -35,7 +35,7 @@ namespace XLShredReplayEditor {
                         break;
                     case ReplayCameraController.CameraMode.Orbit:
                         InputFocusOffsetY();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.CartesianCoords;
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.CartesianCoords;
                         this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                     case ReplayCameraController.CameraMode.Tripod:
@@ -105,6 +105,8 @@ namespace XLShredReplayEditor {
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStickY: Change Orbit Radius");
                     y += 20f;
+                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickX Change Height");
+                    y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
                     y += 20f;
                     break;
@@ -112,6 +114,8 @@ namespace XLShredReplayEditor {
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStick: Move(xz)");
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "DpadY or RightStickY: Move(y)");
+                    y += 20f;
+                    GUI.Label(new Rect(x, boxY + y, w, 20f), "DpadY: Offset Height");
                     y += 20f;
                     GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
                     y += 20f;
@@ -149,7 +153,9 @@ namespace XLShredReplayEditor {
         }
         private void InputFocusOffsetY() {
             FocusOffsetY += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * TranslationSpeed * Time.unscaledDeltaTime;
+            orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - (PlayerController.Instance.skaterController.transform.position + FocusOffsetY * Vector3.up));
         }
+
         private void InputOrbitMode() {
             float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
             float axis2 = PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
@@ -289,7 +295,6 @@ namespace XLShredReplayEditor {
                     return;
             }
             this.keyStones.Insert(index, item);
-            keyStones[index].AddKeyframes();
         }
 
         private int FindKeyStoneInsertIndex(float time) {

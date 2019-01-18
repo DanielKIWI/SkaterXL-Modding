@@ -30,7 +30,7 @@ namespace XLShredReplayEditor {
     }
 
     public enum CurveKeyType {
-        PosX, PosY, PosZ, SphereRotTheta, SphereRotPhi, SphereRotAngle, Fov, Radius, FocusYOffset, FreeCam, OrbitCam, TripodCam
+        PosX, PosY, PosZ, SphereRotTheta, SphereRotPhi, SphereRotAngle, lookSphereRotTheta, lookSphereRotPhi, lookSphereRotAngle, Fov, Radius, FocusYOffset, FreeCam, OrbitCam, TripodCam
     }
 
     public class KeyStoneResult {
@@ -119,6 +119,7 @@ namespace XLShredReplayEditor {
 
     public abstract class KeyStoneWithYOffset : KeyStone {
         public float focusOffsetY;
+        public QuaternionSphereData baseRotation;
     }
     #endregion
 
@@ -131,26 +132,35 @@ namespace XLShredReplayEditor {
             rotation = new QuaternionSphereData(cameraTransform.rotation);
             this.time = time;
             this.fov = fov;
+            AddKeyframes();
         }
 
-        public FreeCameraKeyStone(KeyStone ks) {
-            position = ks.position;
-            rotation = ks.rotation;
+        private float CalcFocusYOffset() {
+            Vector3 camToPlayer = PlayerController.Instance.skaterController.skaterTransform.position - position;
+            Quaternion camToPlayerLookRotation = Quaternion.LookRotation(camToPlayer, Vector3.up);
+            Quaternion rotOffset = Quaternion.FromToRotation(camToPlayerLookRotation * Vector3.up, rotation.ToQuaternion() * Vector3.up);
+            Vector3 n = Vector3.Cross(camToPlayer, Vector3.up);
+            Vector3 alignedLookVec = Vector3.ProjectOnPlane(position, (rotOffset * camToPlayer)).normalized;
 
-            time = ks.time;
-            fov = ks.fov;
+            Vector3 lookVec = alignedLookVec * (camToPlayer.x / (alignedLookVec.x - (position - PlayerController.Instance.skaterController.skaterTransform.position).normalized.x));
+            return Vector3.Project(lookVec, Vector3.up).magnitude;
         }
 
         public override void AddKeyframes() {
+            QuaternionSphereData camToPlayerLookRotation = new QuaternionSphereData(Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - position, Vector3.up));
             keys[CurveKeyType.PosX] = new Keyframe(time, position.x);
             keys[CurveKeyType.PosY] = new Keyframe(time, position.y);
             keys[CurveKeyType.PosZ] = new Keyframe(time, position.z);
             keys[CurveKeyType.SphereRotTheta] = new Keyframe(time, rotation.sphereAxis.theta);
             keys[CurveKeyType.SphereRotPhi] = new Keyframe(time, rotation.sphereAxis.phi);
             keys[CurveKeyType.SphereRotAngle] = new Keyframe(time, rotation.angle);
+            keys[CurveKeyType.lookSphereRotTheta] = new Keyframe(time, camToPlayerLookRotation.sphereAxis.theta);
+            keys[CurveKeyType.lookSphereRotPhi] = new Keyframe(time, camToPlayerLookRotation.sphereAxis.phi);
+            keys[CurveKeyType.lookSphereRotAngle] = new Keyframe(time, rotation.angle);
             keys[CurveKeyType.Fov] = new Keyframe(time, fov);
-            keys[CurveKeyType.Radius] = new Keyframe(time, 0f);
-            keys[CurveKeyType.FocusYOffset] = new Keyframe(time, 0f);
+            keys[CurveKeyType.Radius] = new Keyframe(time, 
+                (position - PlayerController.Instance.skaterController.skaterTransform.position).magnitude);
+            keys[CurveKeyType.FocusYOffset] = new Keyframe(time, CalcFocusYOffset());
             keys[CurveKeyType.FreeCam] = new Keyframe(time, 1f);
             keys[CurveKeyType.OrbitCam] = new Keyframe(time, 0f);
             keys[CurveKeyType.TripodCam] = new Keyframe(time, 0f);
@@ -176,15 +186,38 @@ namespace XLShredReplayEditor {
     }
     [Serializable]
     public class OrbitCameraKeyStone : KeyStoneWithYOffset {
-        public Vector3Radial radialPos;
+        public float radius;
+        public Vector3 focusLocation;
 
         public OrbitCameraKeyStone(Vector3Radial radialPos, float yOffset, float fov, float t) {
-            this.radialPos = radialPos;
-            position = PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up + radialPos.CartesianCoords;
+            this.radius = radialPos.CartesianCoords.magnitude;
+            position = PlayerController.Instance.skaterController.skaterTransform.position;
             rotation = new QuaternionSphereData(Quaternion.LookRotation(-radialPos.CartesianCoords, Vector3.up));
             this.time = t;
             this.fov = fov;
             this.focusOffsetY = yOffset;
+            AddKeyframes();
+        }
+
+        public override void AddKeyframes() {
+            Vector3 calculatedPosition = PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up + rotation.ToQuaternion() * -Vector3.forward * radius;
+            keys[CurveKeyType.PosX] = new Keyframe(time, calculatedPosition.x);
+            keys[CurveKeyType.PosY] = new Keyframe(time, calculatedPosition.y);
+            keys[CurveKeyType.PosZ] = new Keyframe(time, calculatedPosition.z);
+            keys[CurveKeyType.SphereRotTheta] = new Keyframe(time, rotation.sphereAxis.theta);
+            keys[CurveKeyType.SphereRotPhi] = new Keyframe(time, rotation.sphereAxis.phi);
+            keys[CurveKeyType.SphereRotAngle] = new Keyframe(time, rotation.angle);
+            keys[CurveKeyType.lookSphereRotTheta] = new Keyframe(time, rotation.sphereAxis.theta);
+            keys[CurveKeyType.lookSphereRotPhi] = new Keyframe(time, rotation.sphereAxis.phi);
+            keys[CurveKeyType.lookSphereRotAngle] = new Keyframe(time, rotation.angle);
+            keys[CurveKeyType.Fov] = new Keyframe(time, fov);
+            keys[CurveKeyType.Radius] = new Keyframe(time, radius);
+            keys[CurveKeyType.FocusYOffset] = new Keyframe(time, focusOffsetY);
+            keys[CurveKeyType.FreeCam] = new Keyframe(time, 0f);
+            keys[CurveKeyType.OrbitCam] = new Keyframe(time, 1f);
+            keys[CurveKeyType.TripodCam] = new Keyframe(time, 0f);
+
+            base.AddKeyframes();
         }
         /*
         public override void ApplyTo(Transform t) {
@@ -216,12 +249,35 @@ namespace XLShredReplayEditor {
     public class TripodCameraKeyStone : KeyStoneWithYOffset {
         public TripodCameraKeyStone(Transform cameraTransform, float yOffset, float fov, float t) {
             position = cameraTransform.position;
-            //rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + yOffset * Vector3.up - position, Vector3.up);
+            rotation = new QuaternionSphereData(Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position - position, Vector3.up));
             this.time = t;
             this.fov = fov;
             this.focusOffsetY = yOffset;
+
+            AddKeyframes();
         }
 
+        public override void AddKeyframes() {
+            QuaternionSphereData calculatedSphereRot = new QuaternionSphereData(Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up - position, Vector3.up));
+            keys[CurveKeyType.PosX] = new Keyframe(time, position.x);
+            keys[CurveKeyType.PosY] = new Keyframe(time, position.y);
+            keys[CurveKeyType.PosZ] = new Keyframe(time, position.z);
+            keys[CurveKeyType.SphereRotTheta] = new Keyframe(time, calculatedSphereRot.sphereAxis.theta);
+            keys[CurveKeyType.SphereRotPhi] = new Keyframe(time, calculatedSphereRot.sphereAxis.phi);
+            keys[CurveKeyType.SphereRotAngle] = new Keyframe(time, calculatedSphereRot.angle);
+            keys[CurveKeyType.lookSphereRotTheta] = new Keyframe(time, rotation.sphereAxis.theta);
+            keys[CurveKeyType.lookSphereRotPhi] = new Keyframe(time, rotation.sphereAxis.phi);
+            keys[CurveKeyType.lookSphereRotAngle] = new Keyframe(time, rotation.angle);
+            keys[CurveKeyType.Fov] = new Keyframe(time, fov);
+            keys[CurveKeyType.Radius] = new Keyframe(time,
+                (position - PlayerController.Instance.skaterController.skaterTransform.position).magnitude);
+            keys[CurveKeyType.FocusYOffset] = new Keyframe(time, focusOffsetY);
+            keys[CurveKeyType.FreeCam] = new Keyframe(time, 0f);
+            keys[CurveKeyType.OrbitCam] = new Keyframe(time, 0f);
+            keys[CurveKeyType.TripodCam] = new Keyframe(time, 1f);
+
+            base.AddKeyframes();
+        }
         /*
         public override void ApplyTo(Transform t) {
             t.position = position;
