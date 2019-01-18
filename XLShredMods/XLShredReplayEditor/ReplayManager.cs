@@ -16,9 +16,14 @@ namespace XLShredReplayEditor {
         private static ReplayState _currentState = ReplayState.LOADING;
         public static ReplayState CurrentState { get { return _currentState; } }
         public static void SetState(ReplayState s) {
+            if (_currentState == s) return;
             Debug.Log("Changed ReplayState to " + s.ToString());
+            ReplayState oldState = _currentState;
             _currentState = s;
+            StateChangedEvent(s, oldState);
         }
+        public delegate void ReplayStateChangedEventHandler(ReplayState newState, ReplayState oldState);
+        public static event ReplayStateChangedEventHandler StateChangedEvent;
 
         public static ReplayManager Instance {
             get {
@@ -82,6 +87,7 @@ namespace XLShredReplayEditor {
         }
 
         public void Awake() {
+            DontDestroyOnLoad(gameObject);
             ReplayManager._instance = this;
             if (this.recorder == null) {
                 this.recorder = base.gameObject.AddComponent<ReplayRecorder>();
@@ -95,7 +101,8 @@ namespace XLShredReplayEditor {
                 this.saver.enabled = false;
             }
             if (audioRecorder == null) {
-                audioRecorder = DeckSounds.Instance.gameObject.AddComponent<ReplayAudioRecorder>();
+                audioRecorder = base.gameObject.AddComponent<ReplayAudioRecorder>();
+                audioRecorder.enabled = true;
             }
             this.guiColor = Color.white;
             this.fontLarge = new GUIStyle();
