@@ -116,7 +116,7 @@ namespace XLShredReplayEditor {
             } else if (byo != null) {
                 yOffset = byo.focusOffsetY;
             }
-            return new TripodCameraKeyStone(Vector3.Lerp(a.position, b.position, t), Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), yOffset, time);
+            return new TripodCameraKeyStone(Vector3.Lerp(a.position, b.position, t), yOffset, Mathf.Lerp(a.cameraFOV, b.cameraFOV, t), time);
         }
     }
 }

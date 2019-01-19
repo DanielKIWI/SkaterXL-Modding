@@ -119,6 +119,7 @@ namespace XLShredReplayEditor {
         public void Start() {
             if (Main.enabled) {
                 ReplayManager.SetState(ReplayState.RECORDING);
+                audioRecorder.StartRecording();
             }
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
@@ -295,8 +296,9 @@ namespace XLShredReplayEditor {
 
 
         public void ExitReplayEditor() {
-            ReplayManager.SetState(ReplayState.RECORDING);
+            ReplayManager.SetState(ReplayState.LOADING);
             audioRecorder.StopPlayback();
+            audioRecorder.StartRecording();
             PlayerController.Instance.animationController.skaterAnim.enabled = true;
             PlayerController.Instance.cameraController.enabled = true;
             InputController.Instance.enabled = true;
@@ -311,6 +313,7 @@ namespace XLShredReplayEditor {
             ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
             Time.timeScale = 1f;
 #endif
+            ReplayManager.SetState(ReplayState.RECORDING);
         }
 
 

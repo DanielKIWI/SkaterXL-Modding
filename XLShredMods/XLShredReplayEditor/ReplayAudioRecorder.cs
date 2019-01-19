@@ -98,22 +98,9 @@ namespace XLShredReplayEditor {
             }
             tmpMemoryStream = new MemoryStream();//new FileStream(tempAudioPath, FileMode.Truncate, FileAccess.ReadWrite, FileShare.ReadWrite, 2 << 22, true);
             tmpFileWriter = new BinaryWriter(tmpMemoryStream);
-            ReplayManager.StateChangedEvent += OnReplayStateChange;
             dspEndTime = 0f;
         }
-
-        public void OnReplayStateChange(ReplayState newState, ReplayState oldState) {
-            switch (newState) {
-                case ReplayState.LOADING:
-                    return;
-                case ReplayState.PLAYBACK:
-                    return;
-                case ReplayState.RECORDING:
-                    StopPlayback();
-                    StartRecording();
-                    return;
-            }
-        }
+        
         public void OnDisable() {
             if (tmpMemoryStream != null)
                 tmpMemoryStream.Close();
@@ -187,12 +174,9 @@ namespace XLShredReplayEditor {
             fileStreamThread.Start();
         }
         public IEnumerator StartPlayback() {
-            if (fileStreamThread != null) {
-                fileStreamThread.Abort();
-                fileStreamThread = null;
-            }
             SaveToTemp();
             yield return LoadFromTemp();
+            SetPlaybackTime(ReplayManager.Instance.displayedPlaybackTime);
         }
         public void StopPlayback() {
             playBackAudioSource.Stop();
@@ -261,6 +245,10 @@ namespace XLShredReplayEditor {
             if (tmpMemoryStream.Length <= 0) {
                 Debug.LogWarning("There is no audio data to save!");
                 return false;
+            }
+            if (fileStreamThread != null) {
+                fileStreamThread.Abort();
+                fileStreamThread = null;
             }
             if (File.Exists(path)) {
                 File.Delete(path);
