@@ -9,18 +9,18 @@ using XLShredLib;
 namespace XLShredReplayEditor {
 
     public enum ReplayState {
-        LOADING, RECORDING, PLAYBACK
+        LOADING, RECORDING, PLAYBACK, DISABLED
     }
 
     public class ReplayManager : MonoBehaviour {
-        private static ReplayState _currentState = ReplayState.LOADING;
+        private static ReplayState _currentState = ReplayState.DISABLED;
         public static ReplayState CurrentState { get { return _currentState; } }
         public static void SetState(ReplayState s) {
             if (_currentState == s) return;
             Debug.Log("Changed ReplayState to " + s.ToString());
             ReplayState oldState = _currentState;
             _currentState = s;
-            StateChangedEvent(s, oldState);
+            StateChangedEvent?.Invoke(s, oldState);
         }
         public delegate void ReplayStateChangedEventHandler(ReplayState newState, ReplayState oldState);
         public static event ReplayStateChangedEventHandler StateChangedEvent;
@@ -101,7 +101,7 @@ namespace XLShredReplayEditor {
                 this.saver.enabled = false;
             }
             if (audioRecorder == null) {
-                audioRecorder = base.gameObject.AddComponent<ReplayAudioRecorder>();
+                audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
                 audioRecorder.enabled = true;
             }
             this.guiColor = Color.white;
@@ -124,10 +124,67 @@ namespace XLShredReplayEditor {
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
 
+        public IEnumerator StartReplayEditor() {
+            ReplayManager.SetState(ReplayState.LOADING);
+            Debug.Log("Started Replay Editor");
+
+            //Disabling core Game Input and animation that would interfer
+            PlayerController.Instance.animationController.skaterAnim.enabled = false;
+            PlayerController.Instance.cameraController.enabled = false;
+            InputController.Instance.enabled = false;
+            SoundManager.Instance.deckSounds.MuteAll();
+
+            Cursor.visible = true;
+
+            this.cameraController.OnStartReplayEditor();
+            audioRecorder.StopRecording();
+            yield return audioRecorder.StartPlayback();
+
+            this.playbackSpeed = 1f;
+            Time.timeScale = 0f;
+            this.previousFrameIndex = this.recorder.frameCount - 1;
+            this.playbackTime = this.recorder.endTime;
+            this.clipStartTime = this.recorder.startTime;
+            this.clipEndTime = this.recorder.endTime;
+
+#if STANDALONE
+            Time.timeScale = 0f;
+#else
+            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
+            ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
+            ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK && !guiHidden) ? 1 : 0);
+#endif
+            ReplayManager.SetState(ReplayState.PLAYBACK);
+        }
+
+
+        public void ExitReplayEditor() {
+            try {
+                ReplayManager.SetState(ReplayState.LOADING);
+                audioRecorder.StopPlayback();
+                audioRecorder.StartRecording();
+                PlayerController.Instance.animationController.skaterAnim.enabled = true;
+                PlayerController.Instance.cameraController.enabled = true;
+                InputController.Instance.enabled = true;
+                this.cameraController.OnExitReplayEditor();
+                this.recorder.ApplyLastFrame();
+                SoundManager.Instance.deckSounds.UnMuteAll();
+#if STANDALONE
+            Cursor.visible = false;
+            Time.timeScale = 1f;
+#else
+                XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
+                ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
+                Time.timeScale = 1f;
+#endif
+                ReplayManager.SetState(ReplayState.RECORDING);
+            } catch (Exception e) {
+                Debug.LogException(e);
+            }
+        }
+
         public void Update() {
             if (!Main.enabled) {
-                Debug.Log("Replay is disabled!!!");
-                ReplayManager.SetState(ReplayState.LOADING);
                 return;
             }
             this.CheckInput();
@@ -264,59 +321,6 @@ namespace XLShredReplayEditor {
             this.audioRecorder.SetPlaybackTime(t);
         }
 
-
-        public IEnumerator StartReplayEditor() {
-            ReplayManager.SetState(ReplayState.LOADING);
-
-            Debug.Log("Started Replay Editor");
-            Cursor.visible = true;
-
-            yield return audioRecorder.StartPlayback();
-
-            this.playbackSpeed = 1f;
-            Time.timeScale = 0f;
-            this.previousFrameIndex = this.recorder.frameCount - 1;
-            this.playbackTime = this.recorder.endTime;
-            this.clipStartTime = this.recorder.startTime;
-            this.clipEndTime = this.recorder.endTime;
-            PlayerController.Instance.animationController.skaterAnim.enabled = false;
-            PlayerController.Instance.cameraController.enabled = false;
-            InputController.Instance.enabled = false;
-            this.cameraController.OnStartReplayEditor();
-            SoundManager.Instance.deckSounds.MuteAll();
-#if STANDALONE
-            Time.timeScale = 0f;
-#else
-            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
-            ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
-            ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK && !guiHidden) ? 1 : 0);
-#endif
-            ReplayManager.SetState(ReplayState.PLAYBACK);
-        }
-
-
-        public void ExitReplayEditor() {
-            ReplayManager.SetState(ReplayState.LOADING);
-            audioRecorder.StopPlayback();
-            audioRecorder.StartRecording();
-            PlayerController.Instance.animationController.skaterAnim.enabled = true;
-            PlayerController.Instance.cameraController.enabled = true;
-            InputController.Instance.enabled = true;
-            this.cameraController.OnExitReplayEditor();
-            this.recorder.ApplyRecordedFrame(this.recorder.frameCount - 1);
-            SoundManager.Instance.deckSounds.UnMuteAll();
-#if STANDALONE
-            Cursor.visible = false;
-            Time.timeScale = 1f;
-#else
-            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
-            ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
-            Time.timeScale = 1f;
-#endif
-            ReplayManager.SetState(ReplayState.RECORDING);
-        }
-
-
         private void GUIClipSliders() {
             this.clipStartTime = Mathf.Clamp(GUI.HorizontalSlider(ReplaySkin.DefaultSkin.sliderRect, this.clipStartTime, this.recorder.startTime, this.recorder.endTime, ReplaySkin.DefaultSkin.clipStartSliderStyle, ReplaySkin.DefaultSkin.sliderClipBorderThumbStyle), this.recorder.startTime, this.clipEndTime);
             this.clipEndTime = Mathf.Clamp(GUI.HorizontalSlider(ReplaySkin.DefaultSkin.sliderRect, this.clipEndTime, this.recorder.startTime, this.recorder.endTime, ReplaySkin.DefaultSkin.clipEndSliderStyle, ReplaySkin.DefaultSkin.sliderClipBorderThumbStyle), this.clipStartTime, this.recorder.endTime);
@@ -334,7 +338,11 @@ namespace XLShredReplayEditor {
             }
         }
 
-
+        public void Destroy() {
+            Destroy(recorder);
+            audioRecorder.Destroy();
+            SetState(ReplayState.DISABLED);
+        }
     }
 
 }

@@ -57,6 +57,9 @@ namespace XLShredReplayEditor {
         public void ApplyRecordedFrame(int frame) {
             this.recordedFrames[frame].ApplyTo(this.transformsToBeRecorded);
         }
+        public void ApplyLastFrame() {
+            this.recordedFrames[recordedFrames.Count - 1].ApplyTo(this.transformsToBeRecorded);
+        }
 
 
         private void RecordFrame() {
@@ -65,7 +68,7 @@ namespace XLShredReplayEditor {
 
 
         public void OnGUI() {
-            if (ReplayManager.CurrentState == ReplayState.RECORDING) {
+            if (ReplayManager.CurrentState == ReplayState.RECORDING && Main.settings.showRecGUI) {
                 string text = "● Rec";
                 Vector2 vector = this.recSkin.CalcSize(new GUIContent(text));
                 GUI.Label(new Rect((float)Screen.width - vector.x - 10f, 10f, vector.x, vector.y), text, this.recSkin);
