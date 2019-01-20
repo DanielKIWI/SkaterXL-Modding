@@ -15,6 +15,7 @@ namespace XLShredSessionMarkerManager.UI {
         public static void InstantiateInstance() {
             if (_instance != null) return;
             _instance = new GameObject("LocationManagerUI").AddComponent<LocationManagerUI>();
+            DontDestroyOnLoad(_instance.gameObject);
             _instance.enabled = true;
         }
         public static void DestroyInstance() {
@@ -24,6 +25,7 @@ namespace XLShredSessionMarkerManager.UI {
         #endregion
         
         private string toDeleteName = null;
+        private string toDeletePath = null;
         private string saveName;
         private bool teleportDirectly;
         private Vector3 scrollPosition;
@@ -35,10 +37,18 @@ namespace XLShredSessionMarkerManager.UI {
         public string[] MarkerPaths;
 
         public void Awake() {
+            MigrateOldLocations();
             UpdateMarkerList();
         }
+        public void MigrateOldLocations() {
+            var oldFiles = Directory.GetFiles(Main.MarkerSavesRootDirectory, "*.json", SearchOption.TopDirectoryOnly);
+            foreach (string path in oldFiles) {
+                string newPath = Main.MarkerSavesDirectory + path.Substring(path.LastIndexOf('\\') + 1);
+                File.Move(path, newPath);
+            }
+        }
         public void UpdateMarkerList() {
-            MarkerPaths = Directory.GetFiles(Main.MarkerSavesDirectory, "*.json", SearchOption.AllDirectories);
+            MarkerPaths = Directory.GetFiles(Main.MarkerSavesDirectory, "*.json", SearchOption.TopDirectoryOnly);
         }
         public void Update() {
             if (Input.GetKeyDown(KeyCode.T)) {
@@ -57,12 +67,14 @@ namespace XLShredSessionMarkerManager.UI {
             GUILayout.BeginHorizontal();
             {
                 if (GUILayout.Button("Yes")) {
-                    File.Delete(toDeleteName);
+                    File.Delete(toDeletePath);
                     UpdateMarkerList();
                     toDeleteName = null;
+                    toDeletePath = null;
                 }
                 if (GUILayout.Button("Cancel")) {
                     toDeleteName = null;
+                    toDeletePath = null;
                 }
             }
             GUILayout.EndHorizontal();
@@ -115,6 +127,7 @@ namespace XLShredSessionMarkerManager.UI {
                 }
                 if (GUILayout.Button("X", GUILayout.Width(20f))) {
                     toDeleteName = name;
+                    toDeletePath = path;
                 }
             }
             GUILayout.EndHorizontal();
