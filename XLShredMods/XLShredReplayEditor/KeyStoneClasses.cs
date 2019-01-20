@@ -7,9 +7,10 @@ namespace XLShredReplayEditor {
 
     [Serializable]
     public class KeyStone {
-        public virtual void ApplyTo(Transform t) {
-            t.position = this.position;
-            t.rotation = this.rotation;
+        public virtual void ApplyTo(Camera c) {
+            c.transform.position = this.position;
+            c.transform.rotation = this.rotation;
+            c.fieldOfView = cameraFOV;
         }
         public float time;
         public Vector3 position;
@@ -69,9 +70,10 @@ namespace XLShredReplayEditor {
             this.focusOffsetY = yOffset;
         }
 
-        public override void ApplyTo(Transform t) {
-            t.position = PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up + this.radialPos.cartesianCoords;
-            t.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
+        public override void ApplyTo(Camera c) {
+            c.transform.position = PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up + this.radialPos.cartesianCoords;
+            c.transform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
+            c.fieldOfView = cameraFOV;
         }
 
         public static OrbitCameraKeyStone Lerp(OrbitCameraKeyStone a, OrbitCameraKeyStone b, float time) {
@@ -97,9 +99,10 @@ namespace XLShredReplayEditor {
             this.focusOffsetY = yOffset;
         }
 
-        public override void ApplyTo(Transform t) {
-            t.position = this.position;
-            t.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
+        public override void ApplyTo(Camera c) {
+            c.transform.position = this.position;
+            c.transform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up, Vector3.up);
+            c.fieldOfView = cameraFOV;
         }
 
         public static TripodCameraKeyStone Lerp(KeyStone a, KeyStone b, float time) {

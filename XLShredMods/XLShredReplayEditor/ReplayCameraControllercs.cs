@@ -234,27 +234,27 @@ namespace XLShredReplayEditor {
                 return;
             }
             if (this.keyStones.Count == 1) {
-                this.keyStones[0].ApplyTo(this.cameraTransform);
+                this.keyStones[0].ApplyTo(camera);
                 return;
             }
             if (manager.playbackTime < this.keyStones[0].time) {
-                this.keyStones[0].ApplyTo(this.cameraTransform);
+                this.keyStones[0].ApplyTo(camera);
                 return;
             } else if (manager.playbackTime > keyStones[keyStones.Count - 1].time) {
-                this.keyStones[keyStones.Count - 1].ApplyTo(this.cameraTransform);
+                this.keyStones[keyStones.Count - 1].ApplyTo(camera);
                 return;
             }
             int num = this.FindLeftKeyStoneIndex();
             KeyStone keyStone = this.keyStones[num];
             KeyStone keyStone2 = this.keyStones[num + 1];
             if (keyStone is FreeCameraKeyStone || keyStone2 is FreeCameraKeyStone) {
-                FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(camera);
             }
             if (keyStone is TripodCameraKeyStone || keyStone2 is TripodCameraKeyStone) {
-                TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(camera);
             }
             if (keyStone is OrbitCameraKeyStone && keyStone2 is OrbitCameraKeyStone) {
-                OrbitCameraKeyStone.Lerp(keyStone as OrbitCameraKeyStone, keyStone2 as OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(this.cameraTransform);
+                OrbitCameraKeyStone.Lerp(keyStone as OrbitCameraKeyStone, keyStone2 as OrbitCameraKeyStone, this.manager.playbackTime).ApplyTo(camera);
             }
         }
 
