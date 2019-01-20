@@ -136,6 +136,8 @@ namespace XLShredReplayEditor {
 
             Cursor.visible = true;
 
+            PlayerController.Instance.respawn.pin.gameObject.SetActive(false);
+
             this.cameraController.OnStartReplayEditor();
             audioRecorder.StopRecording();
             yield return audioRecorder.StartPlayback();
@@ -161,6 +163,9 @@ namespace XLShredReplayEditor {
         public void ExitReplayEditor() {
             try {
                 ReplayManager.SetState(ReplayState.LOADING);
+
+                PlayerController.Instance.respawn.pin.gameObject.SetActive(true);
+
                 audioRecorder.StopPlayback();
                 audioRecorder.StartRecording();
                 PlayerController.Instance.animationController.skaterAnim.enabled = true;
