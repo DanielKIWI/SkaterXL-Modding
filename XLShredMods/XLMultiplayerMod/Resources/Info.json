@@ -1,0 +1,12 @@
+﻿{
+  "Id": "kiwi.XLMultiplayerMod",
+  "DisplayName": "XL Shred Multiplayer Mod",
+  "Author": "Kiwi",
+  "Version": "0.0.1",
+  "ManagerVersion": "0.12.3",
+  "Requirements": [ "blendermf.XLShredMenu-0.0.4" ],
+  "AssemblyName": "XLMultiplayerMod.dll",
+  "EntryMethod": "XLMultiplayerMod.Main.Load",
+  "HomePage": "https://github.com/DanielKIWI/SkaterXL-Modding",
+  "Repository": "https://raw.githubusercontent.com/DanielKIWI/SkaterXL-Modding/master/XLShredMods/repository.json"
+}
