@@ -13,9 +13,45 @@ using System.Reflection;
 namespace XLShredSessionMarkerManager {
     using UI;
 
+    [Serializable]
+    public class Settings : UnityModManager.ModSettings {
+        public bool TeleportDirectly = true;
+        public Rect WindowRect = new Rect { 
+            center = new Vector2(Screen.width / 2f, Screen.height / 2f),
+            width = 400,
+            height = 400
+        };
+        public override void Save(UnityModManager.ModEntry modEntry) {
+            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
+        }
+        public void MoveIntoScreen() {
+            bool changed = false;
+            if (WindowRect.xMin < 0) {
+                WindowRect.xMin = 0;
+                changed = true;
+            }
+            if (WindowRect.xMax > Screen.width) {
+                WindowRect.xMax = Screen.width;
+                changed = true;
+            }
+            if (WindowRect.yMin < 0) {
+                WindowRect.yMin = 0;
+                changed = true;
+            }
+            if (WindowRect.yMax > Screen.height) {
+                WindowRect.yMax = Screen.height;
+                changed = true;
+            }
+            if (changed) {
+                Save(Main.modEntry);
+            }
+        }
+    }
     static class Main {
         public static bool enabled;
+        public static Settings settings;
         public static String modId;
+        public static UnityModManager.ModEntry modEntry;
         private static Traverse _respawnInstance = null;
         public static Traverse RespawnInstance {
             get {
@@ -50,6 +86,8 @@ namespace XLShredSessionMarkerManager {
         public static bool visible;
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
+            settings = Settings.Load<Settings>(modEntry);
+            Main.modEntry = modEntry;
             modId = modEntry.Info.Id;
             modEntry.OnToggle = OnToggle;
 

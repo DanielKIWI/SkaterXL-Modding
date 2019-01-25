@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using XLShredLib;
 
 namespace XLShredSessionMarkerManager.UI {
     class LocationManagerUI: MonoBehaviour {
@@ -27,13 +28,26 @@ namespace XLShredSessionMarkerManager.UI {
         private string toDeleteName = null;
         private string toDeletePath = null;
         private string saveName;
-        private bool teleportDirectly;
+        public bool TeleportDirectly {
+            get { return Main.settings.TeleportDirectly; }
+            set {
+                if (Main.settings.TeleportDirectly != value) {
+                    Main.settings.TeleportDirectly = value;
+                    Main.settings.Save(Main.modEntry);
+                }
+            }
+        }
         private Vector3 scrollPosition;
-        private Rect windowRect = new Rect() {
-            center = new Vector2(Screen.width / 2f, Screen.height / 2f),
-            width = 400,
-            height = 400
-        };
+
+        private Rect WindowRect {
+            get {return Main.settings.WindowRect; }
+            set {
+                if (Main.settings.WindowRect != value) {
+                    Main.settings.WindowRect = value;
+                    Main.settings.Save(Main.modEntry);
+                }
+            }
+        }
         public string[] MarkerPaths;
 
         public void Awake() {
@@ -41,6 +55,7 @@ namespace XLShredSessionMarkerManager.UI {
             UpdateMarkerList();
         }
         public void MigrateOldLocations() {
+            if (!Directory.Exists(Main.MarkerSavesRootDirectory)) return;
             var oldFiles = Directory.GetFiles(Main.MarkerSavesRootDirectory, "*.json", SearchOption.TopDirectoryOnly);
             foreach (string path in oldFiles) {
                 string newPath = Main.MarkerSavesDirectory + path.Substring(path.LastIndexOf('\\') + 1);
@@ -60,7 +75,7 @@ namespace XLShredSessionMarkerManager.UI {
             if (toDeleteName != null) {
                 GUI.Window(GUIUtility.GetControlID(FocusType.Passive), new Rect(Screen.width / 2f - 250, Screen.height / 2f - 40, 500, 80), DoDeleteWindow, "Are you sure to delete Marker: " + toDeleteName);
             } else {
-                windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), windowRect, DoMainWindow, "Saved Session Markers");
+                WindowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), WindowRect, DoMainWindow, "Saved Session Markers");
             }
         }
         void DoDeleteWindow(int windowID) {
@@ -97,7 +112,7 @@ namespace XLShredSessionMarkerManager.UI {
 
                 GUILayout.Space(10f);
                 GUILayout.BeginHorizontal();
-                teleportDirectly = GUILayout.Toggle(teleportDirectly, "Directly teleport to marker");
+                TeleportDirectly = GUILayout.Toggle(TeleportDirectly, "Directly teleport to marker");
                 if (GUILayout.Button("↺", GUILayout.Width(20f))) {
                     UpdateMarkerList();
                 }
@@ -121,7 +136,7 @@ namespace XLShredSessionMarkerManager.UI {
             {
                 if (GUILayout.Button(name)) {
                     TeleporterLocation.LoadFromFile(path).Apply();
-                    if (teleportDirectly) {
+                    if (TeleportDirectly) {
                         PlayerController.Instance.respawn.DoRespawn();
                     }
                 }
