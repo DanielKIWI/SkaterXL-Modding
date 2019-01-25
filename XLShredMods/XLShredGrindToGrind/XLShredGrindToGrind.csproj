@@ -59,8 +59,8 @@
     <Compile Include="Patches\PlayerState_GrindingPatches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
+    <None Include="ModInfo.md" />
     <None Include="Resources\Info.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

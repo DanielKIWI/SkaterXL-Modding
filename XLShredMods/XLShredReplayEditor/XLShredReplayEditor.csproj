@@ -125,6 +125,7 @@
     <Compile Include="TransformInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ModInfo.md" />
     <None Include="Resources\Info.json" />
   </ItemGroup>
   <ItemGroup>
