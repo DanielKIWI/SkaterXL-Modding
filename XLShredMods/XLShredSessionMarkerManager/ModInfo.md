@@ -8,4 +8,4 @@
 - Press Key T to open the Menu.
 
 ## Latest Release
-[0.0.2](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredSessionMarkerManager-0.0.2)
+[0.0.2](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredSessionMarkerManager-0.0.2) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredSessionMarkerManager-0.0.2/XLShredSessionMarkerManager-0.0.2.zip)
