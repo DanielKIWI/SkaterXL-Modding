@@ -10,4 +10,4 @@
 - Those components sets their pitch to Time.timeScale every Frame
 
 ## Latest Release:
-[0.0.1](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredAdjustAudioPitch-0.0.1)
+[0.0.1](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredAdjustAudioPitch-0.0.1) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredAdjustAudioPitch-0.0.1/XLShredAdjustAudioPitch-0.0.1.zip)

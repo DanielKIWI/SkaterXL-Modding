@@ -17,4 +17,4 @@ Start opens the ReplayEditor. B closes it.
 All other Controlls are displayed on the right, while the Editor is active.
 
 ## Latest Release
-[0.0.5](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredReplayEditor-v0.0.5) [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.0.5/XLShredReplayEditor-0.0.5.zip)
+[0.0.5](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredReplayEditor-v0.0.5) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.0.5/XLShredReplayEditor-0.0.5.zip)
