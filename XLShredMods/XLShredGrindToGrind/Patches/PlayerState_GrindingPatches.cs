@@ -8,7 +8,6 @@ using Harmony12;
 using Dreamteck.Splines;
 
 namespace XLShredGrindToGrind.Patches {
-
     [HarmonyPatch(typeof(PlayerState_Grinding))]
     [HarmonyPatch("OnGrindEnded")]
     public static class PlayerState_Grinding_Patch {
