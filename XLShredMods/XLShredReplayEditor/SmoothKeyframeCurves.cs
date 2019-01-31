@@ -75,9 +75,9 @@ namespace SmoothKeyframeCurves {
             CurveKey<T> k = Keys[seg];
 
             k.C1 = CalculateC1(seg);
-            k.C2 = CalculateC1(seg);
-            k.C4 = CalculateC1(seg);
-            k.C3 = CalculateC1(seg);
+            k.C2 = CalculateC2(seg);
+            k.C4 = CalculateC4(seg);
+            k.C3 = CalculateC3(seg);
         }
 
         private T[] Bezier(List<T> controlPoints, float t) {
