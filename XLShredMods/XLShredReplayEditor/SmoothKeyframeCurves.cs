@@ -68,8 +68,9 @@ namespace SmoothKeyframeCurves {
         }
 
         public void CalculateKeyControlPoints(int seg) {
-
             if (seg < 0 || seg > Keys.Count - 2) return;
+
+            ClearCaches();
 
             CurveKey<T> k = Keys[seg];
 
