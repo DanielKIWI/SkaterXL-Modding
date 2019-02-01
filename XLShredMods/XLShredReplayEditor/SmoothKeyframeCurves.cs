@@ -157,11 +157,19 @@ C4: {C4}
                 return ParamRatioCache[seg];
             }
 
+            float val;
+
+            if (seg + 1 > Keys.Count - 1) {
+                val = 1f;
+                ParamRatioCache[seg] = val;
+                return val;
+            }
+
             float tPrev = Keys[seg - 1].Time;
             float t = Keys[seg].Time;
-            float tNext = (seg + 1 > Keys.Count - 1) ? t : Keys[seg + 1].Time;
+            float tNext = Keys[seg + 1].Time;
 
-            float val = (tNext - t) / (t - tPrev);
+            val = (tNext - t) / (t - tPrev);
             ParamRatioCache[seg] = val;
             return val;
         }
@@ -240,7 +248,7 @@ C4: {C4}
                 return AOutCache[seg];
             }
 
-            CurveKey<T> kNext = Keys[seg];
+            CurveKey<T> kNext = Keys[seg + 1];
             T y = CalculateY(seg);
 
             T val = Diff(Diff(CalculateX(seg), y), Diff(y, kNext.Value));
