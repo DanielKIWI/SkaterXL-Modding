@@ -59,7 +59,7 @@ namespace XLShredReplayEditor {
                         this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                 }
-            }   
+            }
         }
 
         public void OnGUI() {
@@ -222,7 +222,7 @@ namespace XLShredReplayEditor {
                 return;
             }
             this.keyStones.RemoveAt(index);
-            KeyStoneCurves.RemoveKeyframes(index);
+            CameraCurve.DeleteCurveKeys(index);
         }
 
         private bool FindKeyStoneDeleteIndex(out int index) {
@@ -251,12 +251,15 @@ namespace XLShredReplayEditor {
                 //this.keyStones[keyStones.Count - 1].ApplyTo(this.cameraTransform);
                 return;
             }
+
             int num = this.FindLeftKeyStoneIndex();
-            KeyStone keyStone = this.keyStones[num]; 
+            KeyStone keyStone = this.keyStones[num];
             KeyStone keyStone2 = this.keyStones[num + 1];
+
+            CameraCurve.Evaluate(this.manager.playbackTime).ApplyTo(this.cameraTransform);
+
             if (keyStone is FreeCameraKeyStone || keyStone2 is FreeCameraKeyStone) {
                 //FreeCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);
-                KeyStoneCurves.EvaluateCurves(this.manager.playbackTime).ApplyTo(this.cameraTransform);
             }
             if (keyStone is TripodCameraKeyStone || keyStone2 is TripodCameraKeyStone) {
                 //TripodCameraKeyStone.Lerp(keyStone, keyStone2, this.manager.playbackTime).ApplyTo(this.cameraTransform);

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 /* 
@@ -15,6 +16,31 @@ namespace SmoothKeyframeCurves {
         public T C1, C2, C3, C4;
         public float Time;
         public bool isStopPoint;
+
+        public override string ToString() {
+            if (Value.GetType() == typeof(Vector3)) {
+                return
+$@"---------------
+CurveKey<{Value.GetType()}> @ {Time}s
+Val: {((Vector3)(object)Value).ToString("F9")}
+C1: {((Vector3)(object)C1).ToString("F9")}
+C2: {((Vector3)(object)C2).ToString("F9")}
+C3: {((Vector3)(object)C3).ToString("F9")}
+C4: {((Vector3)(object)C4).ToString("F9")}
+---------------
+";
+            }
+            return
+$@"---------------
+CurveKey<{Value.GetType()}> @ {Time}s
+Val: {Value}
+C1: {C1}
+C2: {C2}
+C3: {C3}
+C4: {C4}
+---------------
+";
+        }
     }
 
     public class CurveBase<T> where T : struct {
@@ -49,12 +75,15 @@ namespace SmoothKeyframeCurves {
         protected virtual T Sum(T a, T b) { return new T(); }
         protected virtual T Times(T a, float times) { return new T(); }
         protected virtual T Diff(T a, T b) { return new T(); }
-        protected virtual T Interpolate(T a, T b, float t) { return new T(); }
+
+        private T Interpolate(T a, T b, float t) {
+            return Sum(a, Times(Diff(b, a), t));
+        }
         #endregion
 
         #region General Operations
-        public void InsertCurveKey(int i, T val, float t) {
-            Keys.Insert(i, new CurveKey<T>() { Value = val, Time = t });
+        public void InsertCurveKey(T val, float t) {
+            Keys.Insert(GetInsertPos(t), new CurveKey<T>() { Value = val, Time = t });
         }
 
         public void DeleteCurveKey(int i) {
@@ -67,21 +96,29 @@ namespace SmoothKeyframeCurves {
             }
         }
 
-        public void CalculateKeyControlPoints(int seg) {
+        private void CalculateKeyControlPoints(int seg) {
             if (seg < 0 || seg > Keys.Count - 2) return;
 
             ClearCaches();
-
             CurveKey<T> k = Keys[seg];
 
             k.C1 = CalculateC1(seg);
             k.C2 = CalculateC2(seg);
             k.C4 = CalculateC4(seg);
             k.C3 = CalculateC3(seg);
+
+            if (k.Value.GetType() == typeof(Vector3)) {
+                Console.WriteLine(k);
+            }
         }
 
-        private T[] Bezier(List<T> controlPoints, float t) {
+        private List<T> Bezier(List<T> controlPoints, float t) {
             List<T> newControlPoints = new List<T>();
+
+            if (controlPoints.Count == 1) {
+                return controlPoints;
+            }
+
             for (int i = 0; i < controlPoints.Count - 1; i++) {
                 newControlPoints.Add(Interpolate(controlPoints[i], controlPoints[i + 1], t));
             }
@@ -92,16 +129,25 @@ namespace SmoothKeyframeCurves {
             int index = GetSegment(t);
             CurveKey<T> k = Keys[index];
 
-            T[] controlPoints = new T[] { k.Value, k.C1, k.C2, k.C3, k.C4, Keys[index + 1].Value };
+            float factor = (t - k.Time) / (Keys[index + 1].Time - k.Time);
 
-            return Bezier(new List<T>(controlPoints), t)[0];
+            //T[] controlPoints = new T[] { k.Value, k.C1, k.C2, k.C3, k.C4, Keys[index + 1].Value };
+            T[] controlPoints = new T[] { k.Value, k.C1, k.C4, Keys[index + 1].Value };
+
+            return Bezier(new List<T>(controlPoints), factor)[0];
         }
 
         private int GetSegment(float t) {
             if (t <= Keys[0].Time) return 0;
             if (t >= Keys[Keys.Count - 2].Time) return Keys.Count - 2;
 
-            return Keys.FindIndex(k => t > k.Time);
+            return Keys.FindIndex(k => t <= k.Time) - 1;
+        }
+
+        private int GetInsertPos(float t) {
+            if (Keys.Count == 0 || t <= Keys[0].Time) return 0;
+            int i = Keys.FindIndex(k => t < k.Time);
+            return (i == -1) ? Keys.Count : i;
         }
         #endregion
 
@@ -113,7 +159,7 @@ namespace SmoothKeyframeCurves {
 
             float tPrev = Keys[seg - 1].Time;
             float t = Keys[seg].Time;
-            float tNext = Keys[seg + 1].Time;
+            float tNext = (seg + 1 > Keys.Count - 1) ? t : Keys[seg + 1].Time;
 
             float val = (tNext - t) / (t - tPrev);
             ParamRatioCache[seg] = val;
@@ -124,11 +170,18 @@ namespace SmoothKeyframeCurves {
             if (RCache.ContainsKey(seg)) {
                 return RCache[seg];
             }
-
-            CurveKey<T> kPrev = Keys[seg - 1];
+            T val;
             CurveKey<T> k = Keys[seg];
 
-            T val = Interpolate(kPrev.Value, k.Value, 1f + CalculateParamRatio(seg));
+            if (seg == 0) {
+                val = k.Value;
+                RCache[seg] = val;
+                return val;
+            }
+
+            CurveKey<T> kPrev = Keys[seg - 1];
+
+            val = Interpolate(kPrev.Value, k.Value, 1f + CalculateParamRatio(seg));
             RCache[seg] = val;
             return val;
         }
@@ -137,8 +190,8 @@ namespace SmoothKeyframeCurves {
             if (TCache.ContainsKey(seg)) {
                 return TCache[seg];
             }
-
-            T vNext = Keys[seg + 1].Value;
+            
+            T vNext = (seg + 1 > Keys.Count - 1) ? Keys[seg].Value : Keys[seg + 1].Value;
 
             T val = Interpolate(CalculateR(seg), vNext, 0.5f);
             TCache[seg] = val;
@@ -222,7 +275,8 @@ namespace SmoothKeyframeCurves {
                 return k.Value;
             }
 
-            return Interpolate(k.Value, CalculateT(seg), 0.2f);
+            //return Interpolate(k.Value, CalculateT(seg), 0.2f);
+            return CalculateX(seg);
         }
 
         private T CalculateC2(int seg) {
@@ -253,7 +307,8 @@ namespace SmoothKeyframeCurves {
                 return kNext.Value;
             }
 
-            return Interpolate(kNext.Value, CalculateC1(seg + 1), -1f / CalculateParamRatio(seg + 1));
+            //return Interpolate(kNext.Value, CalculateC1(seg + 1), -1f / CalculateParamRatio(seg + 1));
+            return CalculateY(seg);
         }
         #endregion
     }
@@ -271,10 +326,6 @@ namespace SmoothKeyframeCurves {
         protected override Quaternion Diff(Quaternion a, Quaternion b) {
             return a * Quaternion.Inverse(b);
         }
-
-        protected override Quaternion Interpolate(Quaternion a, Quaternion b, float t) {
-            return Quaternion.Slerp(a, b, t);
-        }
     }
 
     public class Vector3Curve : CurveBase<Vector3> {
@@ -288,10 +339,6 @@ namespace SmoothKeyframeCurves {
 
         protected override Vector3 Diff(Vector3 a, Vector3 b) {
             return a - b;
-        }
-
-        protected override Vector3 Interpolate(Vector3 a, Vector3 b, float t) {
-            return Vector3.Lerp(a, b, t);
         }
     }
 
@@ -307,10 +354,6 @@ namespace SmoothKeyframeCurves {
         protected override Vector2 Diff(Vector2 a, Vector2 b) {
             return a - b;
         }
-
-        protected override Vector2 Interpolate(Vector2 a, Vector2 b, float t) {
-            return Vector2.Lerp(a, b, t);
-        }
     }
 
     public class FloatCurve : CurveBase<float> {
@@ -324,10 +367,6 @@ namespace SmoothKeyframeCurves {
 
         protected override float Diff(float a, float b) {
             return a - b;
-        }
-
-        protected override float Interpolate(float a, float b, float t) {
-            return Mathf.Lerp(a, b, t);
         }
     }
     #endregion

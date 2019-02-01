@@ -97,11 +97,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AudioSourceDataForwarder.cs" />
+    <Compile Include="CameraCurves.cs" />
     <Compile Include="Extensions\DeckSoundsExtension.cs" />
-    <Compile Include="KeyStoneClassesSpline.cs" />
     <Compile Include="KeyStoneClasses.cs" />
+    <Compile Include="SmoothKeyframeCurves.cs" />
     <Compile Include="SoundLoader.cs" />
-    <Compile Include="Spline.cs" />
     <Compile Include="Vector3Radial.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ReplayManager.cs" />
