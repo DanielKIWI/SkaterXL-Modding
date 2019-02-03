@@ -4,7 +4,8 @@ param(
     [String]$TargetDir = $(throw "-TargetDir is required."),
     [String]$ProjectDir = $(throw "-ProjectDir is required."),
     [String]$SolutionDir = $(throw "-SolutionDir is required."),
-    [Switch]$LoadLib
+    [Parameter(Position=6)]
+    [String[]]$LibNames
 )
 
 $configContent = Get-Content ([io.path]::combine($SolutionDir, "config.json")) | ConvertFrom-Json;
@@ -16,3 +17,7 @@ New-Item -ItemType directory -Path ([io.path]::combine( $gameDirectory, "Mods\",
 copy-item $TargetPath ([io.path]::combine( $gameDirectory, "Mods\", $TargetName)) -force;
 copy-item ([io.path]::combine( $TargetDir, $TargetName + ".pdb" )) ([io.path]::combine( $gameDirectory, "Mods\", $TargetName )) -force;
 copy-item ([io.path]::combine( $ProjectDir, "Resources\Info.json" )) ([io.path]::combine( $gameDirectory, "Mods\", $TargetName )) -force;
+
+foreach ($libName in $LibNames) {
+	copy-item ([io.path]::combine( $TargetDir, $libName + ".dll" )) ([io.path]::combine( $gameDirectory, "Mods\", $TargetName )) -force;
+}

@@ -43,6 +43,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredBetterVertGrind", "XLShredBetterVertGrind\XLShredBetterVertGrind.csproj", "{A3664BFB-894C-4178-A329-109C29E8B38B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredTrickNameGUI", "XLShredTrickNameGUI\XLShredTrickNameGUI.csproj", "{F9090AD1-D5DA-4DA9-A7EB-E41FDD3377FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUILayoutLib", "GUILayoutLib\GUILayoutLib.csproj", "{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredRealisticTrucks", "XLShredRealisticTrucks\XLShredRealisticTrucks.csproj", "{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F} = {7FDB6C70-4111-40C1-8D29-5F10EF6B252F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -108,6 +114,18 @@ Global
 		{F9090AD1-D5DA-4DA9-A7EB-E41FDD3377FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F9090AD1-D5DA-4DA9-A7EB-E41FDD3377FE}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
 		{F9090AD1-D5DA-4DA9-A7EB-E41FDD3377FE}.Standalone|Any CPU.Build.0 = Release|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Standalone|Any CPU.Build.0 = Release|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
+		{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}.Standalone|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

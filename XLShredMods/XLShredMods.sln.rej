@@ -1,0 +1,9 @@
+diff a/XLShredMods/XLShredMods.sln b/XLShredMods/XLShredMods.sln	(rejected hunks)
+@@ -53,6 +53,7 @@
+ +Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredBetterVertGrind", "XLShredBetterVertGrind\XLShredBetterVertGrind.csproj", "{A3664BFB-894C-4178-A329-109C29E8B38B}"
+ +EndProject
+ +Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredTrickNameGUI", "XLShredTrickNameGUI\XLShredTrickNameGUI.csproj", "{F9090AD1-D5DA-4DA9-A7EB-E41FDD3377FE}"
+++=======
+  Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GUILayoutLib", "GUILayoutLib\GUILayoutLib.csproj", "{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}"
+  EndProject
+  Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredRealisticTrucks", "XLShredRealisticTrucks\XLShredRealisticTrucks.csproj", "{10D49359-9DEC-4A1E-94F2-9EAA0D5059E9}"
