@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugGUI.cs" />
+    <Compile Include="Helper\DebugExtension.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Patches\LoggerPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
