@@ -9,7 +9,6 @@ namespace XLShredReplayEditor {
         public Quaternion rotation;
         public float time;
         public float fov;
-        private Vector3 velocity = Vector3.zero;
 
         public static CameraCurveResult Evaluate(float time) { return null; }
         public virtual void AddKeyframes() { }
