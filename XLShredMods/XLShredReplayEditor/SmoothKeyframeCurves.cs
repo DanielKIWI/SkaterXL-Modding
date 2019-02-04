@@ -126,6 +126,13 @@ C4: {C4}
         }
 
         public T Evaluate(float t) {
+            if (t < Keys[0].Time) {
+                return Keys[0].Value;
+            }
+            if (t > Keys[Keys.Count - 1].Time) {
+                return Keys[Keys.Count - 1].Value;
+            }
+
             int index = GetSegment(t);
             CurveKey<T> k = Keys[index];
 
