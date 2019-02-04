@@ -34,9 +34,8 @@ namespace XLShredReplayEditor {
 
     public class CameraCurve {
         static public QuaternionCurve orientationCurve = new QuaternionCurve();
-        static public QuaternionCurve lookRotCurve = new QuaternionCurve();
-        static public FloatCurve focusYOffsetCurve = new FloatCurve();
         static public Vector3Curve positionCurve = new Vector3Curve();
+        static public FloatCurve focusYOffsetCurve = new FloatCurve();
         static public FloatCurve fovCurve = new FloatCurve();
         static public FloatCurve radiusCurve = new FloatCurve();
         static public FloatCurve freeCamCurve = new FloatCurve();
@@ -58,6 +57,10 @@ namespace XLShredReplayEditor {
                 results.Add(new Tuple<float, CameraCurveResult>(orbitCamAmount, OrbitCameraKeyStone.Evaluate(t)));
             }
 
+            if (tripodCamAmount > 0) {
+                results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyStone.Evaluate(t)));
+            }
+
             if (results.Count == 1) return results[0].Item2;
 
             if (results.Count == 2) return CameraCurveResult.Combine(
@@ -70,7 +73,6 @@ namespace XLShredReplayEditor {
 
         public static void CalculateCurveControlPoints() {
             orientationCurve.CalculateCurveControlPoints();
-            lookRotCurve.CalculateCurveControlPoints();
             focusYOffsetCurve.CalculateCurveControlPoints();
             positionCurve.CalculateCurveControlPoints();
             fovCurve.CalculateCurveControlPoints();
@@ -82,7 +84,6 @@ namespace XLShredReplayEditor {
 
         public static void DeleteCurveKeys(int i) {
             orientationCurve.DeleteCurveKey(i);
-            lookRotCurve.DeleteCurveKey(i);
             focusYOffsetCurve.DeleteCurveKey(i);
             positionCurve.DeleteCurveKey(i);
             fovCurve.DeleteCurveKey(i);
