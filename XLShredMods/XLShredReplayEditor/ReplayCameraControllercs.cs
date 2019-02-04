@@ -35,7 +35,7 @@ namespace XLShredReplayEditor {
                         break;
                     case ReplayCameraController.CameraMode.Orbit:
                         InputFocusOffsetY();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.CartesianCoords;
+                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.CartesianCoords;
                         this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                         break;
                     case ReplayCameraController.CameraMode.Tripod:
@@ -153,7 +153,6 @@ namespace XLShredReplayEditor {
         }
         private void InputFocusOffsetY() {
             FocusOffsetY += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * TranslationSpeed * Time.unscaledDeltaTime;
-            orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - (PlayerController.Instance.skaterController.transform.position + FocusOffsetY * Vector3.up));
         }
 
         private void InputOrbitMode() {
