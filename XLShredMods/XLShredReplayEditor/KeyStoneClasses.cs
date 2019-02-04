@@ -76,9 +76,9 @@ namespace XLShredReplayEditor {
         public Vector3 focusLocation;
 
         public OrbitCameraKeyStone(Vector3Radial radialPos, float yOffset, float fov, float t) {
-            this.radius = radialPos.CartesianCoords.magnitude;
+            this.radius = radialPos.cartesianCoords.magnitude;
             position = PlayerController.Instance.skaterController.skaterTransform.position; // not really necessary
-            rotation = Quaternion.LookRotation(-radialPos.CartesianCoords, Vector3.up);
+            rotation = Quaternion.LookRotation(-radialPos.cartesianCoords, Vector3.up);
             this.time = t;
             this.fov = fov;
             this.focusOffsetY = yOffset;
