@@ -11,8 +11,9 @@ namespace XLShredReplayEditor {
 
     [Serializable]
     public class Settings : UnityModManager.ModSettings {
-        
+
         public float MaxRecordedTime = 120f;
+        public bool showRecGUI = false;
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
@@ -30,7 +31,6 @@ namespace XLShredReplayEditor {
             modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnSettingsGUI;
-            ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
             //Disabling the Tutorial
             PromptController.Instance.menuthing.enabled = false;
 #if !STANDALONE
@@ -43,11 +43,19 @@ namespace XLShredReplayEditor {
 #endif
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
+            if (value == enabled) return true;
             enabled = value;
+            if (enabled) {
+                ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
+            } else {
+                ReplayManager.Instance?.Destroy();
+            }
+
             return true;
         }
         static void OnSaveGUI(UnityModManager.ModEntry modEntry) {
             settings.Save(modEntry);
+            ReplayAudioRecorder.Instance?.CalcMaxTmpStreamLength();
         }
         static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
             GUILayout.BeginHorizontal();

@@ -1,45 +1,16 @@
 # SkaterXL-Modding
+This is a collection of Mods I made for the game SkaterXL available on [Steam](https://store.steampowered.com/app/962730/Skater_XL/).
 
-## Available Mods for UnityModManager:
+## Available Mods:
+[Replay Editor](https://github.com/DanielKIWI/SkaterXL-Modding/blob/master/XLShredMods/XLShredReplayEditor/ModInfo.md)
 
-### ReplayEditor
-#### Features:
-- Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
-- Changing camera field of view (NEW)
-- Using KeyStones for animated Camera Movement
-- Audio Recording and Playback 
-- Changing Focus Center
-#### Planned Features:
-- Saving as JSON to enable loading and further editing
-- Saving as Video
-- Easing
-#### Controlls:
-Start opens the ReplayEditor. B closes it.
-All other Controlls are displayed on the right, while the Editor is active.
+[Session Marker Manager](https://github.com/DanielKIWI/SkaterXL-Modding/blob/master/XLShredMods/XLShredSessionMarkerManager/ModInfo.md)
 
-### Session Marker Manager
-#### Features:
-- Save manage and restore multiple Session Markers.
-#### Controlls:
-Press Key T to open the Menu. The rest sould be self-explanatory.
+[Adjust Audio Pitch](https://github.com/DanielKIWI/SkaterXL-Modding/blob/master/XLShredMods/XLShredAdjustAudioPitch/ModInfo.md)
 
-## Old Mods without UnityModManager
-Classes inside this files have to be inserted into the Assembly-CSharp.dll manually.
-### SkateTrainer
-#### Features
-- SloMo Buttons (RB/R1, LB/L1)
-- AutoSloMo
-- SloMo Factor,
-- BaseTimeScale,
-- RespawnNearBail,
-- Pop Force,
-- Push Force,
-- Disable Push Reduction for first 2 Pushes
+[Grind To Grind](https://github.com/DanielKIWI/SkaterXL-Modding/blob/master/XLShredMods/XLShredGrindToGrind/ModInfo.md)
 
+## Instull and Build Instructions
+[blendermf](https://github.com/blendermf) wrote a nice Tutorial at his gitHub repo: [**ClickMe**](https://github.com/blendermf/XLShredLoader/blob/master/README.md#installation)
 
-Thanks to dsc, RafahelBF, Commander klepto who wrote parts of this code.
-And to blendermf who brought up the idea to use the UnityModManager(https://github.com/newman55/unity-mod-manager), which is an awesome Tool.
-
-For a Tutorial on how to load Mods via UnityModManager check out https://github.com/blendermf/XLShredLoader and https://www.nexusmods.com/site/mods/21
-
-Check out the discord channel https://discord.gg/czdNBm for more Infos and Tutorials.
+Check out the [**discord**](https://discord.gg/czdNBm) channel  for more Infos and Tutorials.

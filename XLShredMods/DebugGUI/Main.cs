@@ -25,6 +25,7 @@ namespace DebugGUI {
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
             settings = Settings.Load<Settings>(modEntry);
+
             modId = modEntry.Info.Id;
 
             unityLogHandler = Debug.unityLogger.logHandler;

@@ -19,6 +19,7 @@ namespace DebugGUI {
         public bool autoScroll;
         public float maxHeight;
         public void Awake() {
+            DontDestroyOnLoad(gameObject);
             this.messages = new List<DebugGUI.Message>();
             LogType[] logTypes = Enum.GetValues(typeof(LogType)).Cast<LogType>().ToArray();
             showLogType = new Dictionary<LogType, bool>();
@@ -46,11 +47,8 @@ namespace DebugGUI {
             if (this.messages.Count > 0) {
                 float topMargin = 40f;
                 float messageWidth = boxWidth - 20f;
-                float height = messages.CalcHeight(this.font, messageWidth);
                 //Calculating Height of Messages
-                foreach (DebugGUI.StaticMessage message in this.messages) {
-                    height += this.font.CalcHeight(message.getGuiContent(), messageWidth);
-                }
+                float height = 30f + messages.CalcHeight(this.font, messageWidth);
                 if (height < Screen.height - 30 - topMargin) {
                     boxMinY = (float)Screen.height - height - 10f;
                 } else {
