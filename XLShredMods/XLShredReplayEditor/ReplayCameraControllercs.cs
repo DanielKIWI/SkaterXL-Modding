@@ -18,6 +18,7 @@ namespace XLShredReplayEditor {
             this.keyStones = new List<KeyStone>();
             this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             this.FocusOffsetY = 0f;
+            this.cameraCurve = new CameraCurve();
         }
 
         public void Update() {
@@ -216,7 +217,7 @@ namespace XLShredReplayEditor {
                 return;
             }
             this.keyStones.RemoveAt(index);
-            CameraCurve.DeleteCurveKeys(index);
+            cameraCurve.DeleteCurveKeys(index);
         }
 
         private bool FindKeyStoneDeleteIndex(out int index) {
@@ -235,7 +236,7 @@ namespace XLShredReplayEditor {
                 return;
             }
 
-            CameraCurve.Evaluate(this.manager.playbackTime).ApplyTo(this.cameraTransform);
+            cameraCurve.Evaluate(this.manager.playbackTime).ApplyTo(this.cameraTransform);
         }
 
         private int FindLeftKeyStoneIndex() {
@@ -255,13 +256,13 @@ namespace XLShredReplayEditor {
             KeyStone item;
             switch (this.mode) {
                 case ReplayCameraController.CameraMode.Free:
-                    item = new FreeCameraKeyStone(this.cameraTransform, camera.fieldOfView, time);
+                    item = new FreeCameraKeyStone(this.cameraTransform, camera.fieldOfView, time, cameraCurve);
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time);
+                    item = new OrbitCameraKeyStone(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    item = new TripodCameraKeyStone(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time);
+                    item = new TripodCameraKeyStone(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
                 default:
                     return;
@@ -374,6 +375,8 @@ namespace XLShredReplayEditor {
         private float keyStoneDeleteTolerance = 0.1f;
 
         public List<KeyStone> keyStones;
+
+        public CameraCurve cameraCurve;
 
         private Transform cameraParent;
 

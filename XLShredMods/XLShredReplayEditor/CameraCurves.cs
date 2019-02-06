@@ -33,16 +33,16 @@ namespace XLShredReplayEditor {
     }
 
     public class CameraCurve {
-        static public QuaternionCurve orientationCurve = new QuaternionCurve();
-        static public Vector3Curve positionCurve = new Vector3Curve();
-        static public FloatCurve focusYOffsetCurve = new FloatCurve();
-        static public FloatCurve fovCurve = new FloatCurve();
-        static public FloatCurve radiusCurve = new FloatCurve();
-        static public FloatCurve freeCamCurve = new FloatCurve();
-        static public FloatCurve orbitCamCurve = new FloatCurve();
-        static public FloatCurve tripodCamCurve = new FloatCurve();
+        public QuaternionCurve orientationCurve = new QuaternionCurve();
+        public Vector3Curve positionCurve = new Vector3Curve();
+        public FloatCurve focusYOffsetCurve = new FloatCurve();
+        public FloatCurve fovCurve = new FloatCurve();
+        public FloatCurve radiusCurve = new FloatCurve();
+        public FloatCurve freeCamCurve = new FloatCurve();
+        public FloatCurve orbitCamCurve = new FloatCurve();
+        public FloatCurve tripodCamCurve = new FloatCurve();
 
-        public static CameraCurveResult Evaluate(float t) {
+        public CameraCurveResult Evaluate(float t) {
             float freeCamAmount = freeCamCurve.Evaluate(t);
             float orbitCamAmount = orbitCamCurve.Evaluate(t);
             float tripodCamAmount = tripodCamCurve.Evaluate(t);
@@ -50,15 +50,15 @@ namespace XLShredReplayEditor {
             List<Tuple<float, CameraCurveResult>> results = new List<Tuple<float, CameraCurveResult>>();
 
             if (freeCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(freeCamAmount, FreeCameraKeyStone.Evaluate(t)));
+                results.Add(new Tuple<float, CameraCurveResult>(freeCamAmount, FreeCameraKeyStone.Evaluate(t, this)));
             }
 
             if (orbitCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(orbitCamAmount, OrbitCameraKeyStone.Evaluate(t)));
+                results.Add(new Tuple<float, CameraCurveResult>(orbitCamAmount, OrbitCameraKeyStone.Evaluate(t, this)));
             }
 
             if (tripodCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyStone.Evaluate(t)));
+                results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyStone.Evaluate(t, this)));
             }
 
             if (results.Count == 1) return results[0].Item2;
@@ -71,7 +71,7 @@ namespace XLShredReplayEditor {
             return new CameraCurveResult();
         }
 
-        public static void CalculateCurveControlPoints() {
+        public void CalculateCurveControlPoints() {
             orientationCurve.CalculateCurveControlPoints();
             focusYOffsetCurve.CalculateCurveControlPoints();
             positionCurve.CalculateCurveControlPoints();
@@ -82,7 +82,7 @@ namespace XLShredReplayEditor {
             tripodCamCurve.CalculateCurveControlPoints();
         }
 
-        public static void DeleteCurveKeys(int i) {
+        public void DeleteCurveKeys(int i) {
             orientationCurve.DeleteCurveKey(i);
             focusYOffsetCurve.DeleteCurveKey(i);
             positionCurve.DeleteCurveKey(i);

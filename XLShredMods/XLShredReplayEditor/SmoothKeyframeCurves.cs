@@ -88,6 +88,7 @@ C4: {C4}
 
         public void DeleteCurveKey(int i) {
             Keys.RemoveAt(i);
+            CalculateCurveControlPoints();
         }
 
         public void CalculateCurveControlPoints() {
@@ -339,7 +340,11 @@ C4: {C4}
         }
 
         protected override Quaternion Diff(Quaternion a, Quaternion b) {
-            return a * Quaternion.Inverse(b);
+            if (Quaternion.Dot(a, b) > 0) {
+                return a * Quaternion.Inverse(b);
+            } else {
+                return a * Quaternion.Inverse(b.ScalarMultiply(-1f));
+            }
         }
     }
 
