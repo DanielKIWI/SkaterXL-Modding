@@ -5,13 +5,12 @@ using System.Diagnostics;
 using UnityEngine;
 
 namespace DebugGUI {
-    public class DebugGUI : MonoBehaviour, ILogHandler {
+    public class DebugConsoleGUI : MonoBehaviour, ILogHandler {
 
         public ILogHandler parentHandler;
-        private static DebugGUI _instance;
+        private static DebugConsoleGUI _instance;
         private GUIStyle font;
-        private List<DebugGUI.Message> messages;
-        private bool consoleVisible = true;
+        private List<DebugConsoleGUI.Message> messages;
         private GUIStyle boxStyle;
         private bool b_guiStyled;
         private Vector2 scrollPosition;
@@ -19,8 +18,12 @@ namespace DebugGUI {
         public bool autoScroll;
         public float maxHeight;
         public void Awake() {
+            if (_instance) {
+                UnityEngine.Debug.LogError("There are more than 1 DebugConsoleGUI Object");
+            }
+            _instance = this;
             DontDestroyOnLoad(gameObject);
-            this.messages = new List<DebugGUI.Message>();
+            this.messages = new List<DebugConsoleGUI.Message>();
             LogType[] logTypes = Enum.GetValues(typeof(LogType)).Cast<LogType>().ToArray();
             showLogType = new Dictionary<LogType, bool>();
             foreach (var type in logTypes) {
@@ -29,10 +32,14 @@ namespace DebugGUI {
             UnityEngine.Debug.unityLogger.filterLogType = LogType.Log;
             UnityEngine.Debug.unityLogger.logEnabled = true;
         }
+        public void OnDestroy() {
+            UnityEngine.Debug.unityLogger.logEnabled = false;
+            _instance = null;
+        }
 
 
         public void OnGUI() {
-            if (!this.consoleVisible) {
+            if (!Main.guiVisible) {
                 return;
             }
             if (!this.b_guiStyled) {
@@ -65,7 +72,7 @@ namespace DebugGUI {
 
                 scrollPosition = GUI.BeginScrollView(boxRect, scrollPosition, viewRect, false, true);
                 float yOffset = 20f;
-                foreach (DebugGUI.StaticMessage message2 in this.messages) {
+                foreach (DebugConsoleGUI.StaticMessage message2 in this.messages) {
                     this.font.normal.textColor = message2.color;
                     float messageHeight = message2.CalcHeight(font, messageWidth);
                     GUI.Label(new Rect(20f, yOffset, messageWidth, messageHeight), message2.getGuiContent(), this.font);
@@ -90,12 +97,9 @@ namespace DebugGUI {
             x += w;
         }
         
-        public static DebugGUI Instance {
+        public static DebugConsoleGUI Instance {
             get {
-                if (DebugGUI._instance == null) {
-                    DebugGUI._instance = new GameObject("GUIConsole").AddComponent<DebugGUI>();
-                }
-                return DebugGUI._instance;
+                return DebugConsoleGUI._instance;
             }
         }
         private void Update() {
@@ -108,11 +112,11 @@ namespace DebugGUI {
                 }
             }
             if (Input.GetKeyDown(KeyCode.F9)) {
-                this.consoleVisible = !this.consoleVisible;
+                Main.guiVisible = !Main.guiVisible;
             }
             if (Input.GetKeyDown(KeyCode.Delete)) {
                 if (this.messages == null) {
-                    this.messages = new List<DebugGUI.Message>();
+                    this.messages = new List<DebugConsoleGUI.Message>();
                 } else {
                     this.messages.Clear();
                 }
@@ -120,7 +124,7 @@ namespace DebugGUI {
         }
         
         private void AddMessage(string message, Color color) {
-            this.messages.Add(new DebugGUI.StaticMessage(message, color));
+            this.messages.Add(new DebugConsoleGUI.StaticMessage(message, color));
 
             if (this.messages.Count > Main.settings.MaxLogsCount) {
                 this.messages.RemoveAt(0);
@@ -207,9 +211,9 @@ namespace DebugGUI {
 
     }
     public static class MessageListExtension {
-        public static float CalcHeight(this IEnumerable<DebugGUI.Message> messages, GUIStyle style, float width) {
+        public static float CalcHeight(this IEnumerable<DebugConsoleGUI.Message> messages, GUIStyle style, float width) {
             float height = 0f;
-            foreach (DebugGUI.Message message in messages) {
+            foreach (DebugConsoleGUI.Message message in messages) {
                 height += message.CalcHeight(style, width);
             }
             return height;

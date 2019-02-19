@@ -50,58 +50,58 @@ namespace XLMultiplayerMod {
                 DebugHelper.LogObjectHierarchy(skaterRoot);
 
                 return;
-                skaterRoot.AddComponent<ImportentTransformReferences>().importantTransforms = list.ToArray();
-                DebugHelper.LogObjectHierarchy(skaterRoot);
-                skaterRoot.SetActive(false);
-                GameObject skaterClone = GameObject.Instantiate(skaterRoot);
-                Destroy(skaterRoot.GetComponent<ImportentTransformReferences>());
-                Transform[] impotatTransforms = skaterClone.GetComponent<ImportentTransformReferences>().importantTransforms;
-                skaterClone.transform.SetParent(null);
-                skaterRoot.SetActive(true);
+                //skaterRoot.AddComponent<ImportentTransformReferences>().importantTransforms = list.ToArray();
+                //DebugHelper.LogObjectHierarchy(skaterRoot);
+                //skaterRoot.SetActive(false);
+                //GameObject skaterClone = GameObject.Instantiate(skaterRoot);
+                //Destroy(skaterRoot.GetComponent<ImportentTransformReferences>());
+                //Transform[] impotatTransforms = skaterClone.GetComponent<ImportentTransformReferences>().importantTransforms;
+                //skaterClone.transform.SetParent(null);
+                //skaterRoot.SetActive(true);
 
-                foreach (Transform t in skaterClone.GetComponentsInChildren<Transform>()) {
-                    if (t == skaterClone) continue;
-                    if (Array.IndexOf(impotatTransforms, t) == -1) {
-                        Destroy(t.gameObject);
-                    }
-                }
+                //foreach (Transform t in skaterClone.GetComponentsInChildren<Transform>()) {
+                //    if (t == skaterClone) continue;
+                //    if (Array.IndexOf(impotatTransforms, t) == -1) {
+                //        Destroy(t.gameObject);
+                //    }
+                //}
                 //Destroy(skaterClone.transform.Find("Camera Rig").gameObject);
                 //DestroyNotRecordedTransforms(skaterClone.transform);
 
 
-                foreach (var c in skaterClone.GetComponentsInChildren<GraphicRaycaster>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<RawImage>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<Image>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<Text>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<CanvasScaler>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<StandaloneInputModule>()) {
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                foreach (var c in skaterClone.GetComponentsInChildren<Component>()) {
-                    if (c is Renderer) continue;
-                    if (c is Transform) continue;
-                    if (c is MeshFilter) continue;
-                    Debug.Log("Destroyed Component " + c + " from skaterClone");
-                    Destroy(c);
-                }
-                skaterClone.SetActive(true);
-                DebugHelper.LogObjectHierarchy(skaterClone);
+                //foreach (var c in skaterClone.GetComponentsInChildren<GraphicRaycaster>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<RawImage>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<Image>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<Text>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<CanvasScaler>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<StandaloneInputModule>()) {
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //foreach (var c in skaterClone.GetComponentsInChildren<Component>()) {
+                //    if (c is Renderer) continue;
+                //    if (c is Transform) continue;
+                //    if (c is MeshFilter) continue;
+                //    Debug.Log("Destroyed Component " + c + " from skaterClone");
+                //    Destroy(c);
+                //}
+                //skaterClone.SetActive(true);
+                //DebugHelper.LogObjectHierarchy(skaterClone);
             } catch (Exception e) {
                 Debug.LogException(e);
             }
