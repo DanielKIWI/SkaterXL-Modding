@@ -1,13 +1,31 @@
 ﻿using System;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using Harmony12;
 
 namespace XLShredReplayEditor {
 
     public class ReplayRecorder : MonoBehaviour {
-
+        Traverse wheel1;
+        Traverse wheel2;
+        Traverse wheel3;
+        Traverse wheel4;
         public void Awake() {
+            var bcInstance = Traverse.Create(PlayerController.Instance.boardController);
+            var wheel1 = bcInstance.Field<Transform>("_wheel1");
+            var wheel2 = bcInstance.Field<Transform>("_wheel2");
+            var wheel3 = bcInstance.Field<Transform>("_wheel3");
+            var wheel4 = bcInstance.Field<Transform>("_wheel4");
             List<Transform> list = new List<Transform>(PlayerController.Instance.respawn.getSpawn);
+            list = list.Union(new List<Transform> {
+                SoundManager.Instance.wheel1,
+                SoundManager.Instance.wheel2,
+                SoundManager.Instance.wheel3,
+                SoundManager.Instance.wheel4
+            }).ToList();
             foreach (object obj in Enum.GetValues(typeof(HumanBodyBones))) {
                 HumanBodyBones humanBodyBones = (HumanBodyBones)obj;
                 if (humanBodyBones >= HumanBodyBones.Hips && humanBodyBones < HumanBodyBones.LastBone) {
@@ -24,6 +42,13 @@ namespace XLShredReplayEditor {
             this.recordedFrames = new List<ReplayRecordedFrame>();
             this.startTime = 0f;
             this.endTime = 0f;
+            printTransformsToBeRecorded();
+        }
+        void printTransformsToBeRecorded() {
+            print("transformsToBeRecorded: ");
+            foreach (Transform t in transformsToBeRecorded) {
+                print(t.name);
+            }
         }
 
         private void ClearRecording() {
@@ -31,11 +56,13 @@ namespace XLShredReplayEditor {
             this.startTime = this.endTime;
         }
 
-        public void Update() {
+        public void FixedUpdate() {
             if (ReplayManager.CurrentState != ReplayState.RECORDING) {
                 return;
             }
             this.endTime += Time.deltaTime;
+
+
             this.RecordFrame();
             if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
                 this.startTime = this.endTime - Main.settings.MaxRecordedTime;
