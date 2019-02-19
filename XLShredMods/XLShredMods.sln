@@ -10,9 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredReplayEditor", "XLSh
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugGUI", "DebugGUI\DebugGUI.csproj", "{D6B64159-F670-4BCC-951E-C1C192F498F9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredLib", "..\..\XLShredLoader\XLShredLib\XLShredLib.csproj", "{421325E5-D304-4B9B-B207-E511E4423F56}"
 EndProject

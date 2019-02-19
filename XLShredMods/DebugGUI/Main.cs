@@ -22,26 +22,33 @@ namespace DebugGUI {
         public static Settings settings;
         public static String modId;
         private static ILogHandler unityLogHandler;
+        public static bool guiVisible = true;
+        public static GameObject DebugGuiObject;
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
             settings = Settings.Load<Settings>(modEntry);
 
             modId = modEntry.Info.Id;
 
-            unityLogHandler = Debug.unityLogger.logHandler;
             modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             enabled = value;
             if (enabled) {
-                DebugGUI.Instance.enabled = true;
-                DebugGUI.Instance.parentHandler = unityLogHandler;
-                Debug.unityLogger.logHandler = DebugGUI.Instance;
+                unityLogHandler = Debug.unityLogger.logHandler;
+                DebugGuiObject = new GameObject("DebugGUI");
+                DebugGuiObject.AddComponent<DebugConsoleGUI>();
+                DebugGuiObject.AddComponent<DebugHierarchyGUI>();
+                DebugConsoleGUI.Instance.parentHandler = unityLogHandler;
+                Debug.unityLogger.logHandler = DebugConsoleGUI.Instance;
+
             } else {
-                Debug.unityLogger.logHandler = unityLogHandler;
-                DebugGUI.Instance.parentHandler = null;
-                GameObject.Destroy(DebugGUI.Instance.gameObject);
+                if (DebugConsoleGUI.Instance != null) {
+                    Debug.unityLogger.logHandler = unityLogHandler;
+                    DebugConsoleGUI.Instance.parentHandler = null;
+                    GameObject.Destroy(DebugGuiObject);
+                }
             }
             return true;
         }
