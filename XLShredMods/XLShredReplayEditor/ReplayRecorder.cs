@@ -9,6 +9,51 @@ using Harmony12;
 namespace XLShredReplayEditor {
 
     public class ReplayRecorder : MonoBehaviour {
+
+        public float _startTime;
+        public float startTime {
+            get { return _startTime; }
+            set {
+                if (value <= _startTime) return;
+                int i = 0;
+                while (i < recordedFrames.Count && recordedFrames[i].time < value) {
+                    i++;
+                }
+                if (i == recordedFrames.Count) {
+                    recordedFrames.Clear();
+                    _startTime = endTime;
+                } else {
+                    recordedFrames.RemoveRange(0, i);
+                    _startTime = recordedFrames[0].time;
+                }
+            }
+        }
+        public float _endTime;
+        public float endTime {
+            get { return _endTime; }
+            set {
+                if (value >= _endTime) return;
+                int i = 0;
+                while (i < recordedFrames.Count && recordedFrames[recordedFrames.Count - 1 - i].time > value) {
+                    i++;
+                }
+                if (i == recordedFrames.Count) {
+                    recordedFrames.Clear();
+                    _endTime = startTime;
+                } else {
+                    recordedFrames.RemoveRange(recordedFrames.Count - i, i);
+                    _endTime = recordedFrames[recordedFrames.Count - 1].time;
+                }
+            }
+        }
+        public float recordedTime {
+            get {
+                return endTime - startTime;
+            }
+        }
+
+
+
         Traverse wheel1;
         Traverse wheel2;
         Traverse wheel3;
@@ -40,8 +85,8 @@ namespace XLShredReplayEditor {
             this.recSkin.fontSize = 20;
             this.recSkin.normal.textColor = Color.red;
             this.recordedFrames = new List<ReplayRecordedFrame>();
-            this.startTime = 0f;
-            this.endTime = 0f;
+            this._startTime = 0f;
+            this._endTime = 0f;
             printTransformsToBeRecorded();
         }
         void printTransformsToBeRecorded() {
@@ -53,22 +98,19 @@ namespace XLShredReplayEditor {
 
         private void ClearRecording() {
             this.recordedFrames.Clear();
-            this.startTime = this.endTime;
+            this._startTime = this._endTime;
         }
 
         public void FixedUpdate() {
             if (ReplayManager.CurrentState != ReplayState.RECORDING) {
                 return;
             }
-            this.endTime += Time.deltaTime;
+            this._endTime += Time.deltaTime;
 
 
             this.RecordFrame();
             if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
                 this.startTime = this.endTime - Main.settings.MaxRecordedTime;
-                while (this.recordedFrames.Count > 0 && this.recordedFrames[0].time < this.startTime) {
-                    this.recordedFrames.RemoveAt(0);
-                }
             }
         }
 
@@ -143,18 +185,11 @@ namespace XLShredReplayEditor {
         public List<ReplayRecordedFrame> recordedFrames;
 
 
-        public float endTime;
 
 
         private GUIStyle recSkin;
 
 
-        public float startTime;
-        public float recordedTime {
-            get {
-                return endTime - startTime;
-            }
-        }
     }
 
 }

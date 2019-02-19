@@ -2,10 +2,8 @@
 using System.Reflection;
 using UnityModManagerNet;
 using System;
-#if !STANDALONE
 using XLShredLib;
 using XLShredLib.UI;
-#endif
 
 namespace XLShredReplayEditor {
 
@@ -14,6 +12,13 @@ namespace XLShredReplayEditor {
 
         public float MaxRecordedTime = 120f;
         public bool showRecGUI = false;
+        public bool showLogo = true;
+
+        public float TranslationSpeed = 5f;
+        public float OrbitMoveSpeed = 5f;
+        public float RotateSpeed = 20f;
+        public float FOVChangeSpeed = 20f;
+
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
@@ -31,23 +36,22 @@ namespace XLShredReplayEditor {
             modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnSettingsGUI;
-            //Disabling the Tutorial
-            PromptController.Instance.menuthing.enabled = false;
-#if !STANDALONE
+
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
             uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
             uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
             ModMenu.Instance.RegisterShowCursor(modId, () => {
                 return (ReplayManager.CurrentState == ReplayState.PLAYBACK) ? 1 : 0;
             });
-#endif
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             if (value == enabled) return true;
             enabled = value;
             if (enabled) {
+                PromptController.Instance.menuthing.enabled = false; //Disabling the Tutorial
                 ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
             } else {
+                PromptController.Instance.menuthing.enabled = true;
                 ReplayManager.Instance?.Destroy();
             }
 
@@ -58,10 +62,26 @@ namespace XLShredReplayEditor {
             ReplayAudioRecorder.Instance?.CalcMaxTmpStreamLength();
         }
         static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
+            settings.showRecGUI = GUILayout.Toggle(settings.showRecGUI, "Show 'REC'-Icon");
+            settings.showLogo = GUILayout.Toggle(settings.showLogo, "Show Logo");
+            GUILayout.Label("Please leave the logo in your videos or put the mod link (https://github.com/DanielKIWI/SkaterXL-Modding) in the description");
+            GUILayout.Space(8);
+            SettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
+            SettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
+            SettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
+            SettingSliderGUI("FOV Change Speed", () => settings.FOVChangeSpeed, (v) => settings.FOVChangeSpeed = v, 0, 100);
+            GUILayout.Space(8);
+            SettingSliderGUI("Max Record Time", () => settings.MaxRecordedTime, (v) => settings.MaxRecordedTime = v, 0, 300);
+        }
+        static void SettingSliderGUI(string name, Func<float> getter, Action<float> setter, float min, float max) {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Maximum Time to be recorded: " + settings.MaxRecordedTime, GUILayout.ExpandWidth(false));
-            GUILayout.Space(10);
-            settings.MaxRecordedTime = GUILayout.HorizontalSlider(settings.MaxRecordedTime, 0, 300);
+            GUILayout.Label(name, GUILayout.Width(200));
+            GUILayout.Space(8);
+            float value;
+            if (float.TryParse(GUILayout.TextField(getter().ToString("0.00"), GUILayout.Width(50)), out value)) {
+                setter(value);
+            }
+            setter(GUILayout.HorizontalSlider(getter(), min, max));
             GUILayout.EndHorizontal();
         }
     }
