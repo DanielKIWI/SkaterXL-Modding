@@ -6,9 +6,34 @@
       "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-0.0.3/XLShredReplayEditor-0.0.3.zip"
     },
     {
+      "Id": "kiwi.XLShredReplayEditor",
+      "Version": "0.0.4",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.0.4/XLShredReplayEditor-0.0.4.zip"
+    },
+    {
+      "Id": "kiwi.XLShredReplayEditor",
+      "Version": "0.0.5",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.0.5/XLShredReplayEditor-0.0.5.zip"
+    },
+    {
       "Id": "kiwi.XLShredAdjustAudioPitch",
       "Version": "0.0.1",
       "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredAdjustAudioPitch-0.0.1/XLShredAdjustAudioPitch-0.0.1.zip"
+    },
+    {
+      "Id": "kiwi.XLShredGrindToGrind",
+      "Version": "0.0.2",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredGrindToGrind-0.0.2/XLShredGrindToGrind-0.0.2.zip"
+    },
+    {
+      "Id": "kiwi.XLShredSessionMarkerManager",
+      "Version": "0.0.1",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredSessionMarkerManager-0.0.1/XLShredSessionMarkerManager-0.0.1.zip"
+    },
+    {
+      "Id": "kiwi.XLShredSessionMarkerManager",
+      "Version": "0.0.2",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredSessionMarkerManager-0.0.2/XLShredSessionMarkerManager-0.0.2.zip"
     }
   ]
 }
