@@ -67,6 +67,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityModManager">
+      <HintPath>..\references\UnityModManager.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Patches\AssetBundlePatches.cs" />
@@ -76,17 +79,17 @@
     <Compile Include="TeleporterLocation.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\XLShredLoader\XLShredLib\XLShredLib.csproj">
-      <Project>{421325e5-d304-4b9b-b207-e511e4423f56}</Project>
-      <Name>XLShredLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="ModInfo.md" />
     <None Include="Resources\Info.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Extensions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\XLShredLoader\XLShredLib\XLShredLib.csproj">
+      <Project>{421325e5-d304-4b9b-b207-e511e4423f56}</Project>
+      <Name>XLShredLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
