@@ -10,10 +10,6 @@ namespace XLShredReplayEditor {
             this.manager = base.GetComponent<ReplayManager>();
             this.cameraTransform = PlayerController.Instance.cameraController._actualCam;
             this.camera = cameraTransform.GetComponent<Camera>();
-            this.TranslationSpeed = 5f;
-            this.OrbitMoveSpeed = 5f;
-            this.RotateSpeed = 20f;
-            this.FOVChangeSpeed = 20f;
             this.mode = ReplayCameraController.CameraMode.Orbit;
             this.keyStones = new List<KeyStone>();
             this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
@@ -27,121 +23,31 @@ namespace XLShredReplayEditor {
             if (this.CamFollowKeyStones) {
                 return;
             }
-            if (PlayerController.Instance.inputController.player.GetButton("RB")) {
-                InputCameraFOV();
-                switch (this.mode) {
-                    case ReplayCameraController.CameraMode.Free:
-                        InputRollRotation();
-                        break;
-                    case ReplayCameraController.CameraMode.Orbit:
-                        InputFocusOffsetY();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + this.orbitRadialCoord.cartesianCoords;
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
-                        break;
-                    case ReplayCameraController.CameraMode.Tripod:
-                        InputFocusOffsetY();
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
-                        break;
-                }
-            } else {
-                switch (this.mode) {
-                    case ReplayCameraController.CameraMode.Free:
-                        this.InputFreePosition(true, false);
-                        this.InputFreeRotation();
-                        break;
-                    case ReplayCameraController.CameraMode.Orbit:
-                        this.InputOrbitMode();
-                        this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.cartesianCoords;
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
-                        break;
-                    case ReplayCameraController.CameraMode.Tripod:
-                        this.InputFreePosition(true, true);
-                        this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
-                        break;
-                }
+            bool RBPressed = PlayerController.Instance.inputController.player.GetButton("RB");
+            if (RBPressed) InputCameraFOV();
+            switch (this.mode) {
+                case ReplayCameraController.CameraMode.Free:
+                    if (RBPressed) InputRollRotation();
+                    this.InputFreePosition(true, false);
+                    this.InputFreeRotation();
+                    break;
+                case ReplayCameraController.CameraMode.Orbit:
+                    if (RBPressed) InputFocusOffsetY();
+                    this.InputOrbitMode();
+                    this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.cartesianCoords;
+                    this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
+                    break;
+                case ReplayCameraController.CameraMode.Tripod:
+                    if (RBPressed) InputFocusOffsetY();
+                    this.InputFreePosition(true, true);
+                    this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
+                    break;
             }
         }
-
         public void FixedUpdate() {
             this.EvaluateKeyStones();
         }
 
-        public void OnGUI() {
-            if (this.manager.guiHidden) {
-                return;
-            }
-            float w = 300f;
-            float x = (float)Screen.width - w - 20f;
-            float boxY = (float)Screen.height / 2f - 100f;
-            float y = 20f;
-            GUI.skin.label.normal.textColor = Color.white;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "CamMode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), this.mode));
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Back: Enable KeyStone Animation (" + (this.CamFollowKeyStones ? "On" : "Off") + ")");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "RightStick: Show/Hide GUI");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Y: Change Mode");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "X: Add KeyStone");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Hold X: Delete KeyStone");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "DPadX: Jump to next KeyStone or max 5s");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "LB + LeftStickX Change Start of clip");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "LB + RightStickX Change End of clip");
-            y += 20f;
-            switch (this.mode) {
-                case ReplayCameraController.CameraMode.Free:
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStick: Move(xz)");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "DpadY: Move(y)");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RightStick: Rotate");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickX Rotate around forward axis");
-                    y += 20f;
-                    break;
-                case ReplayCameraController.CameraMode.Orbit:
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStickX + RightStickY: Orbit around Skater");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStickY: Change Orbit Radius");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
-                    y += 20f;
-                    break;
-                case ReplayCameraController.CameraMode.Tripod:
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "LeftStick: Move(xz)");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "DpadY or RightStickY: Move(y)");
-                    y += 20f;
-                    GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + RightStickY Change Focus Offset");
-                    y += 20f;
-                    break;
-            }
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "RB + LeftStickY Change camera FOV");
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Free Move Speed");
-            y += 20f;
-            TranslationSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), TranslationSpeed, 0, 10);
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Free Rotate Speed");
-            y += 20f;
-            RotateSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), RotateSpeed, 0, 40);
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "Orbit Move Speed");
-            y += 20f;
-            OrbitMoveSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), OrbitMoveSpeed, 0, 10);
-            y += 20f;
-            GUI.Label(new Rect(x, boxY + y, w, 20f), "FOV Change Speed");
-            y += 20f;
-            FOVChangeSpeed = GUI.HorizontalSlider(new Rect(x, boxY + y, w, 20f), FOVChangeSpeed, 0, 40);
-            y += 20f;
-            GUI.Box(new Rect(x, boxY, w, y), "Camera");
-        }
         #endregion
 
         #region Input
@@ -155,7 +61,7 @@ namespace XLShredReplayEditor {
             FocusOffsetY += PlayerController.Instance.inputController.player.GetAxis("RightStickY") * TranslationSpeed * Time.unscaledDeltaTime;
         }
         private void InputOrbitMode() {
-            float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
+            float axis = -PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
             float axis2 = PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
             PlayerController.Instance.inputController.player.GetAxis("RightStickX");
             float axis3 = PlayerController.Instance.inputController.player.GetAxis("RightStickY");
@@ -365,12 +271,11 @@ namespace XLShredReplayEditor {
 
         public float FocusOffsetY;
 
-        public float RotateSpeed;
+        public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
+        public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
 
-        public float TranslationSpeed;
-
-        public float OrbitMoveSpeed;
-        public float FOVChangeSpeed;
+        public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
+        public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
         private float defaultCameraFOV;
 
         private float xDownTime;

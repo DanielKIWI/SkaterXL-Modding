@@ -34,6 +34,7 @@ namespace XLShredReplayEditor {
         public void CalcMaxTmpStreamLength() {
             maxTmpStreamLength = (long)(Main.settings.MaxRecordedTime * sampleRate) * (BITS_PER_SAMPLE / 8 * channels);
         }
+        float audioStartTime;
 
         private Thread fileStreamThread;
         EventWaitHandle fileThreadWait = new EventWaitHandle(false, EventResetMode.ManualReset);
@@ -119,7 +120,7 @@ namespace XLShredReplayEditor {
                 playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
-                        SetPlaybackTime(ReplayManager.Instance.displayedPlaybackTime);
+                        SetPlaybackTime(ReplayManager.Instance.playbackTime);
                     } catch (Exception e) { Debug.LogException(e); }
                 }
             }
@@ -175,16 +176,18 @@ namespace XLShredReplayEditor {
                 fileStreamThread = null;
             }
             SaveToWavFile();
+            audioStartTime = ReplayManager.Instance.recorder.startTime;
         }
         public IEnumerator StartPlayback() {
             yield return LoadWavFileToAudioSource();
-            SetPlaybackTime(ReplayManager.Instance.displayedPlaybackTime);
+            SetPlaybackTime(ReplayManager.Instance.playbackTime);
         }
         public void StopPlayback() {
             playBackAudioSource.Stop();
             playBackAudioSource.clip = null;
         }
-        public void SetPlaybackTime(float t) {
+        public void SetPlaybackTime(float playbackTime) {
+            float t = playbackTime - audioStartTime;
             if (playBackAudioClip == null) {
                 Debug.LogWarning("playBackAudioClip is null");
                 return;

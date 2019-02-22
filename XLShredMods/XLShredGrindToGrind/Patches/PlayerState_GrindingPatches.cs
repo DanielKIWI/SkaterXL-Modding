@@ -14,8 +14,9 @@ namespace XLShredGrindToGrind.Patches {
     public static class PlayerState_Grinding_Patch {
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
             var codes = instructions.ToList();
-            var canGrindCode = codes[95]; //That line represents the value to that PlayerState_Air._canGrind gets set.
+            var canGrindCode = codes[88]; //That line represents the value to that PlayerState_Air._canGrind gets set.
             //95 = 116 - 13 - 8,  Explanation: boolean value gets pushed to the stack at line 116 in OnGrindEnded IL code, function code starts at 13, 8 empty lines 
+            //88 = 107 - 13 - 6  //for NEW patch 0.0.3
             canGrindCode.opcode = OpCodes.Ldc_I4_1;     //Setting bool for PlayerState_Air._canGrind 
             return codes.AsEnumerable();
         }

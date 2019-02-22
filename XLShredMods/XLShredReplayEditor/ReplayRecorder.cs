@@ -1,13 +1,76 @@
 ﻿using System;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using Harmony12;
 
 namespace XLShredReplayEditor {
 
     public class ReplayRecorder : MonoBehaviour {
 
+        public float _startTime;
+        public float startTime {
+            get { return _startTime; }
+            set {
+                if (value <= _startTime) return;
+                int i = 0;
+                while (i < recordedFrames.Count && recordedFrames[i].time < value) {
+                    i++;
+                }
+                if (i == recordedFrames.Count) {
+                    recordedFrames.Clear();
+                    _startTime = endTime;
+                } else {
+                    recordedFrames.RemoveRange(0, i);
+                    _startTime = recordedFrames[0].time;
+                }
+            }
+        }
+        public float _endTime;
+        public float endTime {
+            get { return _endTime; }
+            set {
+                if (value >= _endTime) return;
+                int i = 0;
+                while (i < recordedFrames.Count && recordedFrames[recordedFrames.Count - 1 - i].time > value) {
+                    i++;
+                }
+                if (i == recordedFrames.Count) {
+                    recordedFrames.Clear();
+                    _endTime = startTime;
+                } else {
+                    recordedFrames.RemoveRange(recordedFrames.Count - i, i);
+                    _endTime = recordedFrames[recordedFrames.Count - 1].time;
+                }
+            }
+        }
+        public float recordedTime {
+            get {
+                return endTime - startTime;
+            }
+        }
+
+
+
+        Traverse wheel1;
+        Traverse wheel2;
+        Traverse wheel3;
+        Traverse wheel4;
         public void Awake() {
+            var bcInstance = Traverse.Create(PlayerController.Instance.boardController);
+            var wheel1 = bcInstance.Field<Transform>("_wheel1");
+            var wheel2 = bcInstance.Field<Transform>("_wheel2");
+            var wheel3 = bcInstance.Field<Transform>("_wheel3");
+            var wheel4 = bcInstance.Field<Transform>("_wheel4");
             List<Transform> list = new List<Transform>(PlayerController.Instance.respawn.getSpawn);
+            list = list.Union(new List<Transform> {
+                SoundManager.Instance.wheel1,
+                SoundManager.Instance.wheel2,
+                SoundManager.Instance.wheel3,
+                SoundManager.Instance.wheel4
+            }).ToList();
             foreach (object obj in Enum.GetValues(typeof(HumanBodyBones))) {
                 HumanBodyBones humanBodyBones = (HumanBodyBones)obj;
                 if (humanBodyBones >= HumanBodyBones.Hips && humanBodyBones < HumanBodyBones.LastBone) {
@@ -22,26 +85,32 @@ namespace XLShredReplayEditor {
             this.recSkin.fontSize = 20;
             this.recSkin.normal.textColor = Color.red;
             this.recordedFrames = new List<ReplayRecordedFrame>();
-            this.startTime = 0f;
-            this.endTime = 0f;
+            this._startTime = 0f;
+            this._endTime = 0f;
+            printTransformsToBeRecorded();
+        }
+        void printTransformsToBeRecorded() {
+            print("transformsToBeRecorded: ");
+            foreach (Transform t in transformsToBeRecorded) {
+                print(t.name);
+            }
         }
 
         private void ClearRecording() {
             this.recordedFrames.Clear();
-            this.startTime = this.endTime;
+            this._startTime = this._endTime;
         }
 
-        public void Update() {
+        public void FixedUpdate() {
             if (ReplayManager.CurrentState != ReplayState.RECORDING) {
                 return;
             }
-            this.endTime += Time.deltaTime;
+            this._endTime += Time.deltaTime;
+
+
             this.RecordFrame();
             if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
                 this.startTime = this.endTime - Main.settings.MaxRecordedTime;
-                while (this.recordedFrames.Count > 0 && this.recordedFrames[0].time < this.startTime) {
-                    this.recordedFrames.RemoveAt(0);
-                }
             }
         }
 
@@ -116,18 +185,11 @@ namespace XLShredReplayEditor {
         public List<ReplayRecordedFrame> recordedFrames;
 
 
-        public float endTime;
 
 
         private GUIStyle recSkin;
 
 
-        public float startTime;
-        public float recordedTime {
-            get {
-                return endTime - startTime;
-            }
-        }
     }
 
 }
