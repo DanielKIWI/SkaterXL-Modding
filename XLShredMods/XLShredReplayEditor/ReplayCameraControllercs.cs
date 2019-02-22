@@ -25,7 +25,6 @@ namespace XLShredReplayEditor {
             this.InputModeChange();
             this.InputKeyStoneControll();
             if (this.CamFollowKeyStones) {
-                this.EvaluateKeyStones();
                 return;
             }
             if (PlayerController.Instance.inputController.player.GetButton("RB")) {
@@ -61,6 +60,10 @@ namespace XLShredReplayEditor {
                         break;
                 }
             }
+        }
+
+        public void FixedUpdate() {
+            this.EvaluateKeyStones();
         }
 
         public void OnGUI() {
