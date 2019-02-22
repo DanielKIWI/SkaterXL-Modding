@@ -21,6 +21,7 @@ namespace XLShredReplayEditor {
             this.InputModeChange();
             this.InputKeyStoneControll();
             if (this.CamFollowKeyStones) {
+                this.EvaluateKeyStones();
                 return;
             }
             bool RBPressed = PlayerController.Instance.inputController.player.GetButton("RB");
@@ -43,9 +44,6 @@ namespace XLShredReplayEditor {
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
             }
-        }
-        public void FixedUpdate() {
-            this.EvaluateKeyStones();
         }
 
         #endregion
