@@ -7,9 +7,23 @@ using UnityEngine;
 namespace GUILayoutLib {
 
     public class GUIValueCache {
-        public Dictionary<string, object> lastValues;
+        public Dictionary<string, object> valuesDict;
+        public bool TryGetValueForKey(string key, out object value) {
+            if (!valuesDict.ContainsKey(key)) {
+                value = 0;
+                return false;
+            }
+            value = valuesDict[key];
+            return true;
+        }
+        public bool ContainsValueForKey(string key) {
+            return valuesDict.ContainsKey(key);
+        }
+        public object GetValueForKey(string key) {
+            return valuesDict[key];
+        }
         public GUIValueCache() {
-            lastValues = new Dictionary<string, object>();
+            valuesDict = new Dictionary<string, object>();
         }
     }
     public abstract class GUIField {
@@ -20,14 +34,14 @@ namespace GUILayoutLib {
         public Action<float> Setter;
 
         public override void ApplyCachedValue(GUIValueCache cache) {
-            if (!cache.lastValues.ContainsKey(Name)) {
-                Debug.LogWarning("No lastValue found for Field " + Name + "!");
-                return;
-            }
-            if (cache.lastValues[Name] is float lastFloat) {
-                Setter(lastFloat);
+            if (cache.TryGetValueForKey(Name, out object value)) {
+                if (value is float lastFloat) {
+                    Setter(lastFloat);
+                } else {
+                    Debug.LogWarning("lastValue for Float Field " + Name + " is not a float!");
+                }
             } else {
-                Debug.LogWarning("lastValue for Float Field " + Name + " is not a float!");
+                Debug.LogWarning("No lastValue found for Field " + Name + "!");
             }
         }
     }
@@ -35,14 +49,14 @@ namespace GUILayoutLib {
         public Action<Vector3> Setter;
 
         public override void ApplyCachedValue(GUIValueCache cache) {
-            if (!cache.lastValues.ContainsKey(Name)) {
-                Debug.LogWarning("No lastValue found for Field " + Name + "!");
-                return;
-            }
-            if (cache.lastValues[Name] is Vector3 lastVector) {
-                Setter(lastVector);
+            if (cache.TryGetValueForKey(Name, out object value)) {
+                if (value is Vector3 lastVector) {
+                    Setter(lastVector);
+                } else {
+                    Debug.LogWarning("lastValue for Float Field " + Name + " is not a Vector3!");
+                }
             } else {
-                Debug.LogWarning("lastValue for Float Field " + Name + " is not a Vector3!");
+                Debug.LogWarning("No lastValue found for Field " + Name + "!");
             }
         }
     }
@@ -70,7 +84,7 @@ namespace GUILayoutLib {
         }
     }
 
-    public static class GUILayoutHelper {
+    public static partial class GUILayoutHelper {
         public static GUIFieldGroup currentGroup = null;
         public static void BeginFieldGroup() {
             if (currentGroup != null) {
@@ -93,10 +107,10 @@ namespace GUILayoutLib {
                 currentGroup.AddFloatField(name, setter);
             }
             bool didSave = false;
-            if (!cache.lastValues.ContainsKey(name)) {
-                cache.lastValues.Add(name, getter());
+            if (!cache.ContainsValueForKey(name)) {
+                cache.valuesDict.Add(name, getter());
             }
-            float num = (float)cache.lastValues[name];
+            float num = (float)cache.valuesDict[name];
             GUILayout.BeginHorizontal();
             {
                 GUILayout.BeginVertical();
@@ -104,7 +118,7 @@ namespace GUILayoutLib {
                     GUILayout.Label(name);
                     float.TryParse(GUILayout.TextField(num.ToString("0.000000")), out num);
                     num = GUILayout.HorizontalSlider(num, min, max);
-                    cache.lastValues[name] = num;
+                    cache.valuesDict[name] = num;
                 }
                 GUILayout.EndVertical();
                 if (currentGroup == null) {
@@ -126,10 +140,10 @@ namespace GUILayoutLib {
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
             GUILayout.Label(name);
-            if (!cache.lastValues.ContainsKey(name)) {
-                cache.lastValues.Add(name, getter());
+            if (!cache.ContainsValueForKey(name)) {
+                cache.valuesDict.Add(name, getter());
             }
-            Vector3 vector = (Vector3)cache.lastValues[name];
+            Vector3 vector = (Vector3)cache.valuesDict[name];
             float x = vector.x;
             float y = vector.y;
             float z = vector.z;
@@ -137,7 +151,7 @@ namespace GUILayoutLib {
             float.TryParse(GUILayout.TextField(y.ToString("0.00")), out y);
             float.TryParse(GUILayout.TextField(z.ToString("0.00")), out z);
             Vector3 newValue = new Vector3(x, y, z);
-            cache.lastValues[name] = newValue;
+            cache.valuesDict[name] = newValue;
             GUILayout.EndVertical();
             if (currentGroup == null) {
                 if (GUILayout.Button("Apply", GUILayout.ExpandHeight(true), GUILayout.Width(saveButtonWidth))) {

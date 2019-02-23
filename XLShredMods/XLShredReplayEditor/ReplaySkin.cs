@@ -114,11 +114,11 @@ namespace XLShredReplayEditor {
             transparentSliderStyle.normal.background = transparentTexture;
             this.timeScaleSliderStyle = initializeTimeScaleSliderStyle();
 
-            this.margin = 20f;
+            this.margin = 40f;
             this.sliderPadding = this.clipSliderStyle.border.horizontal + this.clipSliderStyle.margin.horizontal + this.clipSliderStyle.padding.horizontal;
             this.markerStyle = new GUIStyle(GUI.skin.button);
             markerStyle.normal.background = transparentTexture;
-            markerStyle.fontSize = 20;
+            markerStyle.fontSize = 30;
             markerStyle.padding = new RectOffset(0, 0, 0, 0);
             markerStyle.border = new RectOffset(0, 0, 0, 0);
             markerStyle.fontStyle = FontStyle.Bold;
@@ -127,9 +127,11 @@ namespace XLShredReplayEditor {
             kiwiLogoStyle.hover.background = kiwiCamTexture;
             kiwiLogoStyle.active.background = kiwiCamTexture;
             kiwiLogoStyle.normal.background = kiwiCamTexture;
-            this.markerContent = new GUIContent("↥");
-            this.markerSize = this.markerStyle.CalcSize(this.markerContent);
+            //this.markerContent = new GUIContent("⫰");
+            this.markerContent = new GUIContent("|");
             this.AdjustToScreen();
+            Vector2 O_size = this.markerStyle.CalcSize(new GUIContent("O"));
+            this.markerSize = new Vector2(Mathf.Max(10f, O_size.x), sliderRect.height + O_size.y);
         }
 
         GUIStyle initializeTimeScaleSliderStyle() {
@@ -196,17 +198,20 @@ namespace XLShredReplayEditor {
             };
         }
 
+        public float NormTForMarkerRect(Rect rect) {
+            float a = this.sliderRect.xMin + (float)this.sliderPadding / 2f;
+            float b = this.sliderRect.xMax - (float)this.sliderPadding / 2f;
+            float x = rect.center.x;
+            float t = (x - a) / (b - a);
+            return Mathf.Clamp01(t);
+        }
 
-        public Rect markerRect(float t) {
+        public Rect MarkerRectForNormT(float t) {
             return new Rect {
-                size = new Vector2 {
-                    x = this.markerSize.x,
-                    y = this.markerSize.y
-                },
-                center = new Vector2 {
-                    x = Mathf.Lerp(this.sliderRect.xMin + (float)this.sliderPadding / 2f, this.sliderRect.xMax - (float)this.sliderPadding / 2f, t),
-                    y = this.sliderRect.yMax - this.markerSize.y / 2f
-                }
+                x = Mathf.Lerp(this.sliderRect.xMin + (float)this.sliderPadding / 2f, this.sliderRect.xMax - (float)this.sliderPadding / 2f, t) - 0.5f * this.markerSize.x,
+                y = this.sliderRect.y,
+                width = this.markerSize.x,
+                height = this.markerSize.y
             };
         }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityModManagerNet;
 using XLShredLib;
+using GUILayoutLib;
 
 namespace XLShredReplayEditor {
 
@@ -144,7 +145,7 @@ namespace XLShredReplayEditor {
             this.playbackTime = this.recorder.endTime;
             this.clipStartTime = this.recorder.startTime;
             this.clipEndTime = this.recorder.endTime;
-            
+
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
             ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK && !guiHidden) ? 1 : 0);
@@ -194,7 +195,7 @@ namespace XLShredReplayEditor {
                 this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
             }
         }
-        
+
         private void CheckInput() {
             if (CurrentState != ReplayState.PLAYBACK && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 StartCoroutine(StartReplayEditor());
@@ -347,19 +348,49 @@ namespace XLShredReplayEditor {
             this.clipStartTime = Mathf.Clamp(GUI.HorizontalSlider(clipRects[0], this.clipStartTime, this.recorder.startTime, this.clipEndTime - saveZone, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.recorder.startTime, this.clipEndTime);
             this.clipEndTime = Mathf.Clamp(GUI.HorizontalSlider(clipRects[1], this.clipEndTime, this.clipStartTime + saveZone, this.recorder.endTime, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.clipStartTime, this.recorder.endTime);
             GUI.Box(clipRects[2], "", ReplaySkin.DefaultSkin.clipBoxStyle);
+
             float pTime = GUI.HorizontalSlider(ReplaySkin.DefaultSkin.sliderRect, this.playbackTime, this.recorder.startTime, this.recorder.endTime, ReplaySkin.DefaultSkin.clipSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle);
             if (Mathf.Abs(pTime - this.playbackTime) > 1E-05f) {
                 this.SetPlaybackTime(pTime);
             }
+
             foreach (KeyStone keyStone in this.cameraController.keyStones) {
                 float t = (keyStone.time - this.recorder.startTime) / (this.recorder.endTime - this.recorder.startTime);
                 Color textColor = (keyStone is FreeCameraKeyStone) ? Color.blue : ((keyStone is OrbitCameraKeyStone) ? Color.red : Color.green);
                 ReplaySkin.DefaultSkin.markerStyle.normal.textColor = textColor;
-                if (GUI.Button(ReplaySkin.DefaultSkin.markerRect(t), ReplaySkin.DefaultSkin.markerContent, ReplaySkin.DefaultSkin.markerStyle)) {
-                    this.playbackTime = keyStone.time;
-                }
+                Rect markerRect = ReplaySkin.DefaultSkin.MarkerRectForNormT(t);
+
+                GUIHelper.DraggableArea(
+                    "keyframe" + keyStone.GetHashCode(),
+                    markerRect,
+                    delegate(out bool beginDrag) {  //GUI Draw
+                        GUILayout.BeginVertical();
+                        GUILayout.Label("|", ReplaySkin.DefaultSkin.markerStyle, GUILayout.ExpandHeight(true));
+                        beginDrag = GUILayout.RepeatButton("O", ReplaySkin.DefaultSkin.markerStyle);
+                        GUILayout.EndVertical();
+                    },
+                    () => SetPlaybackTime(keyStone.time),
+                    delegate(ref Rect r) {  //OnDragUpdate
+                        float xmin = ReplaySkin.DefaultSkin.sliderRect.xMin + (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
+                        float xmax = ReplaySkin.DefaultSkin.sliderRect.xMax - (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
+                        r.center = new Vector2(Mathf.Clamp(r.center.x, xmin, xmax), markerRect.center.y);
+                        float time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
+                        SetPlaybackTime(time);
+                    },
+                    delegate(Rect r) {  //OnDrop
+                        keyStone.time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime); 
+                        //TODO remove keyframe cache
+                    },
+                    this,
+                    true);
+                
+                //if (GUI.Button(ReplaySkin.DefaultSkin.MarkerRectForNormT(t), ReplaySkin.DefaultSkin.markerContent, ReplaySkin.DefaultSkin.markerStyle)) {
+                //    this.playbackTime = keyStone.time;
+                //}
             }
         }
+
+
         void DrawTimeScaleGUI(Rect rect) {
             GUILayout.BeginArea(rect);
             GUILayout.BeginHorizontal();
