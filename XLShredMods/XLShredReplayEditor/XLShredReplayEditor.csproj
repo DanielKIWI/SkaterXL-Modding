@@ -124,12 +124,16 @@
       <Project>{421325e5-d304-4b9b-b207-e511e4423f56}</Project>
       <Name>XLShredLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GUILayoutLib\GUILayoutLib.csproj">
+      <Project>{7fdb6c70-4111-40c1-8d29-5f10ef6b252f}</Project>
+      <Name>GUILayoutLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="IdeasForFeatures.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -LoadLib -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)"</PostBuildEvent>
+    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)" -LibNames GUILayoutLib XLShredLib</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XLShredReplayEditor", "XLShredReplayEditor\XLShredReplayEditor.csproj", "{22526BFF-FE10-4710-934C-98DA78F7125E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1F40B834-E402-4DC0-8724-3C065F3BB83D} = {1F40B834-E402-4DC0-8724-3C065F3BB83D}
+		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F} = {7FDB6C70-4111-40C1-8D29-5F10EF6B252F}
 		{421325E5-D304-4B9B-B207-E511E4423F56} = {421325E5-D304-4B9B-B207-E511E4423F56}
 	EndProjectSection
 EndProject
@@ -84,8 +85,6 @@ Global
 		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Standalone|Any CPU.ActiveCfg = Release|Any CPU
-		{7FDB6C70-4111-40C1-8D29-5F10EF6B252F}.Standalone|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
