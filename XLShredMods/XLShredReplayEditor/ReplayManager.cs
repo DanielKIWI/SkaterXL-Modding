@@ -2,9 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityModManagerNet;
-#if !STANDALONE
 using XLShredLib;
-#endif
 
 namespace XLShredReplayEditor {
 
@@ -83,8 +81,6 @@ namespace XLShredReplayEditor {
 
         public ReplaySaver saver;
 
-        public ReplayManager() {
-        }
 
         public void Awake() {
             DontDestroyOnLoad(gameObject);
@@ -148,14 +144,10 @@ namespace XLShredReplayEditor {
             this.playbackTime = this.recorder.endTime;
             this.clipStartTime = this.recorder.startTime;
             this.clipEndTime = this.recorder.endTime;
-
-#if STANDALONE
-            Time.timeScale = 0f;
-#else
+            
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
             ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK && !guiHidden) ? 1 : 0);
-#endif
             ReplayManager.SetState(ReplayState.PLAYBACK);
         }
 
@@ -174,14 +166,9 @@ namespace XLShredReplayEditor {
                 this.cameraController.OnExitReplayEditor();
                 this.recorder.ApplyLastFrame();
                 SoundManager.Instance.deckSounds.UnMuteAll();
-#if STANDALONE
-            Cursor.visible = false;
-            Time.timeScale = 1f;
-#else
                 XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
                 ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
                 Time.timeScale = 1f;
-#endif
                 ReplayManager.SetState(ReplayState.RECORDING);
             } catch (Exception e) {
                 Debug.LogException(e);
@@ -207,8 +194,7 @@ namespace XLShredReplayEditor {
                 this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
             }
         }
-
-
+        
         private void CheckInput() {
             if (CurrentState != ReplayState.PLAYBACK && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 StartCoroutine(StartReplayEditor());
