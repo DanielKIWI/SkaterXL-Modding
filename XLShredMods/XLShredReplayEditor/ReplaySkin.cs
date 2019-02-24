@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using GUILayoutLib.Extensions;
 
 namespace XLShredReplayEditor {
 
@@ -15,7 +16,8 @@ namespace XLShredReplayEditor {
             }
         }
 
-        public Texture2D clipTexture;
+        public Texture2D ClipCutTexture;
+        public GUIStyle clipCutStyle;
         public GUIStyle clipBoxStyle;
         public Texture2D transparentTexture;
         public GUIStyle timeScaleSliderStyle;
@@ -23,14 +25,20 @@ namespace XLShredReplayEditor {
         private Vector2Int oldScreenSize;
         public Rect sliderRect;
         public Rect controllsRect;
+        public Rect toolsRect;
+        public Rect playPauseRect;
         public GUIContent markerContent;
         public Vector2 markerSize;
         public GUIStyle markerStyle;
-        public float margin;
+        public float sliderMargin;
         public int sliderPadding;
         public GUIStyle clipSliderStyle;
         public GUIStyle sliderThumbStyle;
         public GUIStyle transparentSliderStyle;
+
+        public GUIStyle fontLarge;
+        public GUIStyle fontMed;
+        public GUIStyle fontSmall;
         #region logo
         public GUIStyle kiwiLogoStyle;
         float[] logoWidths = {100f, 75f, 50f};
@@ -50,7 +58,6 @@ namespace XLShredReplayEditor {
                 return new Rect(Screen.width - logoWidth, Screen.height - logoWidth * 0.6f, logoWidth, logoWidth * 0.6f);
             }
         }
-        public Texture2D kiwiCamTexture;
         #endregion
 
         public void AdjustToScreen() {
@@ -58,9 +65,9 @@ namespace XLShredReplayEditor {
                 this.oldScreenSize.x = Screen.currentResolution.width;
                 this.oldScreenSize.y = Screen.currentResolution.height;
                 this.sliderRect = new Rect {
-                    xMin = this.margin,
-                    xMax = (float)Screen.width - this.margin,
-                    y = (float)Screen.height - this.margin - 30f,
+                    xMin = this.sliderMargin,
+                    xMax = (float)Screen.width - this.sliderMargin,
+                    y = (float)Screen.height - this.sliderMargin - 30f,
                     height = 30f
                 };
                 this.controllsRect = new Rect(
@@ -73,19 +80,51 @@ namespace XLShredReplayEditor {
         }
 
         public ReplaySkin() {
+            initTransparentTexture();
+
+            //Styles
+            initKiwiLogoStyle();
+            initSliderStyles();
+            initClipBoxStyle();
+            initFontStyles();
+
+            toolsRect = new Rect(20f, (float)Screen.height - 30f, Screen.width - 40f, 30f);
+
+            this.sliderMargin = 40f;
+            this.sliderPadding = this.clipSliderStyle.border.horizontal + this.clipSliderStyle.margin.horizontal + this.clipSliderStyle.padding.horizontal;
+
+            initMarkerStyle();
+            
+            this.markerContent = new GUIContent("|");
+            this.AdjustToScreen();
+            Vector2 O_size = this.markerStyle.CalcSize(new GUIContent("O"));
+            this.markerSize = new Vector2(Mathf.Max(10f, O_size.x), sliderRect.height + O_size.y);
+
+            playPauseRect = new Rect(0, sliderRect.y - sliderRect.height - 60f, 200f, 50f);
+            playPauseRect.center = new Vector2(Screen.width / 2f, playPauseRect.center.y);
+        }
+        void initFontStyles() {
+            this.fontLarge = new GUIStyle();
+            this.fontMed = new GUIStyle();
+            this.fontSmall = new GUIStyle();
+            this.fontLarge.fontSize = 32;
+            this.fontLarge.normal.textColor = Color.white;
+            this.fontMed.fontSize = 14;
+            this.fontMed.normal.textColor = Color.white;
+            this.fontSmall.fontSize = 12;
+            this.fontSmall.normal.textColor = Color.white;
+        }
+
+        void initTransparentTexture() {
             transparentTexture = new Texture2D(1, 1);
             transparentTexture.SetPixels(new Color[]
             {
                 new Color(0f, 0f, 0f, 0f)
             });
             transparentTexture.Apply();
-            clipTexture = new Texture2D(1, 1);
-            clipTexture.SetPixels(new Color[]
-            {
-                new Color(1f, 0f, 0f, 0.33f)
-            });
-            clipTexture.Apply();
-            kiwiCamTexture = new Texture2D(100, 60);
+        }
+        void initKiwiLogoStyle() {
+            Texture2D kiwiCamTexture = new Texture2D(100, 60);
             for (int i = 0, x = 0, y = 0; i < kiwiCamBytes.Length / 4; i++, x++) {
                 if (x == kiwiCamTexture.width) {
                     x = 0;
@@ -99,12 +138,15 @@ namespace XLShredReplayEditor {
                 kiwiCamTexture.SetPixel(x, kiwiCamTexture.height - y, color);
             }
             kiwiCamTexture.Apply();
-            //Styles
-            this.clipBoxStyle = new GUIStyle(GUI.skin.box);
-            clipBoxStyle.focused.background = clipTexture;
-            clipBoxStyle.hover.background = clipTexture;
-            clipBoxStyle.active.background = clipTexture;
-            clipBoxStyle.normal.background = clipTexture;
+
+            this.kiwiLogoStyle = new GUIStyle(GUI.skin.button);
+            kiwiLogoStyle.focused.background = kiwiCamTexture;
+            kiwiLogoStyle.hover.background = kiwiCamTexture;
+            kiwiLogoStyle.active.background = kiwiCamTexture;
+            kiwiLogoStyle.normal.background = kiwiCamTexture;
+        }
+
+        void initSliderStyles() {
             this.clipSliderStyle = new GUIStyle(GUI.skin.horizontalSlider);
             clipSliderStyle.fixedHeight = 25f;
             this.sliderThumbStyle = new GUIStyle(GUI.skin.horizontalSliderThumb);
@@ -112,62 +154,55 @@ namespace XLShredReplayEditor {
             this.transparentSliderStyle = new GUIStyle(GUI.skin.horizontalSlider);
             transparentSliderStyle.fixedHeight = 25f;
             transparentSliderStyle.normal.background = transparentTexture;
-            this.timeScaleSliderStyle = initializeTimeScaleSliderStyle();
 
-            this.margin = 40f;
-            this.sliderPadding = this.clipSliderStyle.border.horizontal + this.clipSliderStyle.margin.horizontal + this.clipSliderStyle.padding.horizontal;
+            this.timeScaleSliderStyle = new GUIStyle(GUI.skin.horizontalSlider);
+            Texture2D myTexture2D = timeScaleSliderStyle.normal.background.Clone();
+            int x = (int)(myTexture2D.texelSize.x / 2f);
+            for (int y = 0; y < myTexture2D.texelSize.y; y++) {
+                myTexture2D.SetPixel(x, y, Color.black);
+            }
+            myTexture2D.Apply();
+            timeScaleSliderStyle.normal.background = myTexture2D;
+        }
+        void initMarkerStyle() {
             this.markerStyle = new GUIStyle(GUI.skin.button);
             markerStyle.normal.background = transparentTexture;
             markerStyle.fontSize = 30;
             markerStyle.padding = new RectOffset(0, 0, 0, 0);
             markerStyle.border = new RectOffset(0, 0, 0, 0);
             markerStyle.fontStyle = FontStyle.Bold;
-            this.kiwiLogoStyle = new GUIStyle(GUI.skin.button);
-            kiwiLogoStyle.focused.background = kiwiCamTexture;
-            kiwiLogoStyle.hover.background = kiwiCamTexture;
-            kiwiLogoStyle.active.background = kiwiCamTexture;
-            kiwiLogoStyle.normal.background = kiwiCamTexture;
-            //this.markerContent = new GUIContent("⫰");
-            this.markerContent = new GUIContent("|");
-            this.AdjustToScreen();
-            Vector2 O_size = this.markerStyle.CalcSize(new GUIContent("O"));
-            this.markerSize = new Vector2(Mathf.Max(10f, O_size.x), sliderRect.height + O_size.y);
         }
-
-        GUIStyle initializeTimeScaleSliderStyle() {
-            var style = new GUIStyle(GUI.skin.horizontalSlider);
-            Texture2D texture = style.normal.background;
-            // Create a temporary RenderTexture of the same size as the texture
-            RenderTexture tmp = RenderTexture.GetTemporary(
-                                texture.width,
-                                texture.height,
-                                0,
-                                RenderTextureFormat.Default,
-                                RenderTextureReadWrite.Linear);
-
-            // Blit the pixels on texture to the RenderTexture
-            Graphics.Blit(texture, tmp);
-            // Backup the currently set RenderTexture
-            RenderTexture previous = RenderTexture.active;
-            // Set the current RenderTexture to the temporary one we created
-            RenderTexture.active = tmp;
-            // Create a new readable Texture2D to copy the pixels to it
-            Texture2D myTexture2D = new Texture2D(texture.width, texture.height);
-            // Copy the pixels from the RenderTexture to the new Texture
-            myTexture2D.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
-
-            Vector2 size = myTexture2D.texelSize;
-            int x = (int)(size.x / 2f);
-            for (int y = 0; y < size.y; y++) {
-                myTexture2D.SetPixel(x, y, Color.black);
+        void initClipBoxStyle() {
+            this.ClipCutTexture = new Texture2D(128, 128);
+            for (int x = 0; x < 128; x++) {
+                for (int y = 0; y < 128; y++) {
+                    //Color c = clipTexture.GetPixel(x, y);
+                    //c.r = c.r * 1.5f;
+                    //c.g = c.g * 0.1f;
+                    //c.b = c.b * 0.1f;
+                    Color color = x == y ? Color.black : new Color(0, 0, 0, 0);
+                    ClipCutTexture.SetPixel(x, y, color);
+                }
             }
-            myTexture2D.Apply();
-            // Reset the active RenderTexture
-            RenderTexture.active = previous;
-            // Release the temporary RenderTexture
-            RenderTexture.ReleaseTemporary(tmp);
-            style.normal.background = myTexture2D;
-            return style;
+            ClipCutTexture.Apply();
+            this.clipCutStyle = new GUIStyle(GUI.skin.box);
+            clipCutStyle.focused.background = ClipCutTexture;
+            clipCutStyle.hover.background = ClipCutTexture;
+            clipCutStyle.active.background = ClipCutTexture;
+            clipCutStyle.normal.background = ClipCutTexture;
+
+            Texture2D redTexture= new Texture2D(16, 16);
+            for (int x = 0; x < 16; x++) {
+                for (int y = 0; y < 16; y++) {
+                    redTexture.SetPixel(x, y, new Color(0.7f, 0f, 0f, 0.5f));
+                }
+            }
+            redTexture.Apply();
+            this.clipBoxStyle = new GUIStyle(GUI.skin.box);
+            clipBoxStyle.focused.background = redTexture;
+            clipBoxStyle.hover.background = redTexture;
+            clipBoxStyle.active.background = redTexture;
+            clipBoxStyle.normal.background = redTexture;
         }
 
         public Rect[] clipSliderRects(float start, float end, float clipStart, float clipEnd, float saveZone) {
