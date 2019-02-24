@@ -79,6 +79,7 @@ namespace GUILayoutLib {
         }
 
         private static IEnumerator DraggableRectUpdate(Action onClick, OnDragUpdateFunc onDragUpdate, Action<Rect> onDrop, bool cancelOnRightClick) {
+            Rect startRect = new Rect(draggedRect);
             Vector2 startPosition = Input.mousePosition;
             float startTime = Time.time;
             Vector2 offset = draggedRect.center - startPosition;
@@ -93,7 +94,7 @@ namespace GUILayoutLib {
             while (Input.GetKey(KeyCode.Mouse0)) {
                 if (cancelOnRightClick && Input.GetKeyDown(KeyCode.Mouse1)) {
                     draggedObjectID = null;
-                    //onCancel();
+                    onDrop(startRect);
                     yield break;
                 }
                 draggedRect.center = (Vector2)Input.mousePosition + offset;

@@ -22,6 +22,9 @@ namespace GUILayoutLib {
         public object GetValueForKey(string key) {
             return valuesDict[key];
         }
+        public void Add(string key, object value) {
+            valuesDict.Add(key, value);
+        }
         public GUIValueCache() {
             valuesDict = new Dictionary<string, object>();
         }

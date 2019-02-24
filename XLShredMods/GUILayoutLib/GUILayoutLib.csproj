@@ -49,6 +49,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\Texture2D+Extension.cs" />
     <Compile Include="GUIHelper_DragNDop.cs" />
     <Compile Include="GUILayoutHelper_Fields.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
