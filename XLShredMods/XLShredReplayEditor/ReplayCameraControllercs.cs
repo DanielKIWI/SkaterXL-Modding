@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -95,7 +96,7 @@ namespace XLShredReplayEditor {
         }
 
         private void InputModeChange() {
-            if (PlayerController.Instance.inputController.player.GetButtonDown("Y")) {
+            if (PlayerController.Instance.inputController.player.GetButtonDown("Y") || Input.GetKeyDown(KeyCode.M)) {
                 this.mode = ((this.mode >= ReplayCameraController.CameraMode.Tripod) ? ReplayCameraController.CameraMode.Free : (this.mode + 1));
             }
             if (PlayerController.Instance.inputController.player.GetButtonDown("Select")) {
@@ -107,10 +108,10 @@ namespace XLShredReplayEditor {
             if (PlayerController.Instance.inputController.player.GetButtonDown("X")) {
                 this.xDownTime = Time.unscaledTime;
             }
-            if (PlayerController.Instance.inputController.player.GetButton("X") && Time.unscaledTime - this.xDownTime > 1.5f) {
+            if (Input.GetKeyDown(KeyCode.Delete) || PlayerController.Instance.inputController.player.GetButton("X") && Time.unscaledTime - this.xDownTime > 1.5f) {
                 this.DeleteKeyStone();
             }
-            if (PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 0.5f) {
+            if (Input.GetKeyDown(KeyCode.K) || PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 0.5f) {
                 this.AddKeyStone(this.manager.playbackTime);
             }
         }
@@ -194,9 +195,7 @@ namespace XLShredReplayEditor {
             }
             return this.keyStones.Count;
         }
-
-
-
+        
         public KeyStone FindNextKeyStone(float time, bool left) {
             if (this.keyStones.Count == 0) {
                 return null;
@@ -215,6 +214,27 @@ namespace XLShredReplayEditor {
                 }
             }
             return null;
+        }
+        
+        public KeyStone SearchKeyStoneInRange(float start, float end) {
+            if (this.keyStones.Count == 0) {
+                return null;
+            }
+            if (start < end) {
+                var kfs = from t in this.keyStones
+                          where t.time > start && t.time <= end
+                          orderby t.time ascending
+                          select t;
+                if (kfs.Count() == 0) return null;
+                return kfs.First();
+            } else {
+                var ks = from t in this.keyStones
+                         where t.time < start && t.time >= end
+                         orderby t.time descending
+                         select t;
+                if (ks.Count() == 0) return null;
+                return ks.First();
+            }
         }
         #endregion
 

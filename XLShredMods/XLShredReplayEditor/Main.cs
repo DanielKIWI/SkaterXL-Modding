@@ -18,6 +18,9 @@ namespace XLShredReplayEditor {
         public float OrbitMoveSpeed = 5f;
         public float RotateSpeed = 20f;
         public float FOVChangeSpeed = 20f;
+        public float DpadTickRate = 0.75f;
+        public float PlaybackTimeJumpDelta = 5f;
+        public float logoWidth = 75f;
 
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
@@ -62,9 +65,17 @@ namespace XLShredReplayEditor {
             ReplayAudioRecorder.Instance?.CalcMaxTmpStreamLength();
         }
         static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
-            settings.showRecGUI = GUILayout.Toggle(settings.showRecGUI, "Show 'REC'-Icon");
+            GUILayout.Label("Website: https://github.com/DanielKIWI/SkaterXL-Modding");
+            GUILayout.Label("Would love to see the logo in your videos. But its your choice ;)");
+            GUILayout.BeginHorizontal();
             settings.showLogo = GUILayout.Toggle(settings.showLogo, "Show Logo");
-            GUILayout.Label("Please leave the logo in your videos or put the mod link (https://github.com/DanielKIWI/SkaterXL-Modding) in the description");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(ReplaySkin.DefaultSkin.kiwiCamTexture, GUILayout.Width(settings.logoWidth));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            SettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
+            settings.showRecGUI = GUILayout.Toggle(settings.showRecGUI, "Show 'REC'-Icon");
+            
             GUILayout.Space(8);
             SettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
             SettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);

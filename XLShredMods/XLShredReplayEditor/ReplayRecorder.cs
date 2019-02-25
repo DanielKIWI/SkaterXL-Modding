@@ -51,13 +51,7 @@ namespace XLShredReplayEditor {
                 return endTime - startTime;
             }
         }
-
-
-
-        Traverse wheel1;
-        Traverse wheel2;
-        Traverse wheel3;
-        Traverse wheel4;
+        
         public void Awake() {
             var bcInstance = Traverse.Create(PlayerController.Instance.boardController);
             var wheel1 = bcInstance.Field<Transform>("_wheel1");
