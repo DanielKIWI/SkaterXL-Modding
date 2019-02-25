@@ -61,6 +61,7 @@ namespace XLShredReplayEditor {
         }
 
         public bool guiHidden;
+        public bool showControllsHelp;
         bool clipEditMode;
 
         public ReplayCameraController cameraController;
@@ -73,9 +74,11 @@ namespace XLShredReplayEditor {
 
         private float timeScaleAddend;
 
-        private bool dpadCentered = true;
-
-        public float PlaybackTimeJumpDelta;
+        /// <summary>
+        /// Time = |lastDpadTick|
+        /// lastDirection = sign(lastDpadTick)
+        /// </summary>
+        private float lastDpadTick;
 
         public ReplaySaver saver;
 
@@ -98,7 +101,6 @@ namespace XLShredReplayEditor {
                 audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
                 audioRecorder.enabled = true;
             }
-            this.PlaybackTimeJumpDelta = 5f;
         }
         public void Start() {
             if (Main.enabled) {
@@ -189,20 +191,21 @@ namespace XLShredReplayEditor {
                 return;
             }
             if (CurrentState == ReplayState.PLAYBACK) {
-                if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button")) {
+                if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.Return)) {
                     this.guiHidden = !this.guiHidden;
                 }
                 if (PlayerController.Instance.inputController.player.GetButtonDown("B") || Input.GetKeyDown(KeyCode.Escape)) {
                     this.ExitReplayEditor();
                     return;
                 }
-                if (PlayerController.Instance.inputController.player.GetButtonDown("A")) {
+                if (PlayerController.Instance.inputController.player.GetButtonDown("A") || Input.GetKeyDown(KeyCode.Space)) {
                     if (this.playbackTime == this.clipEndTime) {
                         this.playbackTime = this.clipStartTime;
                     }
                     this.isPlaying = !this.isPlaying;
                 }
                 if (PlayerController.Instance.inputController.player.GetButton("LB")) {
+                    this.clipEditMode = true;
                     this.isPlaying = false;
                     this.cameraController.enabled = false;
                     float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX") * recorder.recordedTime / 3f;
@@ -223,26 +226,39 @@ namespace XLShredReplayEditor {
                 } else {
                     this.timeScaleAddend = 0f;
                 }
-                float axis3 = PlayerController.Instance.inputController.player.GetAxis("DPadX");
-                if (Mathf.Abs(axis3) > 0.1f) {
-                    if (this.dpadCentered) {
-                        KeyStone keyStone = this.cameraController.FindNextKeyStone(this.playbackTime, axis3 < 0f);
-                        if (keyStone != null && Mathf.Abs(keyStone.time - this.playbackTime) < this.PlaybackTimeJumpDelta) {
-                            this.SetPlaybackTime(keyStone.time);
-                        } else {
-                            this.SetPlaybackTime(this.playbackTime + this.PlaybackTimeJumpDelta * Mathf.Sign(axis3));
-                        }
+                float dpadX = PlayerController.Instance.inputController.player.GetAxis("DPadX");
+
+                if (Mathf.Abs(dpadX) > 0.3f) {
+                    if (Time.unscaledTime - Mathf.Abs(lastDpadTick) > Main.settings.DpadTickRate || Mathf.Sign(dpadX) != Mathf.Sign(lastDpadTick)) {
+                        //KeyStone keyStone = this.cameraController.FindNextKeyStone(this.playbackTime, dpadX < 0f);
+                        this.lastDpadTick = Time.unscaledTime * Mathf.Sign(dpadX);
+                        JumpByTime(Mathf.Sign(dpadX) * Main.settings.PlaybackTimeJumpDelta, true);
                     }
-                    this.dpadCentered = false;
-                    return;
+                } else {
+                    lastDpadTick = 0f;
                 }
-                this.dpadCentered = true;
+                if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                    JumpByTime(Main.settings.PlaybackTimeJumpDelta, true);
+                }
+                if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                    JumpByTime(-Main.settings.PlaybackTimeJumpDelta, true);
+                }
                 //if (PlayerController.Instance.inputController.player.GetButtonDown("Start") || ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))) {
                 //    this.saver.StartSaving();
                 //}
             }
         }
 
+        public void JumpByTime(float deltaTime, bool stopAtMarker) {
+            if (stopAtMarker) {
+                KeyStone keyStone = this.cameraController.SearchKeyStoneInRange(playbackTime, playbackTime + deltaTime);
+                if (keyStone != null) {
+                    this.SetPlaybackTime(keyStone.time);
+                    return;
+                }
+            }
+            this.SetPlaybackTime(this.playbackTime + deltaTime);
+        }
         public void SetPlaybackTime(float t) {
             this.playbackTime = Mathf.Clamp(t, this.clipStartTime, this.clipEndTime);
             this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
@@ -266,35 +282,25 @@ namespace XLShredReplayEditor {
             if (CurrentState != ReplayState.PLAYBACK) { return; }
             if (this.guiHidden) {
                 if (Main.settings.showLogo) {
-                    if (GUI.Button(ReplaySkin.DefaultSkin.logoRect, "", ReplaySkin.DefaultSkin.kiwiLogoStyle)) {
-                        ReplaySkin.DefaultSkin.cycleThroughLogoWidth();
-                    }
+                    GUI.Box(ReplaySkin.DefaultSkin.logoRect, "", ReplaySkin.DefaultSkin.kiwiLogoStyle);
                 }
                 return;
             }
+            if (showControllsHelp) {
+                DrawControllsGUI();
+            }
 
-            DrawTimeLineGUI();
-            DrawControllsGUI();
+            DrawButtons();
+
+            if (clipEditMode) {
+                DrawClipEditSliders();
+            }
+            DrawTimeLineSliders();
         }
-        void DrawTimeLineGUI() {
+        void DrawButtons() {
             int width = Screen.width;
             GUILayout.BeginArea(ReplaySkin.DefaultSkin.playPauseRect);
             GUILayout.BeginVertical();
-
-            if (clipEditMode) {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Cut Clip")) {
-                    CutClip();
-                    clipEditMode = false;
-                }
-                if (GUILayout.Button("Cancel")) {
-                    clipEditMode = false;
-                    clipStartTime = recorder.startTime;
-                    clipEndTime = recorder.endTime;
-                }
-                GUILayout.EndHorizontal();
-            }
-
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(isPlaying ? "▮▮" : "▶")) {
                 isPlaying = !isPlaying;
@@ -303,22 +309,48 @@ namespace XLShredReplayEditor {
             GUILayout.EndArea();
 
             GUILayout.BeginArea(ReplaySkin.DefaultSkin.toolsRect);
+            GUILayout.BeginVertical();
+            GUILayout.FlexibleSpace();
+
+            if (clipEditMode) {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Cut Clip")) {
+                    CutClip();
+                    clipEditMode = false;
+                }
+                if (GUILayout.Button("Cancel Edit")) {
+                    clipEditMode = false;
+                    clipStartTime = recorder.startTime;
+                    clipEndTime = recorder.endTime;
+                }
+                GUILayout.EndHorizontal();
+            } else {
+                if (GUILayout.Button("Edit Clip Length (" + (clipEditMode ? "ON" : "OFF") + ")")) {
+                    clipEditMode = true;
+                }
+            }
+
+            if (GUILayout.Button("Show Help (" + (showControllsHelp ? "ON" : "OFF") + ")")) {
+                showControllsHelp = !showControllsHelp;
+            }
+
+            //showControllsHelp Toggle
+            GUILayout.EndVertical();
+            GUILayout.EndArea();
+
+            GUILayout.BeginArea(ReplaySkin.DefaultSkin.timeScaleRect);
             GUILayout.BeginHorizontal();
 
             DrawTimeScaleGUI();
-            GUILayout.FlexibleSpace();
-            DrawClipEditButtonGUI();
 
+            GUILayout.FlexibleSpace();
+            //showControllsHelp Toggle
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
 
-            if (clipEditMode) {
-                DrawClipEditSliders();
-            }
-            DrawTimeLineSliders();
         }
         void DrawTimeScaleGUI() {
-            GUILayout.Label(String.Format("{0:0.#}s /{1:0.#}s | TimeScale: {2:0.#}s/s", displayedPlaybackTime, recorder.recordedTime, playbackTimeScale), ReplaySkin.DefaultSkin.fontMed, GUILayout.Width(200));
+            GUILayout.Label(String.Format("{0:0.#}s /{1:0.#}s | Speed: {2:0.#}s/s", displayedPlaybackTime, recorder.recordedTime, playbackSpeed), ReplaySkin.DefaultSkin.fontMed, GUILayout.Width(200));
             //playbackSpeed
             //if (float.TryParse(GUILayout.TextField(playbackSpeed.ToString("0.0"), GUILayout.Width(40)), out float newValue)) {
             //    playbackSpeed = newValue;
@@ -326,13 +358,11 @@ namespace XLShredReplayEditor {
             float value = GUILayout.HorizontalSlider(playbackSpeed, 0f, 2f, ReplaySkin.DefaultSkin.timeScaleSliderStyle, GUI.skin.horizontalSliderThumb, GUILayout.MinWidth(300), GUILayout.MaxWidth(500));
             playbackSpeed = Mathf.Round(value * 10f) / 10f;
         }
-        void DrawClipEditButtonGUI() {
-            if (GUILayout.Button("Edit Clip Length")) {
-                clipEditMode = !clipEditMode;
-            }
-        }
         void DrawControllsGUI() {
-            GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), ReplaySkin.DefaultSkin.controllsRect, ReplayControllsWindow, "Controlls:");
+            var style = new GUIStyle(GUI.skin.window);
+            style.normal.background = GUI.skin.box.normal.background;
+            style.focused.background = GUI.skin.box.normal.background;
+            GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), ReplaySkin.DefaultSkin.controllsRect, ReplayControllsWindow, "Controlls:", style);
         }
         void DrawClipEditSliders() {
             float saveZone = recorder.recordedTime / 50f;
@@ -361,8 +391,8 @@ namespace XLShredReplayEditor {
             this.clipEndTime = Mathf.Clamp(GUI.HorizontalSlider(clipRects[1], this.clipEndTime, this.clipStartTime + saveZone, this.recorder.endTime, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.clipStartTime, this.recorder.endTime);
 
             GUI.Box(clipRects[2], "", ReplaySkin.DefaultSkin.clipBoxStyle);
-            //GUI.Box(clipStartRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
-            //GUI.Box(clipEndRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
+            GUI.Box(clipStartRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
+            GUI.Box(clipEndRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
 
             //GUIHelper.DraggableArea(
             //    "clipStart",
@@ -463,35 +493,55 @@ namespace XLShredReplayEditor {
             float y = 20f;
             GUI.skin.label.normal.textColor = Color.white;
             GUILayout.Label("CamMode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
-            GUILayout.Label("Back: Enable KeyStone Animation (" + (cameraController.CamFollowKeyStones ? "On" : "Off") + ")");
-            GUILayout.Label("RightStick: Show/Hide GUI");
-            GUILayout.Label("Y: Change Mode");
-            GUILayout.Label("X: Add KeyStone");
-            GUILayout.Label("Hold X: Delete KeyStone");
-            GUILayout.Label("DPadX: Jump to next KeyStone or max 5s");
-            GUILayout.Label("LB + LeftStickX Change Start of clip");
-            GUILayout.Label("LB + RightStickX Change End of clip");
             GUILayout.Space(20);
+            DrawControllGUI("ControllName", "Keyboard", "Xbox", "PS4");
+            GUILayout.Space(10);
+            DrawControllGUI("Use KeyFrame Animation (" + (cameraController.CamFollowKeyStones ? "On" : "Off") + ")", "", "select", "share");
+            DrawControllGUI("Show/Hide GUI", "Return", "RS", "R3");
+            DrawControllGUI("Change Mode", "M", "Y", "\u25B3");
+            DrawControllGUI("Add KeyStone", "K", "X", "\u25A1");
+            DrawControllGUI("Delete KeyStone", "Delete", "Hold X", "Hold \u25A1");
+            DrawControllGUI(String.Format("DPadX: Jump to next KeyStone or max {0:0.#} s", Main.settings.PlaybackTimeJumpDelta), "Arrows", "DPadX", "DPadX");
+            DrawControllGUI("Change Start of clip", "", "LB + LeftStickX", "LB + LeftStickX");
+            DrawControllGUI("Change End of clip", "", "LB + RightStickX", "LB + RightStickX");
+
             switch (cameraController.mode) {
                 case ReplayCameraController.CameraMode.Free:
-                    GUILayout.Label("LeftStick: Move(xz)");
-                    GUILayout.Label("DpadY: Move(y)");
-                    GUILayout.Label("RightStick: Rotate");
-                    GUILayout.Label("RB + RightStickX Rotate around forward axis");
+                    DrawControllGUI("Move(xz)", "", "LeftStick", "LeftStick");
+                    DrawControllGUI("Move(y)", "", "DpadY", "DpadY");
+                    DrawControllGUI("Rotate", "", "RightStick", "RightStick");
+                    DrawControllGUI("Roll", "", "RB + RightStickX", "RB + RightStickX");
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    GUILayout.Label("LeftStickX + RightStickY: Orbit around Skater");
-                    GUILayout.Label("LeftStickY: Change Orbit Radius");
-                    GUILayout.Label("RB + RightStickY Change Focus Offset");
+                    DrawControllGUI("Orbit around Skater", "", "LeftStickX + RightStickY", "LeftStickX + RightStickY");
+                    DrawControllGUI("Change Orbit Radius", "", "LeftStickY", "LeftStickY");
+                    DrawControllGUI("Change Focus Offset", "", "RB + RightStickY", "RB + RightStickY");
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    GUILayout.Label("LeftStick: Move(xz)");
-                    GUILayout.Label("DpadY or RightStickY: Move(y)");
-                    GUILayout.Label("RB + RightStickY Change Focus Offset");
+                    DrawControllGUI("Move(xz)", "", "LeftStick", "LeftStick");
+                    DrawControllGUI("Move(y)", "", "DpadY", "DpadY");
+                    DrawControllGUI("Change Focus Offset", "", "RB + RightStickY", "RB + RightStickY");
                     break;
             }
-            GUILayout.Label("RB + LeftStickY Change camera FOV");
+            DrawControllGUI("Change camera FOV", "", "RB + LeftStickY", "RB + LeftStickY");
             GUILayout.EndVertical();
+        }
+        private void DrawControllGUI(string name, string keyControll, string xboxControll, string ps4Controll) {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(name);
+            GUILayout.FlexibleSpace();
+
+            GUIStyle keyStyle = new GUIStyle(GUI.skin.label);
+            keyStyle.normal.textColor = Color.red;
+            GUIStyle xboxStyle = new GUIStyle(GUI.skin.label);
+            xboxStyle.normal.textColor = Color.green;
+            GUIStyle ps4Style = new GUIStyle(GUI.skin.label);
+            ps4Style.normal.textColor = Color.cyan;
+
+            GUILayout.Label(keyControll, keyStyle);
+            GUILayout.Label(xboxControll, xboxStyle);
+            GUILayout.Label(ps4Controll, ps4Style);
+            GUILayout.EndHorizontal();
         }
         #endregion
     }

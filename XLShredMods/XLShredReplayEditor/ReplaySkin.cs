@@ -25,6 +25,7 @@ namespace XLShredReplayEditor {
         private Vector2Int oldScreenSize;
         public Rect sliderRect;
         public Rect controllsRect;
+        public Rect timeScaleRect;
         public Rect toolsRect;
         public Rect playPauseRect;
         public GUIContent markerContent;
@@ -40,22 +41,11 @@ namespace XLShredReplayEditor {
         public GUIStyle fontMed;
         public GUIStyle fontSmall;
         #region logo
+        public Texture2D kiwiCamTexture;
         public GUIStyle kiwiLogoStyle;
-        float[] logoWidths = {100f, 75f, 50f};
-        int logoWidthIndex = 0;
-        public float logoWidth {
-            get {
-                return logoWidths[logoWidthIndex];
-            }
-        }
-        public void cycleThroughLogoWidth() {
-            logoWidthIndex++;
-            if (logoWidthIndex >= logoWidths.Length)
-                logoWidthIndex = 0;
-        }
         public Rect logoRect {
             get {
-                return new Rect(Screen.width - logoWidth, Screen.height - logoWidth * 0.6f, logoWidth, logoWidth * 0.6f);
+                return new Rect(Screen.width - Main.settings.logoWidth, Screen.height - Main.settings.logoWidth * 0.6f, Main.settings.logoWidth, Main.settings.logoWidth * 0.6f);
             }
         }
         #endregion
@@ -71,11 +61,18 @@ namespace XLShredReplayEditor {
                     height = 30f
                 };
                 this.controllsRect = new Rect(
-                    (float)Screen.width - 300f - 20f,
+                    (float)Screen.width - 400f - 20f,
                     (float)Screen.height / 2f - 100f,
-                    300f,
+                    400f,
                     0
                 );
+                toolsRect = new Rect() {
+                    x = 20f,
+                    height = 300f,
+                    yMax = this.sliderRect.y - this.sliderRect.height - 10f,
+                    width = 200f
+                };
+                timeScaleRect = new Rect(20f, (float)Screen.height - 30f, Screen.width - 40f, 30f);
             }
         }
 
@@ -87,8 +84,6 @@ namespace XLShredReplayEditor {
             initSliderStyles();
             initClipBoxStyle();
             initFontStyles();
-
-            toolsRect = new Rect(20f, (float)Screen.height - 30f, Screen.width - 40f, 30f);
 
             this.sliderMargin = 40f;
             this.sliderPadding = this.clipSliderStyle.border.horizontal + this.clipSliderStyle.margin.horizontal + this.clipSliderStyle.padding.horizontal;
@@ -124,7 +119,7 @@ namespace XLShredReplayEditor {
             transparentTexture.Apply();
         }
         void initKiwiLogoStyle() {
-            Texture2D kiwiCamTexture = new Texture2D(100, 60);
+            kiwiCamTexture = new Texture2D(100, 60);
             for (int i = 0, x = 0, y = 0; i < kiwiCamBytes.Length / 4; i++, x++) {
                 if (x == kiwiCamTexture.width) {
                     x = 0;
@@ -139,7 +134,7 @@ namespace XLShredReplayEditor {
             }
             kiwiCamTexture.Apply();
 
-            this.kiwiLogoStyle = new GUIStyle(GUI.skin.button);
+            this.kiwiLogoStyle = new GUIStyle(GUI.skin.box);
             kiwiLogoStyle.focused.background = kiwiCamTexture;
             kiwiLogoStyle.hover.background = kiwiCamTexture;
             kiwiLogoStyle.active.background = kiwiCamTexture;
