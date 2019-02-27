@@ -7,4 +7,4 @@
 - Sets 'canGrind' variable of PlayerState_InAir instance following the PlayerState_Grinding to true
 
 ## Latest Release:
-[0.0.1](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredGrindToGrind-0.0.1) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredGrindToGrind-0.0.1/XLShredGrindToGrind-0.0.1.zip)
+[0.0.2](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredGrindToGrind-0.0.2) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredGrindToGrind-0.0.2/XLShredGrindToGrind-0.0.2.zip)
