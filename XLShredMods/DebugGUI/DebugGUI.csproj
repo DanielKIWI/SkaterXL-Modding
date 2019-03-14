@@ -69,6 +69,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityModManager, Version=0.13.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\references\UnityModManager.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugConsoleGUI.cs" />
