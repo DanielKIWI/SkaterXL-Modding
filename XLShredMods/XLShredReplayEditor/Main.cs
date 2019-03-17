@@ -13,6 +13,7 @@ namespace XLShredReplayEditor {
         public float MaxRecordedTime = 120f;
         public bool showRecGUI = false;
         public bool showLogo = true;
+        public bool showControllsHelp = true;
 
         public float TranslationSpeed = 5f;
         public float OrbitMoveSpeed = 5f;
@@ -32,8 +33,11 @@ namespace XLShredReplayEditor {
         public static bool enabled;
         public static Settings settings;
         public static String modId;
+        public static UnityModManager.ModEntry modEntry;
+
         // Send a response to the mod manager about the launch status, success or not.
         static void Load(UnityModManager.ModEntry modEntry) {
+            Main.modEntry = modEntry;
             settings = Settings.Load<Settings>(modEntry);
             modId = modEntry.Info.Id;
             modEntry.OnSaveGUI = OnSaveGUI;

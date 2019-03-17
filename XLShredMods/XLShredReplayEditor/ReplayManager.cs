@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityModManagerNet;
 using XLShredLib;
 using GUILayoutLib;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace XLShredReplayEditor {
 
@@ -61,7 +63,6 @@ namespace XLShredReplayEditor {
         }
 
         public bool guiHidden;
-        public bool showControllsHelp;
         bool clipEditMode;
 
         public ReplayCameraController cameraController;
@@ -86,15 +87,15 @@ namespace XLShredReplayEditor {
         public void Awake() {
             DontDestroyOnLoad(gameObject);
             ReplayManager._instance = this;
-            if (this.recorder == null) {
-                this.recorder = base.gameObject.AddComponent<ReplayRecorder>();
+            if (recorder == null) {
+                this.recorder = gameObject.AddComponent<ReplayRecorder>();
             }
             if (this.cameraController == null) {
                 this.cameraController = base.gameObject.AddComponent<ReplayCameraController>();
                 this.cameraController.enabled = false;
             }
             if (this.saver == null) {
-                this.saver = base.gameObject.AddComponent<ReplaySaver>();
+                this.saver = gameObject.AddComponent<ReplaySaver>();
                 this.saver.enabled = false;
             }
             if (audioRecorder == null) {
@@ -113,14 +114,14 @@ namespace XLShredReplayEditor {
         public IEnumerator StartReplayEditor() {
             ReplayManager.SetState(ReplayState.LOADING);
             Debug.Log("Started Replay Editor");
+            Cursor.visible = true;
 
             //Disabling core Game Input and animation that would interfer
-            PlayerController.Instance.animationController.skaterAnim.enabled = false;
+            SoundManager.Instance.deckSounds.MuteAll();
             PlayerController.Instance.cameraController.enabled = false;
             InputController.Instance.enabled = false;
-            SoundManager.Instance.deckSounds.MuteAll();
+            PlayerController.Instance.enabled = false;
 
-            Cursor.visible = true;
 
             PlayerController.Instance.respawn.pin.gameObject.SetActive(false);
 
@@ -130,7 +131,7 @@ namespace XLShredReplayEditor {
 
             this.playbackSpeed = 1f;
             Time.timeScale = 0f;
-            this.previousFrameIndex = this.recorder.frameCount - 1;
+            this.previousFrameIndex = this.recorder.recordedFrames.Count - 1;
             this.playbackTime = this.recorder.endTime;
             this.clipStartTime = this.recorder.startTime;
             this.clipEndTime = this.recorder.endTime;
@@ -150,9 +151,14 @@ namespace XLShredReplayEditor {
 
                 audioRecorder.StopPlayback();
                 audioRecorder.StartRecording();
-                PlayerController.Instance.animationController.skaterAnim.enabled = true;
+                //PlayerController.Instance.animationController.skaterAnim.enabled = true;
+                //PlayerController.Instance.animationController.enabled = true;
+                //PlayerController.Instance.skaterController.enabled = true;
                 PlayerController.Instance.cameraController.enabled = true;
                 InputController.Instance.enabled = true;
+                //PlayerController.Instance.ikController.enabled = true;
+                PlayerController.Instance.enabled = true;
+
                 this.cameraController.OnExitReplayEditor();
                 this.recorder.ApplyLastFrame();
                 SoundManager.Instance.deckSounds.UnMuteAll();
@@ -166,9 +172,6 @@ namespace XLShredReplayEditor {
         }
 
         public void Update() {
-            if (!Main.enabled) {
-                return;
-            }
             this.CheckInput();
             this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
             if (CurrentState == ReplayState.PLAYBACK) {
@@ -204,10 +207,8 @@ namespace XLShredReplayEditor {
                     }
                     this.isPlaying = !this.isPlaying;
                 }
-                if (PlayerController.Instance.inputController.player.GetButton("LB")) {
-                    this.clipEditMode = true;
+                if (clipEditMode && PlayerController.Instance.inputController.player.GetButton("LB")) {
                     this.isPlaying = false;
-                    this.cameraController.enabled = false;
                     float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX") * recorder.recordedTime / 3f;
                     float axis2 = PlayerController.Instance.inputController.player.GetAxis("RightStickX") * recorder.recordedTime / 3f;
                     float saveZone = recorder.recordedTime / 50f;
@@ -217,8 +218,6 @@ namespace XLShredReplayEditor {
                     if (Mathf.Abs(axis2) > 0.01f) {
                         this.clipEndTime = Mathf.Clamp(this.clipEndTime + axis2 * Time.unscaledDeltaTime, this.clipStartTime + saveZone, this.recorder.endTime);
                     }
-                } else {
-                    this.cameraController.enabled = true;
                 }
                 float f = PlayerController.Instance.inputController.player.GetAxis("RT") - PlayerController.Instance.inputController.player.GetAxis("LT");
                 if ((double)Mathf.Abs(f) > 0.001) {
@@ -286,7 +285,7 @@ namespace XLShredReplayEditor {
                 }
                 return;
             }
-            if (showControllsHelp) {
+            if (Main.settings.showControllsHelp) {
                 DrawControllsGUI();
             }
 
@@ -331,8 +330,9 @@ namespace XLShredReplayEditor {
                 }
             }
 
-            if (GUILayout.Button("Show Help (" + (showControllsHelp ? "ON" : "OFF") + ")")) {
-                showControllsHelp = !showControllsHelp;
+            if (GUILayout.Button("Show Help (" + (Main.settings.showControllsHelp ? "ON" : "OFF") + ")")) {
+                Main.settings.showControllsHelp = !Main.settings.showControllsHelp;
+                Main.settings.Save(Main.modEntry);
             }
 
             //showControllsHelp Toggle

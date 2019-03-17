@@ -26,22 +26,36 @@ namespace XLShredReplayEditor {
                 return;
             }
             bool RBPressed = PlayerController.Instance.inputController.player.GetButton("RB");
-            if (RBPressed) InputCameraFOV();
             switch (this.mode) {
                 case ReplayCameraController.CameraMode.Free:
-                    if (RBPressed) InputRollRotation();
-                    this.InputFreePosition(true, false);
-                    this.InputFreeRotation();
+                    if (RBPressed) {
+                        InputRollRotation();
+                        InputCameraFOV();
+                    } else {
+                        this.InputFreePosition(true, false);
+                        this.InputFreeRotation();
+                    }
                     break;
                 case ReplayCameraController.CameraMode.Orbit:
-                    if (RBPressed) InputFocusOffsetY();
-                    this.InputOrbitMode();
-                    this.cameraTransform.position = PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up + this.orbitRadialCoord.cartesianCoords;
+                    if (RBPressed) {
+                        InputFocusOffsetY();
+                        InputCameraFOV();
+                    } else {
+                        this.InputOrbitMode();
+                    }
+                    this.cameraTransform.position =
+                        PlayerController.Instance.skaterController.skaterTransform.position
+                        + FocusOffsetY * Vector3.up
+                        + this.orbitRadialCoord.cartesianCoords;
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
                 case ReplayCameraController.CameraMode.Tripod:
-                    if (RBPressed) InputFocusOffsetY();
-                    this.InputFreePosition(true, true);
+                    if (RBPressed) {
+                        InputFocusOffsetY();
+                        InputCameraFOV();
+                    } else {
+                        this.InputFreePosition(true, true);
+                    }
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
             }
@@ -51,9 +65,13 @@ namespace XLShredReplayEditor {
 
         #region Input
         private void InputCameraFOV() {
-            float dpadX = -PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
-            if (Mathf.Abs(dpadX) > 0.01) {
-                camera.fieldOfView += dpadX * FOVChangeSpeed * Time.unscaledDeltaTime;
+            float lsY = -PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
+            float lsX = -PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
+            if (Mathf.Abs(lsY) > 0.01) {
+                camera.fieldOfView += lsY * FOVChangeSpeed * Time.unscaledDeltaTime;
+            }
+            if (Mathf.Abs(lsX) > 0.01) {
+                camera.focalLength += lsX * FOVChangeSpeed * Time.unscaledDeltaTime;
             }
         }
         private void InputFocusOffsetY() {

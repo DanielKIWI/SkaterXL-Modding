@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using Harmony12;
+using System.Collections;
 
 namespace XLShredReplayEditor {
 
@@ -51,37 +52,63 @@ namespace XLShredReplayEditor {
                 return endTime - startTime;
             }
         }
-        
+
+        public void AddTransformToRecordedList(Transform t) {
+            if (transformsToBeRecorded.Contains(t)) {
+                Debug.Log("Transform " + t.name + " is already being recorded.");
+                return;
+            }
+            transformsToBeRecorded.Add(t);
+        }
+
+        public void RecordTransforms(IEnumerable<Transform> ts) {
+            foreach (Transform t in ts) {
+                AddTransformToRecordedList(t);
+            }
+        }
+
         public void Awake() {
-            var bcInstance = Traverse.Create(PlayerController.Instance.boardController);
-            var wheel1 = bcInstance.Field<Transform>("_wheel1");
-            var wheel2 = bcInstance.Field<Transform>("_wheel2");
-            var wheel3 = bcInstance.Field<Transform>("_wheel3");
-            var wheel4 = bcInstance.Field<Transform>("_wheel4");
-            List<Transform> list = new List<Transform>(PlayerController.Instance.respawn.getSpawn);
-            list = list.Union(new List<Transform> {
-                SoundManager.Instance.wheel1,
-                SoundManager.Instance.wheel2,
-                SoundManager.Instance.wheel3,
-                SoundManager.Instance.wheel4
-            }).ToList();
+            StartCoroutine(RecordLoop());
+            this.transformsToBeRecorded = new List<Transform>();
+            this.recordedFrames = new List<ReplayRecordedFrame>();
+
+            //RecordTransforms(PlayerController.Instance.transform.GetComponentsInChildren<Transform>());
+            //Board
+            AddTransformToRecordedList(PlayerController.Instance.boardController.boardTransform);
+            AddTransformToRecordedList(PlayerController.Instance.boardController.backTruckCoM);
+            AddTransformToRecordedList(PlayerController.Instance.boardController.frontTruckCoM);
+            AddTransformToRecordedList(SoundManager.Instance.wheel1);
+            AddTransformToRecordedList(SoundManager.Instance.wheel2);
+            AddTransformToRecordedList(SoundManager.Instance.wheel3);
+            AddTransformToRecordedList(SoundManager.Instance.wheel4);
+
+            ////Bones
+            AddTransformToRecordedList(PlayerController.Instance.skaterController.skaterTransform);
+            AddTransformToRecordedList(PlayerController.Instance.skaterController.skaterRigidbody.transform);
             foreach (object obj in Enum.GetValues(typeof(HumanBodyBones))) {
                 HumanBodyBones humanBodyBones = (HumanBodyBones)obj;
-                if (humanBodyBones >= HumanBodyBones.Hips && humanBodyBones < HumanBodyBones.LastBone) {
-                    Transform boneTransform = PlayerController.Instance.animationController.skaterAnim.GetBoneTransform(humanBodyBones);
-                    if (!(boneTransform == null)) {
-                        list.Add(boneTransform);
-                    }
+                if (humanBodyBones < HumanBodyBones.Hips || humanBodyBones >= HumanBodyBones.LastBone)
+                    break;
+                Transform boneTransform = PlayerController.Instance.animationController.skaterAnim.GetBoneTransform(humanBodyBones);
+                if (boneTransform != null) {
+                    AddTransformToRecordedList(boneTransform);
                 }
             }
-            this.transformsToBeRecorded = list.ToArray();
-            this.recSkin = new GUIStyle();
-            this.recSkin.fontSize = 20;
-            this.recSkin.normal.textColor = Color.red;
-            this.recordedFrames = new List<ReplayRecordedFrame>();
+            var ikcTraverse = Traverse.Create(PlayerController.Instance.ikController);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikAnimBoard").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikLeftFootPosition").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikRightFootPosition").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikAnimLeftFootTarget").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikAnimRightFootTarget").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikLeftFootPositionOffset").Value);
+            AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikRightFootPositionOffset").Value);
+
+            var bailTraverse = Traverse.Create(PlayerController.Instance.respawn.bail);
+            RecordTransforms(bailTraverse.Field<RootMotion.Dynamics.PuppetMaster>("_puppetMaster").Value.GetComponentsInChildren<Transform>());
+            //RecordTransform(ikcInstance.Field<Transform>());
             this._startTime = 0f;
             this._endTime = 0f;
-            printTransformsToBeRecorded();
+            //printTransformsToBeRecorded();
         }
         void printTransformsToBeRecorded() {
             print("transformsToBeRecorded: ");
@@ -95,28 +122,20 @@ namespace XLShredReplayEditor {
             this._startTime = this._endTime;
         }
 
-        public void FixedUpdate() {
-            if (ReplayManager.CurrentState != ReplayState.RECORDING) {
-                return;
-            }
-            this._endTime += Time.deltaTime;
-
-
-            this.RecordFrame();
-            if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
-                this.startTime = this.endTime - Main.settings.MaxRecordedTime;
-            }
-        }
-
-
-
-        public int frameCount {
-            get {
-                return this.recordedFrames.Count;
+        private IEnumerator RecordLoop() {
+            while (true) {
+                if (ReplayManager.CurrentState != ReplayState.RECORDING) {
+                    yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.RECORDING);
+                }
+                yield return new WaitForEndOfFrame();
+                this._endTime += Time.deltaTime;
+                
+                this.RecordFrame();
+                if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
+                    this.startTime = this.endTime - Main.settings.MaxRecordedTime;
+                }
             }
         }
-
-
         public void ApplyRecordedFrame(int frame) {
             this.recordedFrames[frame].ApplyTo(this.transformsToBeRecorded);
         }
@@ -132,6 +151,9 @@ namespace XLShredReplayEditor {
 
         public void OnGUI() {
             if (ReplayManager.CurrentState == ReplayState.RECORDING && Main.settings.showRecGUI) {
+                this.recSkin = new GUIStyle(GUI.skin.label);
+                this.recSkin.fontSize = 20;
+                this.recSkin.normal.textColor = Color.red;
                 string text = "● Rec";
                 Vector2 vector = this.recSkin.CalcSize(new GUIContent(text));
                 GUI.Label(new Rect((float)Screen.width - vector.x - 10f, 10f, vector.x, vector.y), text, this.recSkin);
@@ -173,7 +195,7 @@ namespace XLShredReplayEditor {
         }
 
 
-        public Transform[] transformsToBeRecorded;
+        public List<Transform> transformsToBeRecorded;
 
 
         public List<ReplayRecordedFrame> recordedFrames;

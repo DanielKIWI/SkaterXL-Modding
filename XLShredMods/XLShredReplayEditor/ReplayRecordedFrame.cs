@@ -7,17 +7,17 @@ namespace XLShredReplayEditor {
     [Serializable]
     public class ReplayRecordedFrame {
 
-        public void ApplyTo(Transform[] transforms) {
-            for (int i = 0; i < transforms.Length; i++) {
+        public void ApplyTo(List<Transform> transforms) {
+            for (int i = 0; i < transforms.Count; i++) {
                 this.transformInfos[i].ApplyTo(transforms[i]);
             }
         }
 
 
-        public ReplayRecordedFrame(Transform[] transforms, float time) {
+        public ReplayRecordedFrame(List<Transform> transforms, float time) {
             this.time = time;
-            this.transformInfos = new TransformInfo[transforms.Length];
-            for (int i = 0; i < transforms.Length; i++) {
+            this.transformInfos = new TransformInfo[transforms.Count];
+            for (int i = 0; i < transforms.Count; i++) {
                 this.transformInfos[i] = new TransformInfo(transforms[i]);
             }
         }
