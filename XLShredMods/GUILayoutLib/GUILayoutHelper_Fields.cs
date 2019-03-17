@@ -48,6 +48,21 @@ namespace GUILayoutLib {
             }
         }
     }
+    public class GUIIntField : GUIField {
+        public Action<int> Setter;
+
+        public override void ApplyCachedValue(GUIValueCache cache) {
+            if (cache.TryGetValueForKey(Name, out object value)) {
+                if (value is int lastFloat) {
+                    Setter(lastFloat);
+                } else {
+                    Debug.LogWarning("lastValue for Float Field " + Name + " is not a float!");
+                }
+            } else {
+                Debug.LogWarning("No lastValue found for Field " + Name + "!");
+            }
+        }
+    }
     public class GUIVector3Field : GUIField {
         public Action<Vector3> Setter;
 
@@ -64,9 +79,11 @@ namespace GUILayoutLib {
         }
     }
     public class GUIFieldGroup {
+        public bool editMode;
         public List<GUIField> fields;
-        public GUIFieldGroup() {
+        public GUIFieldGroup(bool editMode) {
             fields = new List<GUIField>();
+            this.editMode = editMode;
         }
         public void ApplyCachedValues(GUIValueCache cache) {
             foreach (var field in fields) {
@@ -75,6 +92,12 @@ namespace GUILayoutLib {
         }
         public void AddFloatField(string name, Action<float> setter) {
             fields.Add(new GUIFloatField() {
+                Name = name,
+                Setter = setter
+            });
+        }
+        public void AddIntField(string name, Action<int> setter) {
+            fields.Add(new GUIIntField() {
                 Name = name,
                 Setter = setter
             });
@@ -89,18 +112,18 @@ namespace GUILayoutLib {
 
     public static partial class GUILayoutHelper {
         public static GUIFieldGroup currentGroup = null;
-        public static void BeginFieldGroup() {
+        public static void BeginFieldGroup(bool editMode = true) {
             if (currentGroup != null) {
                 Debug.LogError("Tried to begin a GUI Field Group while another isn't ended yet.");
             }
-            currentGroup = new GUIFieldGroup();
+            currentGroup = new GUIFieldGroup(editMode);
         }
         public static void EndFieldGroup(GUIValueCache cache) {
             if (currentGroup == null) {
                 Debug.LogError("Tried to end a GUI Field Group but there wasn't a 'BeginFieldGroup' call");
                 return;
             }
-            if (GUILayout.Button("Apply")) {
+            if (currentGroup.editMode && GUILayout.Button("Apply")) {
                 currentGroup.ApplyCachedValues(cache);
             }
             currentGroup = null;
@@ -121,6 +144,35 @@ namespace GUILayoutLib {
                     GUILayout.Label(name);
                     float.TryParse(GUILayout.TextField(num.ToString("0.000000")), out num);
                     num = GUILayout.HorizontalSlider(num, min, max);
+                    cache.valuesDict[name] = num;
+                }
+                GUILayout.EndVertical();
+                if (currentGroup == null) {
+                    if (GUILayout.Button("Apply", GUILayout.ExpandHeight(true), GUILayout.Width(saveButtonWidth))) {
+                        setter(num);
+                        didSave = true;
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
+            return didSave;
+        }
+        public static bool IntField(string name, GUIValueCache cache, Func<int> getter, Action<int> setter, int min = 0, int max = 10, float saveButtonWidth = 40f) {
+            if (currentGroup != null) {
+                currentGroup.AddIntField(name, setter);
+            }
+            bool didSave = false;
+            if (!cache.ContainsValueForKey(name)) {
+                cache.valuesDict.Add(name, getter());
+            }
+            int num = (int)cache.valuesDict[name];
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.BeginVertical();
+                {
+                    GUILayout.Label(name);
+                    int.TryParse(GUILayout.TextField(num.ToString("0")), out num);
+                    num = Mathf.RoundToInt(GUILayout.HorizontalSlider((float)num, (float)min, (float)max));
                     cache.valuesDict[name] = num;
                 }
                 GUILayout.EndVertical();
@@ -166,6 +218,16 @@ namespace GUILayoutLib {
             return didSave;
         }
 
+        public static void Vector3Label(string name, Vector3 value) {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(name);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(String.Format("x: {0,-10} y: {1,-10} z: {2,-10}", value.x, value.y, value.z));
+            GUILayout.EndHorizontal();
+        }
 
+        public static void QuaternionLabel(string name, Quaternion value) {
+            Vector3Label(name, value.eulerAngles);
+        }
     }
 }
