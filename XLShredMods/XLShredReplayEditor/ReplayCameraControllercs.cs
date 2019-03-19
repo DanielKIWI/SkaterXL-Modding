@@ -66,12 +66,8 @@ namespace XLShredReplayEditor {
         #region Input
         private void InputCameraFOV() {
             float lsY = -PlayerController.Instance.inputController.player.GetAxis("LeftStickY");
-            float lsX = -PlayerController.Instance.inputController.player.GetAxis("LeftStickX");
             if (Mathf.Abs(lsY) > 0.01) {
                 camera.fieldOfView += lsY * FOVChangeSpeed * Time.unscaledDeltaTime;
-            }
-            if (Mathf.Abs(lsX) > 0.01) {
-                camera.focalLength += lsX * FOVChangeSpeed * Time.unscaledDeltaTime;
             }
         }
         private void InputFocusOffsetY() {
@@ -297,7 +293,7 @@ namespace XLShredReplayEditor {
 
         private Transform cameraTransform;
 
-        private Camera camera;
+        public Camera camera;
 
         public ReplayCameraController.CameraMode mode;
 

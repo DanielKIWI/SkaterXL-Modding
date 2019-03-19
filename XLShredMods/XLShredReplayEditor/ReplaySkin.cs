@@ -150,13 +150,6 @@ namespace XLShredReplayEditor {
             transparentSliderStyle.normal.background = transparentTexture;
 
             this.timeScaleSliderStyle = new GUIStyle(GUI.skin.horizontalSlider);
-            Texture2D myTexture2D = timeScaleSliderStyle.normal.background.Clone();
-            int x = (int)(myTexture2D.texelSize.x / 2f);
-            for (int y = 0; y < myTexture2D.texelSize.y; y++) {
-                myTexture2D.SetPixel(x, y, Color.black);
-            }
-            myTexture2D.Apply();
-            timeScaleSliderStyle.normal.background = myTexture2D;
         }
         void initMarkerStyle() {
             this.markerStyle = new GUIStyle(GUI.skin.button);

@@ -342,22 +342,28 @@ namespace XLShredReplayEditor {
             GUILayout.BeginArea(ReplaySkin.DefaultSkin.timeScaleRect);
             GUILayout.BeginHorizontal();
 
-            DrawTimeScaleGUI();
+            DrawInfoGUI();
 
-            GUILayout.FlexibleSpace();
-            //showControllsHelp Toggle
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
-
         }
-        void DrawTimeScaleGUI() {
-            GUILayout.Label(String.Format("{0:0.#}s /{1:0.#}s | Speed: {2:0.#}s/s", displayedPlaybackTime, recorder.recordedTime, playbackSpeed), ReplaySkin.DefaultSkin.fontMed, GUILayout.Width(200));
-            //playbackSpeed
-            //if (float.TryParse(GUILayout.TextField(playbackSpeed.ToString("0.0"), GUILayout.Width(40)), out float newValue)) {
-            //    playbackSpeed = newValue;
-            //}
+        void DrawInfoGUI() {
+            //TimeScale
+            GUILayout.Label(String.Format("{0:0.0}s /{1:0.0}s | Speed: {2:0.0}s/s", displayedPlaybackTime, recorder.recordedTime, playbackSpeed), ReplaySkin.DefaultSkin.fontMed, GUILayout.Width(200));
             float value = GUILayout.HorizontalSlider(playbackSpeed, 0f, 2f, ReplaySkin.DefaultSkin.timeScaleSliderStyle, GUI.skin.horizontalSliderThumb, GUILayout.MinWidth(300), GUILayout.MaxWidth(500));
             playbackSpeed = Mathf.Round(value * 10f) / 10f;
+            
+            GUILayout.FlexibleSpace();
+
+            //FOV and FocusOffsetY
+            float focalLength = Camera.FOVToFocalLength(cameraController.camera.fieldOfView, Main.settings.CameraSensorSize / 1000f) * 1000f;
+            GUILayout.Label(String.Format("FOV: {0:0.0} ≡ Focal length: {1:0.00}mm, SensorSize of {2:0.00} mm", cameraController.camera.fieldOfView, focalLength, Main.settings.CameraSensorSize));
+            GUILayout.Label("Focus y-offset: " + cameraController.FocusOffsetY + "m");
+
+            GUILayout.FlexibleSpace();
+
+            //Camera Mode
+            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
         }
         void DrawControllsGUI() {
             var style = new GUIStyle(GUI.skin.window);
@@ -507,7 +513,7 @@ namespace XLShredReplayEditor {
             GUILayout.BeginVertical();
             float y = 20f;
             GUI.skin.label.normal.textColor = Color.white;
-            GUILayout.Label("CamMode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
+            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
             GUILayout.Space(20);
             DrawControllGUI("ControllName", "Keyboard", "Xbox", "PS4");
             GUILayout.Space(10);
@@ -552,10 +558,16 @@ namespace XLShredReplayEditor {
             xboxStyle.normal.textColor = Color.green;
             GUIStyle ps4Style = new GUIStyle(GUI.skin.label);
             ps4Style.normal.textColor = Color.cyan;
+            GUIStyle controllerStyle = new GUIStyle(GUI.skin.label);
+            controllerStyle.normal.textColor = Color.yellow;
 
             GUILayout.Label(keyControll, keyStyle);
-            GUILayout.Label(xboxControll, xboxStyle);
-            GUILayout.Label(ps4Controll, ps4Style);
+            if (xboxControll == ps4Controll) {
+                GUILayout.Label(xboxControll, controllerStyle);
+            } else {
+                GUILayout.Label(xboxControll, xboxStyle);
+                GUILayout.Label(ps4Controll, ps4Style);
+            }
             GUILayout.EndHorizontal();
         }
         #endregion

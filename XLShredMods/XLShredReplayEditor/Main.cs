@@ -22,6 +22,7 @@ namespace XLShredReplayEditor {
         public float DpadTickRate = 0.75f;
         public float PlaybackTimeJumpDelta = 5f;
         public float logoWidth = 75f;
+        public float CameraSensorSize = 8.47f;
 
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
@@ -85,6 +86,8 @@ namespace XLShredReplayEditor {
             SettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
             SettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
             SettingSliderGUI("FOV Change Speed", () => settings.FOVChangeSpeed, (v) => settings.FOVChangeSpeed = v, 0, 100);
+            GUILayout.Space(8);
+            SettingSliderGUI("Camera sensor size in mm (used for focalLength calculation)", () => settings.CameraSensorSize, (v) => settings.CameraSensorSize = v, 0, 100);
             GUILayout.Space(8);
             SettingSliderGUI("Max Record Time", () => settings.MaxRecordedTime, (v) => settings.MaxRecordedTime = v, 0, 300);
         }
