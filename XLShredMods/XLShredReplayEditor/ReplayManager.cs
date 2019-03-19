@@ -352,7 +352,7 @@ namespace XLShredReplayEditor {
             GUILayout.Label(String.Format("{0:0.0}s /{1:0.0}s | Speed: {2:0.0}s/s", displayedPlaybackTime, recorder.recordedTime, playbackSpeed), ReplaySkin.DefaultSkin.fontMed, GUILayout.Width(200));
             float value = GUILayout.HorizontalSlider(playbackSpeed, 0f, 2f, ReplaySkin.DefaultSkin.timeScaleSliderStyle, GUI.skin.horizontalSliderThumb, GUILayout.MinWidth(300), GUILayout.MaxWidth(500));
             playbackSpeed = Mathf.Round(value * 10f) / 10f;
-            
+
             GUILayout.FlexibleSpace();
 
             //FOV and FocusOffsetY
@@ -518,7 +518,17 @@ namespace XLShredReplayEditor {
             GUI.skin.label.normal.textColor = Color.white;
             GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
             GUILayout.Space(20);
-            DrawControllGUI("ControllName", "Keyboard", "Xbox", "PS4");
+
+            //legend
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("ControllName");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Keyboard", ReplaySkin.DefaultSkin.helpTextKeyStyle);
+            GUILayout.Label("Xbox", ReplaySkin.DefaultSkin.helpTextXboxStyle);
+            GUILayout.Label("PS4", ReplaySkin.DefaultSkin.helpTextPs4Style);
+            GUILayout.Label("All Controllers", ReplaySkin.DefaultSkin.helpTextControllerStyle);
+            GUILayout.EndHorizontal();
+
             GUILayout.Space(10);
             DrawControllGUI("Use KeyFrame Animation (" + (cameraController.CamFollowKeyFrames ? "On" : "Off") + ")", "", "select", "share");
             DrawControllGUI("Show/Hide GUI", "Return", "RS", "R3");
@@ -551,26 +561,16 @@ namespace XLShredReplayEditor {
             GUILayout.EndVertical();
         }
         private void DrawControllGUI(string name, string keyControll, string xboxControll, string ps4Controll) {
-            float windowWidth = ReplaySkin.DefaultSkin.controllsRect.width;
             GUILayout.BeginHorizontal();
             GUILayout.Label(name);
             GUILayout.FlexibleSpace();
 
-            GUIStyle keyStyle = new GUIStyle(GUI.skin.label);
-            keyStyle.normal.textColor = Color.red;
-            GUIStyle xboxStyle = new GUIStyle(GUI.skin.label);
-            xboxStyle.normal.textColor = Color.green;
-            GUIStyle ps4Style = new GUIStyle(GUI.skin.label);
-            ps4Style.normal.textColor = Color.cyan;
-            GUIStyle controllerStyle = new GUIStyle(GUI.skin.label);
-            controllerStyle.normal.textColor = Color.yellow;
-
-            GUILayout.Label(keyControll, keyStyle);
+            GUILayout.Label(keyControll, ReplaySkin.DefaultSkin.helpTextKeyStyle);
             if (xboxControll == ps4Controll) {
-                GUILayout.Label(xboxControll, controllerStyle);
+                GUILayout.Label(xboxControll, ReplaySkin.DefaultSkin.helpTextControllerStyle);
             } else {
-                GUILayout.Label(xboxControll, xboxStyle);
-                GUILayout.Label(ps4Controll, ps4Style);
+                GUILayout.Label(xboxControll, ReplaySkin.DefaultSkin.helpTextXboxStyle);
+                GUILayout.Label(ps4Controll, ReplaySkin.DefaultSkin.helpTextPs4Style);
             }
             GUILayout.EndHorizontal();
         }

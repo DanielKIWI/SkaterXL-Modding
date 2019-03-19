@@ -40,6 +40,11 @@ namespace XLShredReplayEditor {
         public GUIStyle fontLarge;
         public GUIStyle fontMed;
         public GUIStyle fontSmall;
+
+        public GUIStyle helpTextKeyStyle;
+        public GUIStyle helpTextXboxStyle;
+        public GUIStyle helpTextPs4Style;
+        public GUIStyle helpTextControllerStyle;
         #region logo
         public Texture2D kiwiCamTexture;
         public GUIStyle kiwiLogoStyle;
@@ -107,6 +112,15 @@ namespace XLShredReplayEditor {
             this.fontMed.normal.textColor = Color.white;
             this.fontSmall.fontSize = 12;
             this.fontSmall.normal.textColor = Color.white;
+
+            helpTextKeyStyle = new GUIStyle(GUI.skin.label);
+            helpTextKeyStyle.normal.textColor = Color.red;
+            helpTextXboxStyle = new GUIStyle(GUI.skin.label);
+            helpTextXboxStyle.normal.textColor = Color.green;
+            helpTextPs4Style = new GUIStyle(GUI.skin.label);
+            helpTextPs4Style.normal.textColor = Color.cyan;
+            helpTextControllerStyle = new GUIStyle(GUI.skin.label);
+            helpTextControllerStyle.normal.textColor = Color.yellow;
         }
 
         void initTransparentTexture() {
