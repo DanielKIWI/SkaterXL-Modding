@@ -10,7 +10,6 @@ using System.Collections;
 namespace XLShredReplayEditor {
 
     public class ReplayRecorder : MonoBehaviour {
-
         public float _startTime;
         public float startTime {
             get { return _startTime; }
@@ -75,8 +74,8 @@ namespace XLShredReplayEditor {
             //RecordTransforms(PlayerController.Instance.transform.GetComponentsInChildren<Transform>());
             //Board
             AddTransformToRecordedList(PlayerController.Instance.boardController.boardTransform);
-            AddTransformToRecordedList(PlayerController.Instance.boardController.backTruckCoM);
-            AddTransformToRecordedList(PlayerController.Instance.boardController.frontTruckCoM);
+            AddTransformToRecordedList(PlayerController.Instance.boardController.backTruckRigidbody.transform);
+            AddTransformToRecordedList(PlayerController.Instance.boardController.frontTruckRigidbody.transform);
             AddTransformToRecordedList(SoundManager.Instance.wheel1);
             AddTransformToRecordedList(SoundManager.Instance.wheel2);
             AddTransformToRecordedList(SoundManager.Instance.wheel3);
