@@ -15,13 +15,13 @@ namespace XLShredReplayEditor {
             t.rotation = rotation;
             t.GetComponent<Camera>().fieldOfView = this.fov;
         }
-        
+
         public static CameraCurveResult Combine(CameraCurveResult r1, CameraCurveResult r2, float w1, float w2) {
             float totalWeight = w1 + w2;
             w2 = w2 / totalWeight;
 
             Vector3 pos = Vector3.Lerp(r1.position, r2.position, w2);
-            Quaternion rot = Quaternion.Slerp(r1.rotation, r2.rotation, w2);
+            Quaternion rot = Quaternion.Lerp(r1.rotation, r2.rotation, w2);
             float fov = Mathf.Lerp(r1.fov, r2.fov, w2);
 
             return new CameraCurveResult() {
@@ -60,15 +60,20 @@ namespace XLShredReplayEditor {
             if (tripodCamAmount > 0) {
                 results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyFrame.Evaluate(t, this)));
             }
-
-            if (results.Count == 1) return results[0].Item2;
-
-            if (results.Count == 2) return CameraCurveResult.Combine(
-                results[0].Item2, results[1].Item2,
-                results[0].Item1, results[1].Item1
-            );
-
-            return new CameraCurveResult();
+            switch (results.Count) {
+                case 1:
+                    return results[0].Item2;
+                case 2:
+                    return CameraCurveResult.Combine(
+                       results[0].Item2, results[1].Item2,
+                       results[0].Item1, results[1].Item1
+                    );
+                case 3:
+                    results.Remove(results.OrderBy(v => v.Item1).First());  //Combine the two curves with the highest amount
+                    goto case 2;
+                default:
+                    return new CameraCurveResult();
+            }
         }
 
         public void CalculateCurveControlPoints() {
