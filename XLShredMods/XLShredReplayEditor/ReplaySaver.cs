@@ -146,7 +146,7 @@ namespace XLShredReplayEditor {
             this.textureFrames = new List<Texture2D>();
             for (float num = ReplayManager.Instance.clipStartTime; num < ReplayManager.Instance.clipEndTime; num += 1f / (float)this.fps) {
                 ReplayManager.Instance.SetPlaybackTime(num);
-                ReplayManager.Instance.cameraController.EvaluateKeyStones();
+                ReplayManager.Instance.cameraController.EvaluateKeyFrames();
                 this.CaptureCameraTexture();
                 yield return new WaitUntil(() => !this.saveRendered);
             }

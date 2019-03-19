@@ -15,14 +15,14 @@ namespace XLShredReplayEditor {
             for (int i = 0; i < this.recordedFrames.Length; i++) {
                 this.recordedFrames[i].time -= time;
             }
-            this.cameraKeyStones = ReplayManager.Instance.cameraController.keyStones.ToArray();
-            for (int j = 0; j < this.cameraKeyStones.Length; j++) {
-                this.cameraKeyStones[j].time -= time;
-                if (this.cameraKeyStones[j].time < 0f) {
-                    this.cameraKeyStones[j].time = 0f;
+            this.cameraKeyFrames = ReplayManager.Instance.cameraController.keyFrames.ToArray();
+            for (int j = 0; j < this.cameraKeyFrames.Length; j++) {
+                this.cameraKeyFrames[j].time -= time;
+                if (this.cameraKeyFrames[j].time < 0f) {
+                    this.cameraKeyFrames[j].time = 0f;
                 }
-                if (this.cameraKeyStones[j].time > time2) {
-                    this.cameraKeyStones[j].time = time2;
+                if (this.cameraKeyFrames[j].time > time2) {
+                    this.cameraKeyFrames[j].time = time2;
                 }
             }
         }
@@ -39,7 +39,7 @@ namespace XLShredReplayEditor {
             for (int i = 0; i < this.recordedFrames.Length; i++) {
                 this.recordedFrames[i].time -= time;
             }
-            ReplayManager.Instance.cameraController.keyStones = new List<KeyStone>(this.cameraKeyStones);
+            ReplayManager.Instance.cameraController.keyFrames = new List<KeyFrame>(this.cameraKeyFrames);
         }
         
         public void SaveToFile(string path) {
@@ -65,7 +65,7 @@ namespace XLShredReplayEditor {
 
 
         [SerializeField]
-        public KeyStone[] cameraKeyStones;
+        public KeyFrame[] cameraKeyFrames;
 
 
         [SerializeField]

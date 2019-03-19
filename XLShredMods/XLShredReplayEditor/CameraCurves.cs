@@ -50,15 +50,15 @@ namespace XLShredReplayEditor {
             List<Tuple<float, CameraCurveResult>> results = new List<Tuple<float, CameraCurveResult>>();
 
             if (freeCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(freeCamAmount, FreeCameraKeyStone.Evaluate(t, this)));
+                results.Add(new Tuple<float, CameraCurveResult>(freeCamAmount, FreeCameraKeyFrame.Evaluate(t, this)));
             }
 
             if (orbitCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(orbitCamAmount, OrbitCameraKeyStone.Evaluate(t, this)));
+                results.Add(new Tuple<float, CameraCurveResult>(orbitCamAmount, OrbitCameraKeyFrame.Evaluate(t, this)));
             }
 
             if (tripodCamAmount > 0) {
-                results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyStone.Evaluate(t, this)));
+                results.Add(new Tuple<float, CameraCurveResult>(tripodCamAmount, TripodCameraKeyFrame.Evaluate(t, this)));
             }
 
             if (results.Count == 1) return results[0].Item2;

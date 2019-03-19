@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace XLShredReplayEditor {
     [Serializable]
-    public class KeyStone {
+    public class KeyFrame {
         public Vector3 position;
         public Quaternion rotation;
         public float time;
@@ -14,15 +14,15 @@ namespace XLShredReplayEditor {
         public virtual void AddKeyframes(CameraCurve cameraCurve) { }
     }
 
-    public abstract class KeyStoneWithYOffset : KeyStone {
+    public abstract class KeyFrameWithYOffset : KeyFrame {
         public float focusOffsetY;
     }
 
-    #region KeyStone Implementations
+    #region KeyFrame Implementations
     [Serializable]
-    public class FreeCameraKeyStone : KeyStone {
+    public class FreeCameraKeyFrame : KeyFrame {
 
-        public FreeCameraKeyStone(Transform cameraTransform, float fov, float time, CameraCurve cameraCurve) {
+        public FreeCameraKeyFrame(Transform cameraTransform, float fov, float time, CameraCurve cameraCurve) {
             position = cameraTransform.position;
             rotation = cameraTransform.rotation;
             this.time = time;
@@ -71,11 +71,11 @@ namespace XLShredReplayEditor {
         }
     }
     [Serializable]
-    public class OrbitCameraKeyStone : KeyStoneWithYOffset {
+    public class OrbitCameraKeyFrame : KeyFrameWithYOffset {
         public float radius;
         public Vector3 focusLocation;
 
-        public OrbitCameraKeyStone(Vector3Radial radialPos, float yOffset, float fov, float t, CameraCurve cameraCurve) {
+        public OrbitCameraKeyFrame(Vector3Radial radialPos, float yOffset, float fov, float t, CameraCurve cameraCurve) {
             this.radius = radialPos.cartesianCoords.magnitude;
             position = PlayerController.Instance.skaterController.skaterTransform.position; // not really necessary
             rotation = Quaternion.LookRotation(-radialPos.cartesianCoords, Vector3.up);
@@ -119,8 +119,8 @@ namespace XLShredReplayEditor {
     }
 
     [Serializable]
-    public class TripodCameraKeyStone : KeyStoneWithYOffset {
-        public TripodCameraKeyStone(Transform cameraTransform, float yOffset, float fov, float t, CameraCurve cameraCurve) {
+    public class TripodCameraKeyFrame : KeyFrameWithYOffset {
+        public TripodCameraKeyFrame(Transform cameraTransform, float yOffset, float fov, float t, CameraCurve cameraCurve) {
             position = cameraTransform.position;
             rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up - position, Vector3.up);
             this.time = t;

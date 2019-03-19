@@ -229,7 +229,7 @@ namespace XLShredReplayEditor {
 
                 if (Mathf.Abs(dpadX) > 0.3f) {
                     if (Time.unscaledTime - Mathf.Abs(lastDpadTick) > Main.settings.DpadTickRate || Mathf.Sign(dpadX) != Mathf.Sign(lastDpadTick)) {
-                        //KeyStone keyStone = this.cameraController.FindNextKeyStone(this.playbackTime, dpadX < 0f);
+                        //KeyFrame keyFrame = this.cameraController.FindNextKeyFrame(this.playbackTime, dpadX < 0f);
                         this.lastDpadTick = Time.unscaledTime * Mathf.Sign(dpadX);
                         JumpByTime(Mathf.Sign(dpadX) * Main.settings.PlaybackTimeJumpDelta, true);
                     }
@@ -250,9 +250,9 @@ namespace XLShredReplayEditor {
 
         public void JumpByTime(float deltaTime, bool stopAtMarker) {
             if (stopAtMarker) {
-                KeyStone keyStone = this.cameraController.SearchKeyStoneInRange(playbackTime, playbackTime + deltaTime);
-                if (keyStone != null) {
-                    this.SetPlaybackTime(keyStone.time);
+                KeyFrame keyFrame = this.cameraController.SearchKeyFrameInRange(playbackTime, playbackTime + deltaTime);
+                if (keyFrame != null) {
+                    this.SetPlaybackTime(keyFrame.time);
                     return;
                 }
             }
@@ -462,9 +462,9 @@ namespace XLShredReplayEditor {
         }
         private void DrawKeyFrameMarkers() {
 
-            foreach (KeyStone keyStone in this.cameraController.keyStones) {
-                float t = (keyStone.time - this.recorder.startTime) / (this.recorder.endTime - this.recorder.startTime);
-                Color textColor = (keyStone is FreeCameraKeyStone) ? Color.blue : ((keyStone is OrbitCameraKeyStone) ? Color.red : Color.green);
+            foreach (KeyFrame keyFrame in this.cameraController.keyFrames) {
+                float t = (keyFrame.time - this.recorder.startTime) / (this.recorder.endTime - this.recorder.startTime);
+                Color textColor = (keyFrame is FreeCameraKeyFrame) ? Color.blue : ((keyFrame is OrbitCameraKeyFrame) ? Color.red : Color.green);
                 ReplaySkin.DefaultSkin.markerStyle.normal.textColor = textColor;
                 Rect markerRect = ReplaySkin.DefaultSkin.MarkerRectForNormT(t);
 
@@ -474,7 +474,7 @@ namespace XLShredReplayEditor {
                 GUILayout.Label("|", ReplaySkin.DefaultSkin.markerStyle);
                 GUILayout.Space(-10f);
                 if (GUILayout.Button("°", ReplaySkin.DefaultSkin.markerStyle)) {
-                    SetPlaybackTime(keyStone.time);
+                    SetPlaybackTime(keyFrame.time);
                 }
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();
@@ -485,7 +485,7 @@ namespace XLShredReplayEditor {
                 //TODO: Update Curves on KeyFrame move
 
                 //GUIHelper.DraggableArea(
-                //    "keyframe" + keyStone.GetHashCode(),
+                //    "keyframe" + keyFrame.GetHashCode(),
                 //    markerRect,
                 //    delegate (out bool beginDrag) {  //GUI Draw
                 //        GUILayout.BeginVertical();
@@ -493,7 +493,7 @@ namespace XLShredReplayEditor {
                 //        beginDrag = GUILayout.RepeatButton("O", ReplaySkin.DefaultSkin.markerStyle);
                 //        GUILayout.EndVertical();
                 //    },
-                //    () => SetPlaybackTime(keyStone.time),
+                //    () => SetPlaybackTime(keyFrame.time),
                 //    delegate (ref Rect r) {  //OnDragUpdate
                 //        float xmin = ReplaySkin.DefaultSkin.sliderRect.xMin + (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
                 //        float xmax = ReplaySkin.DefaultSkin.sliderRect.xMax - (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
@@ -502,7 +502,7 @@ namespace XLShredReplayEditor {
                 //        SetPlaybackTime(time);
                 //    },
                 //    delegate (Rect r) {  //OnDrop
-                //        keyStone.time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
+                //        keyFrame.time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
                 //        //TODO remove keyframe cache
                 //    },
                 //    this,
@@ -517,12 +517,12 @@ namespace XLShredReplayEditor {
             GUILayout.Space(20);
             DrawControllGUI("ControllName", "Keyboard", "Xbox", "PS4");
             GUILayout.Space(10);
-            DrawControllGUI("Use KeyFrame Animation (" + (cameraController.CamFollowKeyStones ? "On" : "Off") + ")", "", "select", "share");
+            DrawControllGUI("Use KeyFrame Animation (" + (cameraController.CamFollowKeyFrames ? "On" : "Off") + ")", "", "select", "share");
             DrawControllGUI("Show/Hide GUI", "Return", "RS", "R3");
             DrawControllGUI("Change Mode", "M", "Y", "\u25B3");
-            DrawControllGUI("Add KeyStone", "K", "X", "\u25A1");
-            DrawControllGUI("Delete KeyStone", "Delete", "Hold X", "Hold \u25A1");
-            DrawControllGUI(String.Format("DPadX: Jump to next KeyStone or max {0:0.#} s", Main.settings.PlaybackTimeJumpDelta), "Arrows", "DPadX", "DPadX");
+            DrawControllGUI("Add KeyFrame", "K", "X", "\u25A1");
+            DrawControllGUI("Delete KeyFrame", "Delete", "Hold X", "Hold \u25A1");
+            DrawControllGUI(String.Format("DPadX: Jump to next KeyFrame or max {0:0.#} s", Main.settings.PlaybackTimeJumpDelta), "Arrows", "DPadX", "DPadX");
             DrawControllGUI("Change Start of clip", "", "LB + LeftStickX", "LB + LeftStickX");
             DrawControllGUI("Change End of clip", "", "LB + RightStickX", "LB + RightStickX");
 
@@ -548,6 +548,7 @@ namespace XLShredReplayEditor {
             GUILayout.EndVertical();
         }
         private void DrawControllGUI(string name, string keyControll, string xboxControll, string ps4Controll) {
+            float windowWidth = ReplaySkin.DefaultSkin.controllsRect.width;
             GUILayout.BeginHorizontal();
             GUILayout.Label(name);
             GUILayout.FlexibleSpace();
