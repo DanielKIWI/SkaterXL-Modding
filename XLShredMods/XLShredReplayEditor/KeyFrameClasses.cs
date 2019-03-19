@@ -10,6 +10,10 @@ namespace XLShredReplayEditor {
         public float time;
         public float fov;
 
+        public virtual void Update(Transform cameraTransform, float t) {
+            time = t;
+        }
+        public virtual void ApplyTo(Camera camera) { }
         public static CameraCurveResult Evaluate(float time, CameraCurve cameraCurve) { return null; }
         public virtual void AddKeyframes(CameraCurve cameraCurve) { }
     }
@@ -58,6 +62,12 @@ namespace XLShredReplayEditor {
             cameraCurve.CalculateCurveControlPoints();
         }
 
+        public override void ApplyTo(Camera camera) {
+            camera.transform.position = position;
+            camera.transform.rotation = rotation;
+            camera.fieldOfView = fov;
+        }
+
         public new static CameraCurveResult Evaluate(float time, CameraCurve cameraCurve) {
             Vector3 pos = cameraCurve.positionCurve.Evaluate(time);
             Quaternion rot = cameraCurve.orientationCurve.Evaluate(time);
@@ -72,12 +82,17 @@ namespace XLShredReplayEditor {
     }
     [Serializable]
     public class OrbitCameraKeyFrame : KeyFrameWithYOffset {
-        public float radius;
+        public Vector3Radial radialPos;
+        public float radius {
+            get {
+                return radialPos.cartesianCoords.magnitude;
+            }
+        }
         public Vector3 focusLocation;
 
         public OrbitCameraKeyFrame(Vector3Radial radialPos, float yOffset, float fov, float t, CameraCurve cameraCurve) {
-            this.radius = radialPos.cartesianCoords.magnitude;
-            position = PlayerController.Instance.skaterController.skaterTransform.position; // not really necessary
+            this.radialPos = radialPos;
+            position = PlayerController.Instance.skaterController.skaterTransform.position + Vector3.up * focusOffsetY + radialPos.cartesianCoords;
             rotation = Quaternion.LookRotation(-radialPos.cartesianCoords, Vector3.up);
             this.time = t;
             this.fov = fov;
@@ -100,6 +115,17 @@ namespace XLShredReplayEditor {
             cameraCurve.tripodCamCurve.InsertCurveKey(0f, time);
 
             cameraCurve.CalculateCurveControlPoints();
+        }
+
+        public override void ApplyTo(Camera camera) {
+            camera.transform.position = PlayerController.Instance.skaterController.skaterTransform.position + Vector3.up * focusOffsetY + radialPos.cartesianCoords;
+            camera.transform.rotation = Quaternion.LookRotation(-radialPos.cartesianCoords, Vector3.up);
+            camera.fieldOfView = fov;
+        }
+
+        public override void Update(Transform cameraTransform, float t) {
+            position = PlayerController.Instance.skaterController.skaterTransform.position + Vector3.up * focusOffsetY + radialPos.cartesianCoords;
+            base.Update(cameraTransform, t);
         }
 
         public new static CameraCurveResult Evaluate(float time, CameraCurve cameraCurve) {
@@ -143,6 +169,17 @@ namespace XLShredReplayEditor {
             cameraCurve.tripodCamCurve.InsertCurveKey(1f, time);
 
             cameraCurve.CalculateCurveControlPoints();
+        }
+
+        public override void ApplyTo(Camera camera) {
+            camera.transform.position = position;
+            camera.transform.rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up - position, Vector3.up);
+            camera.fieldOfView = fov;
+        }
+
+        public override void Update(Transform cameraTransform, float t) {
+            rotation = Quaternion.LookRotation(PlayerController.Instance.skaterController.skaterTransform.position + focusOffsetY * Vector3.up - position, Vector3.up);
+            base.Update(cameraTransform, t);
         }
 
         public new static CameraCurveResult Evaluate(float time, CameraCurve cameraCurve) {;

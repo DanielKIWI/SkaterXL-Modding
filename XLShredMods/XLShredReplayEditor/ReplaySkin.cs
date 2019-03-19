@@ -92,7 +92,7 @@ namespace XLShredReplayEditor {
             
             this.markerContent = new GUIContent("|");
             this.AdjustToScreen();
-            this.markerSize = new Vector2(10f, sliderRect.height + 20f);
+            this.markerSize = new Vector2(20f, sliderRect.height + 20f);
 
             playPauseRect = new Rect(0, sliderRect.y - sliderRect.height - 60f, 200f, 50f);
             playPauseRect.center = new Vector2(Screen.width / 2f, playPauseRect.center.y);
@@ -154,7 +154,7 @@ namespace XLShredReplayEditor {
         void initMarkerStyle() {
             this.markerStyle = new GUIStyle(GUI.skin.button);
             markerStyle.normal.background = transparentTexture;
-            markerStyle.fontSize = 30;
+            markerStyle.fontSize = 20;
             markerStyle.padding = new RectOffset(0, 0, 0, 0);
             markerStyle.border = new RectOffset(0, 0, 0, 0);
             markerStyle.fontStyle = FontStyle.Bold;
