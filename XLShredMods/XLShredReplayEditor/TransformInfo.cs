@@ -2,8 +2,9 @@
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-    
 
+
+    [Serializable]
     public class TransformInfo {
 
         public TransformInfo(Transform t) {
@@ -30,14 +31,11 @@ namespace XLShredReplayEditor {
         public static TransformInfo Lerp(TransformInfo a, TransformInfo b, float t) {
             return new TransformInfo(Vector3.Lerp(a.position, b.position, t), Quaternion.Lerp(a.rotation, b.rotation, t), Vector3.Lerp(a.scale, b.scale, t));
         }
-
-
+        
         public Vector3 position;
-
-
+        
         public Quaternion rotation;
-
-
+        
         public Vector3 scale;
     }
 

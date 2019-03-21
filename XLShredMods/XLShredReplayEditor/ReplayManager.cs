@@ -81,7 +81,7 @@ namespace XLShredReplayEditor {
         /// </summary>
         private float lastDpadTick;
 
-        public ReplaySaver saver;
+        public ReplayEditorMenu menu;
 
 
         public void Awake() {
@@ -94,9 +94,9 @@ namespace XLShredReplayEditor {
                 this.cameraController = base.gameObject.AddComponent<ReplayCameraController>();
                 this.cameraController.enabled = false;
             }
-            if (this.saver == null) {
-                this.saver = gameObject.AddComponent<ReplaySaver>();
-                this.saver.enabled = false;
+            if (this.menu == null) {
+                this.menu = gameObject.AddComponent<ReplayEditorMenu>();
+                this.menu.enabled = false;
             }
             if (audioRecorder == null) {
                 audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
@@ -189,9 +189,11 @@ namespace XLShredReplayEditor {
         }
 
         private void CheckInput() {
-            if (CurrentState != ReplayState.PLAYBACK && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
+            if (CurrentState == ReplayState.RECORDING && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 StartCoroutine(StartReplayEditor());
                 return;
+            } else if (CurrentState == ReplayState.PLAYBACK && PlayerController.Instance.inputController.player.GetButtonDown("Start")) {
+                menu.Toggle();
             }
             if (CurrentState == ReplayState.PLAYBACK) {
                 if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.Return)) {
@@ -214,9 +216,11 @@ namespace XLShredReplayEditor {
                     float saveZone = recorder.recordedTime / 50f;
                     if (Mathf.Abs(axis) > 0.01f) {
                         this.clipStartTime = Mathf.Clamp(this.clipStartTime + axis * Time.unscaledDeltaTime, this.recorder.startTime, this.clipEndTime - saveZone);
+                        SetPlaybackTime(clipStartTime);
                     }
                     if (Mathf.Abs(axis2) > 0.01f) {
                         this.clipEndTime = Mathf.Clamp(this.clipEndTime + axis2 * Time.unscaledDeltaTime, this.clipStartTime + saveZone, this.recorder.endTime);
+                        SetPlaybackTime(clipEndTime);
                     }
                 }
                 float f = PlayerController.Instance.inputController.player.GetAxis("RT") - PlayerController.Instance.inputController.player.GetAxis("LT");
@@ -330,6 +334,10 @@ namespace XLShredReplayEditor {
                 }
             }
 
+            if (GUILayout.Button(menu.enabled ? "Hide" : "Show" + " menu")) {
+                menu.Toggle();
+            }
+
             if (GUILayout.Button("Show Help (" + (Main.settings.showControllsHelp ? "ON" : "OFF") + ")")) {
                 Main.settings.showControllsHelp = !Main.settings.showControllsHelp;
                 Main.settings.Save(Main.modEntry);
@@ -393,9 +401,17 @@ namespace XLShredReplayEditor {
                 yMax = clipStartRect.yMax
             };
 
-            this.clipStartTime = Mathf.Clamp(GUI.HorizontalSlider(clipRects[0], this.clipStartTime, this.recorder.startTime, this.clipEndTime - saveZone, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.recorder.startTime, this.clipEndTime);
+            float st = Mathf.Clamp(GUI.HorizontalSlider(clipRects[0], this.clipStartTime, this.recorder.startTime, this.clipEndTime - saveZone, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.recorder.startTime, this.clipEndTime);
+            if (st != this.clipStartTime) {
+                this.clipStartTime = st;
+                SetPlaybackTime(clipStartTime);
+            }
 
-            this.clipEndTime = Mathf.Clamp(GUI.HorizontalSlider(clipRects[1], this.clipEndTime, this.clipStartTime + saveZone, this.recorder.endTime, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.clipStartTime, this.recorder.endTime);
+            float et = Mathf.Clamp(GUI.HorizontalSlider(clipRects[1], this.clipEndTime, this.clipStartTime + saveZone, this.recorder.endTime, ReplaySkin.DefaultSkin.transparentSliderStyle, ReplaySkin.DefaultSkin.sliderThumbStyle), this.clipStartTime, this.recorder.endTime);
+            if (et != this.clipEndTime) {
+                this.clipEndTime = et;
+                SetPlaybackTime(clipEndTime);
+            }
 
             GUI.Box(clipRects[2], "", ReplaySkin.DefaultSkin.clipBoxStyle);
             GUI.Box(clipStartRect, "", ReplaySkin.DefaultSkin.clipCutStyle);

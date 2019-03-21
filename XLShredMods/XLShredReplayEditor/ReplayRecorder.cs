@@ -193,6 +193,13 @@ namespace XLShredReplayEditor {
             }
         }
 
+        public void LoadFrames(List<ReplayRecordedFrame> frames) {
+            recordedFrames = frames;
+            _startTime =
+            _startTime = this.recordedFrames[0].time;
+            _endTime = this.recordedFrames[this.recordedFrames.Count - 1].time;
+        }
+
 
         public List<Transform> transformsToBeRecorded;
 

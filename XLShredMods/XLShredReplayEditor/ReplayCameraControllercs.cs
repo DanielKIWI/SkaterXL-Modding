@@ -61,6 +61,11 @@ namespace XLShredReplayEditor {
             }
         }
 
+        internal void LoadKeyFrames(IEnumerable<KeyFrame> cameraKeyFrames) {
+            keyFrames = new List<KeyFrame>(cameraKeyFrames);
+            cameraCurve.CalculateCurveControlPoints();
+        }
+
         #endregion
 
         #region Input

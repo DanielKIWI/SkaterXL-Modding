@@ -116,7 +116,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayCameraControllercs.cs" />
     <Compile Include="ReplayRecorder.cs" />
-    <Compile Include="ReplaySaver.cs" />
+    <Compile Include="ReplayEditorMenu.cs" />
     <Compile Include="ReplayRecordedFrame.cs" />
     <Compile Include="ReplaySkin.cs" />
     <Compile Include="TransformInfo.cs" />

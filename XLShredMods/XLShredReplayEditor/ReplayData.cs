@@ -1,75 +1,69 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using System.Collections;
 
 namespace XLShredReplayEditor {
     [Serializable]
     public class ReplayData {
         public ReplayData() {
-            List<ReplayRecordedFrame> list = ReplayManager.Instance.recorder.recordedFrames.FindAll((ReplayRecordedFrame f) => f.time >= ReplayManager.Instance.clipStartTime && f.time <= ReplayManager.Instance.clipEndTime);
-            this.recordedFrames = list.ToArray();
-            float time = this.recordedFrames[0].time;
-            float time2 = this.recordedFrames[this.recordedFrames.Length - 1].time;
-            this.recordedTime = time2 - time;
+            this.recordedFrames = ReplayManager.Instance.recorder.recordedFrames.ToArray();
+            testFrame = recordedFrames[0];
+            float startTime = this.recordedFrames[0].time;
+            float endTime = this.recordedFrames[this.recordedFrames.Length - 1].time;
+            this.recordedTime = endTime - startTime;
             for (int i = 0; i < this.recordedFrames.Length; i++) {
-                this.recordedFrames[i].time -= time;
+                this.recordedFrames[i].time -= startTime;
             }
-            this.cameraKeyFrames = ReplayManager.Instance.cameraController.keyFrames.ToArray();
-            for (int j = 0; j < this.cameraKeyFrames.Length; j++) {
-                this.cameraKeyFrames[j].time -= time;
-                if (this.cameraKeyFrames[j].time < 0f) {
-                    this.cameraKeyFrames[j].time = 0f;
-                }
-                if (this.cameraKeyFrames[j].time > time2) {
-                    this.cameraKeyFrames[j].time = time2;
-                }
+            this.cameraKeyFrames = ReplayManager.Instance.cameraController.keyFrames
+                .Where(k => k.time >= startTime && k.time <= endTime)
+                .ToList();
+            foreach (var keyFrame in cameraKeyFrames) {
+                keyFrame.time -= startTime;
             }
+            Debug.Log(this);
+            Debug.Log(cameraKeyFrames.Count);
         }
-        
+
         public void Load() {
-            ReplayManager.Instance.recorder.recordedFrames = new List<ReplayRecordedFrame>(this.recordedFrames);
+            ReplayManager.Instance.recorder.LoadFrames(new List<ReplayRecordedFrame>(this.recordedFrames));
             ReplayManager.Instance.clipStartTime = 0f;
             ReplayManager.Instance.clipEndTime = this.recordedTime;
             ReplayManager.Instance.playbackTime = 0f;
             ReplayManager.Instance.previousFrameIndex = 0;
-            float time = this.recordedFrames[0].time;
-            float time2 = this.recordedFrames[this.recordedFrames.Length - 1].time;
-            this.recordedTime = time2 - time;
-            for (int i = 0; i < this.recordedFrames.Length; i++) {
-                this.recordedFrames[i].time -= time;
-            }
-            ReplayManager.Instance.cameraController.keyFrames = new List<KeyFrame>(this.cameraKeyFrames);
+            ReplayManager.Instance.cameraController.LoadKeyFrames(this.cameraKeyFrames);
+        }
+
+        public void SaveToFile(string path) {
+            if (Directory.Exists(path))
+                Directory.Delete(path, true);
+            Directory.CreateDirectory(path);
+
+            string dataPath = path + "\\Data.replay";
+            string contents = JsonUtility.ToJson(this, false); //TODO: //FIXME: //Es wird nur recordedTime gespeichert
+            File.WriteAllText(dataPath, contents);
+
+            string audioPath = path + "\\Audio.wav";
+            ReplayManager.Instance.audioRecorder.WriteTmpStreamToPath(audioPath, ReplayManager.Instance.recorder.startTime, ReplayManager.Instance.recorder.endTime);
+        }
+
+        public static IEnumerator LoadFromFile(string path) {
+            string audioPath = path + "\\Audio.wav";
+            string dataPath = path + "\\Data.replay";
+            JsonUtility.FromJson<ReplayData>(File.ReadAllText(dataPath)).Load();
+            yield return ReplayManager.Instance.audioRecorder.LoadReplayAudio(audioPath);
         }
         
-        public void SaveToFile(string path) {
-            if (!path.EndsWith(".json")) {
-                path += ".json";
-            }
-            string contents = JsonUtility.ToJson(this, true);
-            File.WriteAllText(path, contents);
-        }
-
-
-        public static void SaveCurrentToFile(string path) {
-            new ReplayData().SaveToFile(path);
-        }
-
-
-        public static void LoadFromFile(string path) {
-            JsonUtility.FromJson<ReplayData>(File.ReadAllText(path)).Load();
-        }
-
-        [SerializeField]
+        public ReplayRecordedFrame testFrame;
         public ReplayRecordedFrame[] recordedFrames;
+        
+        public List<KeyFrame> cameraKeyFrames;
 
-
-        [SerializeField]
-        public KeyFrame[] cameraKeyFrames;
-
-
-        [SerializeField]
+        
         public float recordedTime;
     }
-
+    //[Serializable]
+    //public class TransformJSON
 }

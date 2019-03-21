@@ -4,6 +4,7 @@ using UnityModManagerNet;
 using System;
 using XLShredLib;
 using XLShredLib.UI;
+using System.IO;
 
 namespace XLShredReplayEditor {
 
@@ -23,6 +24,7 @@ namespace XLShredReplayEditor {
         public float PlaybackTimeJumpDelta = 5f;
         public float logoWidth = 75f;
         public float CameraSensorSize = 8.47f;
+        public string ReplaysDirectory = Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "\\SkaterXL\\Replays";
 
         public override void Save(UnityModManager.ModEntry modEntry) {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
@@ -40,6 +42,15 @@ namespace XLShredReplayEditor {
         static void Load(UnityModManager.ModEntry modEntry) {
             Main.modEntry = modEntry;
             settings = Settings.Load<Settings>(modEntry);
+            if (!Directory.Exists(settings.ReplaysDirectory)) {
+                try {
+                    Directory.CreateDirectory(settings.ReplaysDirectory);
+                } catch (Exception e) {
+                    Main.modEntry.Logger.Error("Error creating Directory at " + Main.settings.ReplaysDirectory + ": " + e.Message);
+                    ReplayDirectoryExists = false;
+                }
+            }
+
             modId = modEntry.Info.Id;
             modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
@@ -69,8 +80,10 @@ namespace XLShredReplayEditor {
             settings.Save(modEntry);
             ReplayAudioRecorder.Instance?.CalcMaxTmpStreamLength();
         }
-        static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
-            GUILayout.Label("Website: https://github.com/DanielKIWI/SkaterXL-Modding");
+        public static void OnSettingsGUI(UnityModManager.ModEntry modEntry) {
+            if (GUILayout.Button("Website: https://github.com/DanielKIWI/SkaterXL-Modding")) {
+                Application.OpenURL("https://github.com/DanielKIWI/SkaterXL-Modding");
+            }
             GUILayout.Label("Would love to see the logo in your videos. But its your choice ;)");
             GUILayout.BeginHorizontal();
             settings.showLogo = GUILayout.Toggle(settings.showLogo, "Show Logo");
@@ -78,23 +91,53 @@ namespace XLShredReplayEditor {
             GUILayout.Label(ReplaySkin.DefaultSkin.kiwiCamTexture, GUILayout.Width(settings.logoWidth));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
-            SettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
+            FloatSettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
             settings.showRecGUI = GUILayout.Toggle(settings.showRecGUI, "Show 'REC'-Icon");
-            
+
             GUILayout.Space(8);
-            SettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
-            SettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
-            SettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
-            SettingSliderGUI("FOV Change Speed", () => settings.FOVChangeSpeed, (v) => settings.FOVChangeSpeed = v, 0, 100);
+            FloatSettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
+            FloatSettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
+            FloatSettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
+            FloatSettingSliderGUI("FOV Change Speed", () => settings.FOVChangeSpeed, (v) => settings.FOVChangeSpeed = v, 0, 100);
             GUILayout.Space(8);
-            SettingSliderGUI("Camera sensor size in mm (used for focalLength calculation)", () => settings.CameraSensorSize, (v) => settings.CameraSensorSize = v, 0, 100);
+            FloatSettingSliderGUI("Camera sensor size in mm (used for focalLength calculation)", () => settings.CameraSensorSize, (v) => settings.CameraSensorSize = v, 0, 100);
             GUILayout.Space(8);
-            SettingSliderGUI("Max Record Time", () => settings.MaxRecordedTime, (v) => settings.MaxRecordedTime = v, 0, 300);
-        }
-        static void SettingSliderGUI(string name, Func<float> getter, Action<float> setter, float min, float max) {
+            FloatSettingSliderGUI("Max Record Time", () => settings.MaxRecordedTime, (v) => settings.MaxRecordedTime = v, 0, 300);
+            GUILayout.Space(8);
+
+
+
             GUILayout.BeginHorizontal();
-            GUILayout.Label(name, GUILayout.Width(200));
+            GUILayout.Label("Replays Directory Path");
             GUILayout.Space(8);
+            ReplaysDirectory = GUILayout.TextField(ReplaysDirectory, GUILayout.ExpandWidth(true));
+            if (!ReplayDirectoryExists && GUILayout.Button("Save and Create Directory")) {
+                settings.ReplaysDirectory = _replaysDirectory;
+                try {
+                    Directory.CreateDirectory(ReplaysDirectory);
+                } catch (Exception e) {
+                    modEntry.Logger.Log("Can't creat Directory at '" + ReplaysDirectory + "'! Error: " + e.Message);
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+        private static string _replaysDirectory;
+        private static string ReplaysDirectory {
+            get { return _replaysDirectory; }
+            set {
+                if (_replaysDirectory == value) return;
+                _replaysDirectory = value;
+                ReplayDirectoryExists = Directory.Exists(value);
+                if (ReplayDirectoryExists)
+                    Main.settings.ReplaysDirectory = value;
+            }
+        }
+        private static bool ReplayDirectoryExists;
+
+        static void FloatSettingSliderGUI(string name, Func<float> getter, Action<float> setter, float min, float max) {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(name);
+            GUILayout.FlexibleSpace();
             float value;
             if (float.TryParse(GUILayout.TextField(getter().ToString("0.00"), GUILayout.Width(50)), out value)) {
                 setter(value);

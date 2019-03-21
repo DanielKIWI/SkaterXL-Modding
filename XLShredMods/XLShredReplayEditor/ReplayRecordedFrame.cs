@@ -48,10 +48,9 @@ namespace XLShredReplayEditor {
                 this.transformInfos[i] = TransformInfo.Lerp(a.transformInfos[i], b.transformInfos[i], t);
             }
         }
-
-
+        
         public TransformInfo[] transformInfos;
-
+        
         public float time;
     }
 }
