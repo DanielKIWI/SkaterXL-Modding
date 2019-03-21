@@ -67,7 +67,7 @@ namespace XLShredReplayEditor {
         }
 
         public void Awake() {
-            StartCoroutine(RecordLoop());
+            StartCoroutine(RecordBailedLoop());
             this.transformsToBeRecorded = new List<Transform>();
             this.recordedFrames = new List<ReplayRecordedFrame>();
 
@@ -121,22 +121,30 @@ namespace XLShredReplayEditor {
             this._startTime = this._endTime;
         }
 
-        private IEnumerator RecordLoop() {
-            while (true) {
-                if (ReplayManager.CurrentState != ReplayState.RECORDING) {
-                    yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.RECORDING);
-                }
-                //If player has bailed recorded Transforms are changed between FixedUpdate and rendering -> Recording directly after the frame was rendered.  <-> Animations done at Render-Time determinates the Movement
-                if (PlayerController.Instance.respawn.bail.bailed)
-                    yield return new WaitForEndOfFrame();
-                else    //Recording at FixedUpdate when skating.  <->  Physics determinates the Movement
-                    yield return new WaitForFixedUpdate();
-                this._endTime += Time.deltaTime;
-                
+        public void FixedUpdate() {
+            if (ReplayManager.CurrentState != ReplayState.RECORDING) {
+                return;
+            }
+            this._endTime += Time.fixedDeltaTime;
+            
+            //Recording at FixedUpdate when skating.  <->  Physics determinates the Movement
+            if (!PlayerController.Instance.respawn.bail.bailed) {
                 this.RecordFrame();
-                if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
-                    this.startTime = this.endTime - Main.settings.MaxRecordedTime;
+            }
+            if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
+                this.startTime = this.endTime - Main.settings.MaxRecordedTime;
+            }
+        }
+
+        //If player has bailed recorded Transforms are changed between FixedUpdate and rendering -> Recording directly after the frame was rendered.  <-> Animations done at Render-Time determinates the Movement
+        private IEnumerator RecordBailedLoop() {
+            while (true) {
+                if (ReplayManager.CurrentState != ReplayState.RECORDING || !PlayerController.Instance.respawn.bail.bailed) {
+                    yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.RECORDING && PlayerController.Instance.respawn.bail.bailed);
                 }
+                yield return new WaitForEndOfFrame();
+
+                this.RecordFrame();
             }
         }
         public void ApplyRecordedFrame(int frame) {
@@ -165,23 +173,28 @@ namespace XLShredReplayEditor {
 
 
         public int GetFrameIndex(float time, int lastFrame = 0) {
+            if (recordedFrames.Count == 0) {
+                Main.modEntry.Logger.Error("RecordedFramse is empty");
+                return -1;
+            }
+            int index;
             if (lastFrame < 0) {
-                lastFrame = 0;
+                index = 0;
+            } else if (lastFrame > this.recordedFrames.Count - 2) {
+                index = this.recordedFrames.Count - 2;
+            } else {
+                index = lastFrame;
             }
-            if (lastFrame > this.recordedFrames.Count - 2) {
-                lastFrame = this.recordedFrames.Count - 2;
-            }
-            int num = lastFrame;
             if (time < this.recordedFrames[lastFrame].time) {
-                while (num > 0 && this.recordedFrames[num].time > time) {
-                    num--;
+                while (index > 0 && this.recordedFrames[index].time > time) {
+                    index--;
                 }
-                return num;
+                return index;
             }
-            while (num < this.recordedFrames.Count - 2 && this.recordedFrames[num + 1].time < time) {
-                num++;
+            while (index < this.recordedFrames.Count - 2 && this.recordedFrames[index + 1].time < time) {
+                index++;
             }
-            return num;
+            return index;
         }
 
 
