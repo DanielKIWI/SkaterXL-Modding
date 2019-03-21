@@ -126,7 +126,11 @@ namespace XLShredReplayEditor {
                 if (ReplayManager.CurrentState != ReplayState.RECORDING) {
                     yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.RECORDING);
                 }
-                yield return new WaitForEndOfFrame();
+                //If player has bailed recorded Transforms are changed between FixedUpdate and rendering -> Recording directly after the frame was rendered.  <-> Animations done at Render-Time determinates the Movement
+                if (PlayerController.Instance.respawn.bail.bailed)
+                    yield return new WaitForEndOfFrame();
+                else    //Recording at FixedUpdate when skating.  <->  Physics determinates the Movement
+                    yield return new WaitForFixedUpdate();
                 this._endTime += Time.deltaTime;
                 
                 this.RecordFrame();
