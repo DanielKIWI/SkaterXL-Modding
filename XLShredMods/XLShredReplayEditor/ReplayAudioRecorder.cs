@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using XLShredReplayEditor.Extensions;
+using XLShredReplayEditor.Utils;
 
 namespace XLShredReplayEditor {
     public class ReplayAudioRecorder : MonoBehaviour {

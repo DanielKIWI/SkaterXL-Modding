@@ -4,6 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
+
+    public enum CameraMode {
+        Free,
+        Orbit,
+        Tripod
+    }
     public class ReplayCameraController : MonoBehaviour {
 
         #region From Unity called Functions
@@ -11,7 +17,7 @@ namespace XLShredReplayEditor {
             this.manager = base.GetComponent<ReplayManager>();
             this.cameraTransform = PlayerController.Instance.cameraController._actualCam;
             this.camera = cameraTransform.GetComponent<Camera>();
-            this.mode = ReplayCameraController.CameraMode.Orbit;
+            this.mode = CameraMode.Orbit;
             this.keyFrames = new List<KeyFrame>();
             this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             this.FocusOffsetY = 0f;
@@ -27,7 +33,7 @@ namespace XLShredReplayEditor {
             }
             bool RBPressed = PlayerController.Instance.inputController.player.GetButton("RB");
             switch (this.mode) {
-                case ReplayCameraController.CameraMode.Free:
+                case CameraMode.Free:
                     if (RBPressed) {
                         InputRollRotation();
                         InputCameraFOV();
@@ -36,7 +42,7 @@ namespace XLShredReplayEditor {
                         this.InputFreeRotation();
                     }
                     break;
-                case ReplayCameraController.CameraMode.Orbit:
+                case CameraMode.Orbit:
                     if (RBPressed) {
                         InputFocusOffsetY();
                         InputCameraFOV();
@@ -49,7 +55,7 @@ namespace XLShredReplayEditor {
                         + this.orbitRadialCoord.cartesianCoords;
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
-                case ReplayCameraController.CameraMode.Tripod:
+                case CameraMode.Tripod:
                     if (RBPressed) {
                         InputFocusOffsetY();
                         InputCameraFOV();
@@ -116,7 +122,7 @@ namespace XLShredReplayEditor {
 
         private void InputModeChange() {
             if (PlayerController.Instance.inputController.player.GetButtonDown("Y") || Input.GetKeyDown(KeyCode.M)) {
-                this.mode = ((this.mode >= ReplayCameraController.CameraMode.Tripod) ? ReplayCameraController.CameraMode.Free : (this.mode + 1));
+                this.mode = ((this.mode >= CameraMode.Tripod) ? CameraMode.Free : (this.mode + 1));
             }
             if (PlayerController.Instance.inputController.player.GetButtonDown("Select")) {
                 this.CamFollowKeyFrames = !this.CamFollowKeyFrames;
@@ -182,13 +188,13 @@ namespace XLShredReplayEditor {
             int index = this.FindKeyFrameInsertIndex(time);
             KeyFrame item;
             switch (this.mode) {
-                case ReplayCameraController.CameraMode.Free:
+                case CameraMode.Free:
                     item = new FreeCameraKeyFrame(this.cameraTransform, camera.fieldOfView, time, cameraCurve);
                     break;
-                case ReplayCameraController.CameraMode.Orbit:
+                case CameraMode.Orbit:
                     item = new OrbitCameraKeyFrame(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
-                case ReplayCameraController.CameraMode.Tripod:
+                case CameraMode.Tripod:
                     item = new TripodCameraKeyFrame(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
                 default:
@@ -262,7 +268,7 @@ namespace XLShredReplayEditor {
                 this.keyFrames.RemoveAt(0);
             }
             base.enabled = true;
-            if (this.mode == ReplayCameraController.CameraMode.Orbit) {
+            if (this.mode == CameraMode.Orbit) {
                 this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             }
             this.cameraParent = this.cameraTransform.parent;
@@ -285,13 +291,13 @@ namespace XLShredReplayEditor {
         }
 
 
-        private void SwitchModeTo(ReplayCameraController.CameraMode newValue) {
-            ReplayCameraController.CameraMode cameraMode = this.mode;
+        private void SwitchModeTo(CameraMode newValue) {
+            CameraMode cameraMode = this.mode;
             if (newValue == cameraMode) {
                 return;
             }
             this.mode = newValue;
-            if (newValue == ReplayCameraController.CameraMode.Orbit) {
+            if (newValue == CameraMode.Orbit) {
                 this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.transform.position);
             }
         }
@@ -300,7 +306,7 @@ namespace XLShredReplayEditor {
 
         public Camera camera;
 
-        public ReplayCameraController.CameraMode mode;
+        public CameraMode mode;
 
         public Vector3 lookDirection;
 
@@ -329,10 +335,5 @@ namespace XLShredReplayEditor {
 
         private ReplayManager manager;
 
-        public enum CameraMode {
-            Free,
-            Orbit,
-            Tripod
-        }
     }
 }

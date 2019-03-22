@@ -52,6 +52,8 @@ namespace XLShredReplayEditor {
             }
         }
 
+        public ReplayRecordedFrame lastFrame;
+
         public void AddTransformToRecordedList(Transform t) {
             if (transformsToBeRecorded.Contains(t)) {
                 Debug.Log("Transform " + t.name + " is already being recorded.");
@@ -150,8 +152,13 @@ namespace XLShredReplayEditor {
         public void ApplyRecordedFrame(int frame) {
             this.recordedFrames[frame].ApplyTo(this.transformsToBeRecorded);
         }
+
+        public void SaveLastFrame() {
+            lastFrame = this.recordedFrames[recordedFrames.Count - 1];
+        }
+
         public void ApplyLastFrame() {
-            this.recordedFrames[recordedFrames.Count - 1].ApplyTo(this.transformsToBeRecorded);
+            lastFrame.ApplyTo(this.transformsToBeRecorded);
         }
 
 
@@ -185,7 +192,7 @@ namespace XLShredReplayEditor {
             } else {
                 index = lastFrame;
             }
-            if (time < this.recordedFrames[lastFrame].time) {
+            if (time < this.recordedFrames[index].time) {
                 while (index > 0 && this.recordedFrames[index].time > time) {
                     index--;
                 }

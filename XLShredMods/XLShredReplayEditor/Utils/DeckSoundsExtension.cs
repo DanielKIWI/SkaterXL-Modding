@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace XLShredReplayEditor.Extensions {
+namespace XLShredReplayEditor.Utils {
     public static class DeckSoundsExtension {
         public static AudioSource[] getAudioSources(this DeckSounds ds) {
             List<AudioSource> sources = new List<AudioSource>(new AudioSource[9] {

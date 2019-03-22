@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace XLShredReplayEditor {
+    using UnityEngine.Experimental.Rendering;
+    using Utils;
 
     public enum ReplayState {
         LOADING, RECORDING, PLAYBACK, DISABLED
@@ -83,25 +85,16 @@ namespace XLShredReplayEditor {
 
         public ReplayEditorMenu menu;
 
-
         public void Awake() {
             DontDestroyOnLoad(gameObject);
             ReplayManager._instance = this;
-            if (recorder == null) {
-                this.recorder = gameObject.AddComponent<ReplayRecorder>();
-            }
-            if (this.cameraController == null) {
-                this.cameraController = base.gameObject.AddComponent<ReplayCameraController>();
-                this.cameraController.enabled = false;
-            }
-            if (this.menu == null) {
-                this.menu = gameObject.AddComponent<ReplayEditorMenu>();
-                this.menu.enabled = false;
-            }
-            if (audioRecorder == null) {
-                audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
-                audioRecorder.enabled = true;
-            }
+            this.recorder = gameObject.AddComponent<ReplayRecorder>();
+            this.cameraController = base.gameObject.AddComponent<ReplayCameraController>();
+            this.cameraController.enabled = false;
+            this.menu = gameObject.AddComponent<ReplayEditorMenu>();
+            this.menu.enabled = false;
+            audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
+            audioRecorder.enabled = true;
         }
         public void Start() {
             if (Main.enabled) {
@@ -110,7 +103,6 @@ namespace XLShredReplayEditor {
             }
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
-
         public IEnumerator StartReplayEditor() {
             ReplayManager.SetState(ReplayState.LOADING);
             Debug.Log("Started Replay Editor");
@@ -121,13 +113,13 @@ namespace XLShredReplayEditor {
             PlayerController.Instance.cameraController.enabled = false;
             InputController.Instance.enabled = false;
             PlayerController.Instance.enabled = false;
-
-
+            
             PlayerController.Instance.respawn.pin.gameObject.SetActive(false);
 
             this.cameraController.OnStartReplayEditor();
             audioRecorder.StopRecording();
             yield return audioRecorder.StartPlayback();
+            recorder.SaveLastFrame();
 
             this.playbackSpeed = 1f;
             Time.timeScale = 0f;
@@ -148,7 +140,7 @@ namespace XLShredReplayEditor {
                 ReplayManager.SetState(ReplayState.LOADING);
 
                 PlayerController.Instance.respawn.pin.gameObject.SetActive(true);
-
+                
                 audioRecorder.StopPlayback();
                 audioRecorder.StartRecording();
                 //PlayerController.Instance.animationController.skaterAnim.enabled = true;
@@ -173,19 +165,19 @@ namespace XLShredReplayEditor {
 
         public void Update() {
             this.CheckInput();
+            if (CurrentState != ReplayState.PLAYBACK) return;
+
             this.playbackTime += playbackTimeScale * Time.unscaledDeltaTime;
-            if (CurrentState == ReplayState.PLAYBACK) {
-                if (this.playbackTime < this.clipStartTime && this.playbackTimeScale < 0f) {
-                    this.isPlaying = false;
-                    this.playbackTime = this.clipStartTime;
-                } else if (this.playbackTime > this.clipEndTime && this.playbackTimeScale > 0f) {
-                    this.isPlaying = false;
-                    this.playbackTime = this.clipEndTime;
-                }
-                //Settin SkaterTransforms
-                this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
-                this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
+            if (this.playbackTime < this.clipStartTime && this.playbackTimeScale < 0f) {
+                this.isPlaying = false;
+                this.playbackTime = this.clipStartTime;
+            } else if (this.playbackTime > this.clipEndTime && this.playbackTimeScale > 0f) {
+                this.isPlaying = false;
+                this.playbackTime = this.clipEndTime;
             }
+            //Settin SkaterTransforms
+            this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
+            this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
         }
 
         private void CheckInput() {
@@ -371,7 +363,7 @@ namespace XLShredReplayEditor {
             GUILayout.FlexibleSpace();
 
             //Camera Mode
-            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
+            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(CameraMode), cameraController.mode));
         }
         void DrawControllsGUI() {
             var style = new GUIStyle(GUI.skin.window);
@@ -532,7 +524,7 @@ namespace XLShredReplayEditor {
             GUILayout.BeginVertical();
             float y = 20f;
             GUI.skin.label.normal.textColor = Color.white;
-            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(ReplayCameraController.CameraMode), cameraController.mode));
+            GUILayout.Label("Camera-Mode: " + Enum.GetName(typeof(CameraMode), cameraController.mode));
             GUILayout.Space(20);
 
             //legend
@@ -556,18 +548,18 @@ namespace XLShredReplayEditor {
             DrawControllGUI("Change End of clip", "", "LB + RightStickX", "LB + RightStickX");
 
             switch (cameraController.mode) {
-                case ReplayCameraController.CameraMode.Free:
+                case CameraMode.Free:
                     DrawControllGUI("Move(xz)", "", "LeftStick", "LeftStick");
                     DrawControllGUI("Move(y)", "", "DpadY", "DpadY");
                     DrawControllGUI("Rotate", "", "RightStick", "RightStick");
                     DrawControllGUI("Roll", "", "RB + RightStickX", "RB + RightStickX");
                     break;
-                case ReplayCameraController.CameraMode.Orbit:
+                case CameraMode.Orbit:
                     DrawControllGUI("Orbit around Skater", "", "LeftStickX + RightStickY", "LeftStickX + RightStickY");
                     DrawControllGUI("Change Orbit Radius", "", "LeftStickY", "LeftStickY");
                     DrawControllGUI("Change Focus Offset", "", "RB + RightStickY", "RB + RightStickY");
                     break;
-                case ReplayCameraController.CameraMode.Tripod:
+                case CameraMode.Tripod:
                     DrawControllGUI("Move(xz)", "", "LeftStick", "LeftStick");
                     DrawControllGUI("Move(y)", "", "DpadY", "DpadY");
                     DrawControllGUI("Change Focus Offset", "", "RB + RightStickY", "RB + RightStickY");

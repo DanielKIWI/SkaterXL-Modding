@@ -83,7 +83,8 @@ namespace XLShredReplayEditor {
                     GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), DialogeBoxRect, SettingsWindow, "Settings");
                     break;
             }
-            if (GUI.Button(new Rect(DialogeBoxRect.xMax - 20, DialogeBoxRect.y, 20, 20), "X")) {
+            if (GUI.Button(new Rect(DialogeBoxRect.xMax - 20, DialogeBoxRect.y, 30, 30), "X")) {
+                Close();
             }
         }
 
@@ -147,108 +148,6 @@ namespace XLShredReplayEditor {
             Close();
         }
         #endregion
-
-
-        //private void CaptureCameraTexture() {
-        //    this.camera.Render();
-        //}
-
-
-        //private void CreateMovie() {
-        //    string text = this.videoDir + "\\" + this.fileName;
-        //    for (int i = 0; i < this.textureFrames.Count; i++) {
-        //        File.WriteAllBytes(string.Concat(new object[]
-        //        {
-        //        text,
-        //        "\\frame_",
-        //        i,
-        //        ".jpg"
-        //        }), this.textureFrames[i].EncodeToJPG());
-        //    }
-        //}
-
-
-        //public void Update() {
-        //    if (Input.GetKeyDown(KeyCode.Return) || PlayerController.Instance.inputController.player.GetButtonDown("A")) {
-        //        this.Save();
-        //        return;
-        //    }
-        //    if (Input.GetKeyDown(KeyCode.Escape) || PlayerController.Instance.inputController.player.GetButtonDown("B")) {
-        //        this.EndSaving();
-        //        return;
-        //    }
-        //}
-
-
-        //private void Save() {
-        //    base.StartCoroutine(this.SaveAsync());
-        //}
-
-
-        //private void OnPostRender() {
-        //    if (this.saveRendered) {
-        //        Texture2D texture2D = new Texture2D(this.camera.pixelWidth, this.camera.pixelHeight, TextureFormat.RGB24, false);
-        //        texture2D.ReadPixels(new Rect(0f, 0f, (float)Screen.width, (float)Screen.height), 0, 0, false);
-        //        texture2D.Apply();
-        //        this.textureFrames.Add(texture2D);
-        //        this.saveRendered = false;
-        //    }
-        //}
-
-
-        //private IEnumerator CreateReplayTextureList() {
-        //    this.textureFrames = new List<Texture2D>();
-        //    for (float num = ReplayManager.Instance.clipStartTime; num < ReplayManager.Instance.clipEndTime; num += 1f / (float)this.fps) {
-        //        ReplayManager.Instance.SetPlaybackTime(num);
-        //        ReplayManager.Instance.cameraController.EvaluateKeyFrames();
-        //        this.CaptureCameraTexture();
-        //        yield return new WaitUntil(() => !this.saveRendered);
-        //    }
-        //    RenderTexture.active = null;
-        //    yield break;
-        //}
-
-
-        //private IEnumerator SaveAsync() {
-        //    if (!this.fileName.EndsWith(this.movieFileEnding)) {
-        //        this.fileName += this.movieFileEnding;
-        //    }
-        //    yield return this.CreateReplayTextureList();
-        //    this.CreateMovie();
-        //    this.EndSaving();
-        //    yield break;
-        //}
-
-
-        //private Camera camera;
-
-        //private Rect saveDialogeTextRect;
-
-
-        //private RenderTexture renderTexture;
-
-
-        //private List<Texture2D> textureFrames;
-
-
-        //private int fps;
-
-
-        //private Rect saveDialogeSaveButtonRect;
-
-
-        //private Rect saveDialogeCancelButtonRect;
-
-
-        //private string videoDir;
-
-
-        //private bool saveRendered;
-
-
-        //private string movieFileEnding;
-
-
     }
 
 }
