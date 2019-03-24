@@ -12,7 +12,6 @@ namespace XLShredReplayEditor {
     public class Settings : UnityModManager.ModSettings {
 
         public float MaxRecordedTime = 120f;
-        public bool showRecGUI = false;
         public bool showLogo = true;
         public bool showControllsHelp = true;
 
@@ -50,11 +49,11 @@ namespace XLShredReplayEditor {
                     ReplayDirectoryExists = false;
                 }
             }
-
             modId = modEntry.Info.Id;
             modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnSettingsGUI;
+            _replaysDirectory = settings.ReplaysDirectory;
 
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
             uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
@@ -92,7 +91,6 @@ namespace XLShredReplayEditor {
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             FloatSettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
-            settings.showRecGUI = GUILayout.Toggle(settings.showRecGUI, "Show 'REC'-Icon");
 
             GUILayout.Space(8);
             FloatSettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
@@ -100,23 +98,22 @@ namespace XLShredReplayEditor {
             FloatSettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
             FloatSettingSliderGUI("FOV Change Speed", () => settings.FOVChangeSpeed, (v) => settings.FOVChangeSpeed = v, 0, 100);
             GUILayout.Space(8);
-            FloatSettingSliderGUI("Camera sensor size in mm (used for focalLength calculation)", () => settings.CameraSensorSize, (v) => settings.CameraSensorSize = v, 0, 100);
+            FloatSettingSliderGUI("Camera sensor size in mm \n(used for focalLength calculation)", () => settings.CameraSensorSize, (v) => settings.CameraSensorSize = v, 0, 100);
             GUILayout.Space(8);
             FloatSettingSliderGUI("Max Record Time", () => settings.MaxRecordedTime, (v) => settings.MaxRecordedTime = v, 0, 300);
             GUILayout.Space(8);
-
-
-
+            
             GUILayout.BeginHorizontal();
             GUILayout.Label("Replays Directory Path");
             GUILayout.Space(8);
             ReplaysDirectory = GUILayout.TextField(ReplaysDirectory, GUILayout.ExpandWidth(true));
-            if (!ReplayDirectoryExists && GUILayout.Button("Save and Create Directory")) {
+            GUIContent content = new GUIContent("Save and Create Directory");
+            if (!ReplayDirectoryExists && GUILayout.Button(content, GUILayout.Width(GUI.skin.button.CalcSize(content).x))) {
                 settings.ReplaysDirectory = _replaysDirectory;
                 try {
                     Directory.CreateDirectory(ReplaysDirectory);
                 } catch (Exception e) {
-                    modEntry.Logger.Log("Can't creat Directory at '" + ReplaysDirectory + "'! Error: " + e.Message);
+                    modEntry.Logger.Log("Can't create Directory at '" + ReplaysDirectory + "'! Error: " + e.Message);
                 }
             }
             GUILayout.EndHorizontal();
@@ -138,11 +135,10 @@ namespace XLShredReplayEditor {
             GUILayout.BeginHorizontal();
             GUILayout.Label(name);
             GUILayout.FlexibleSpace();
-            float value;
-            if (float.TryParse(GUILayout.TextField(getter().ToString("0.00"), GUILayout.Width(50)), out value)) {
+            if (float.TryParse(GUILayout.TextField(getter().ToString("0.00"), GUILayout.Width(50)), out float value)) {
                 setter(value);
             }
-            setter(GUILayout.HorizontalSlider(getter(), min, max));
+            setter(GUILayout.HorizontalSlider(getter(), min, max, GUILayout.MinWidth(600f)));
             GUILayout.EndHorizontal();
         }
     }

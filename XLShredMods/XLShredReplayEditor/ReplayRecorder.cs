@@ -10,21 +10,26 @@ using System.Collections;
 namespace XLShredReplayEditor {
 
     public class ReplayRecorder : MonoBehaviour {
+        public List<Transform> transformsToBeRecorded;
+
+        public List<ReplayRecordedFrame> ClipFrames;
+        public List<ReplayRecordedFrame> RecordedFrames;
+        
         public float _startTime;
         public float startTime {
             get { return _startTime; }
             set {
                 if (value <= _startTime) return;
                 int i = 0;
-                while (i < recordedFrames.Count && recordedFrames[i].time < value) {
+                while (i < ClipFrames.Count && ClipFrames[i].time < value) {
                     i++;
                 }
-                if (i == recordedFrames.Count) {
-                    recordedFrames.Clear();
+                if (i == ClipFrames.Count) { 
+                    ClipFrames.Clear();
                     _startTime = endTime;
                 } else {
-                    recordedFrames.RemoveRange(0, i);
-                    _startTime = recordedFrames[0].time;
+                    ClipFrames.RemoveRange(0, i);
+                    _startTime = ClipFrames[0].time;
                 }
             }
         }
@@ -34,15 +39,15 @@ namespace XLShredReplayEditor {
             set {
                 if (value >= _endTime) return;
                 int i = 0;
-                while (i < recordedFrames.Count && recordedFrames[recordedFrames.Count - 1 - i].time > value) {
+                while (i < ClipFrames.Count && ClipFrames[ClipFrames.Count - 1 - i].time > value) {
                     i++;
                 }
-                if (i == recordedFrames.Count) {
-                    recordedFrames.Clear();
+                if (i == ClipFrames.Count) {
+                    ClipFrames.Clear();
                     _endTime = startTime;
                 } else {
-                    recordedFrames.RemoveRange(recordedFrames.Count - i, i);
-                    _endTime = recordedFrames[recordedFrames.Count - 1].time;
+                    ClipFrames.RemoveRange(ClipFrames.Count - i, i);
+                    _endTime = ClipFrames[ClipFrames.Count - 1].time;
                 }
             }
         }
@@ -52,6 +57,10 @@ namespace XLShredReplayEditor {
             }
         }
 
+        /// <summary>
+        /// Used for saving the skater position when opening ReplayEditor
+        /// Reason: After cutting the clip the last frame is no longer the frame when opening the Editor
+        /// </summary>
         public ReplayRecordedFrame lastFrame;
 
         public void AddTransformToRecordedList(Transform t) {
@@ -71,9 +80,8 @@ namespace XLShredReplayEditor {
         public void Awake() {
             StartCoroutine(RecordBailedLoop());
             this.transformsToBeRecorded = new List<Transform>();
-            this.recordedFrames = new List<ReplayRecordedFrame>();
-
-            //RecordTransforms(PlayerController.Instance.transform.GetComponentsInChildren<Transform>());
+            this.RecordedFrames = new List<ReplayRecordedFrame>();
+            
             //Board
             AddTransformToRecordedList(PlayerController.Instance.boardController.boardTransform);
             AddTransformToRecordedList(PlayerController.Instance.boardController.backTruckRigidbody.transform);
@@ -111,15 +119,25 @@ namespace XLShredReplayEditor {
             this._endTime = 0f;
             //printTransformsToBeRecorded();
         }
-        void printTransformsToBeRecorded() {
-            print("transformsToBeRecorded: ");
-            foreach (Transform t in transformsToBeRecorded) {
-                print(t.name);
-            }
+
+        public void OnStartReplayEditor() {
+            SaveLastFrame();
+            ClipFrames = new List<ReplayRecordedFrame>(RecordedFrames);
+            startTime = ClipFrames[0].time;
+            endTime = ClipFrames[ClipFrames.Count - 1].time;
+        }
+
+        public void OnExitReplayEditor() {
+            ApplyLastFrame();
+        }
+
+        public void Destroy() {
+            StopAllCoroutines();
+            Destroy(this);
         }
 
         private void ClearRecording() {
-            this.recordedFrames.Clear();
+            this.ClipFrames.Clear();
             this._startTime = this._endTime;
         }
 
@@ -138,7 +156,9 @@ namespace XLShredReplayEditor {
             }
         }
 
-        //If player has bailed recorded Transforms are changed between FixedUpdate and rendering -> Recording directly after the frame was rendered.  <-> Animations done at Render-Time determinates the Movement
+        /// <summary>
+        /// If player has bailed recorded Transforms are changed between FixedUpdate and rendering -> Recording directly after the frame was rendered.  <-> Animations done at Render-Time determinates the Movement
+        /// </summary>
         private IEnumerator RecordBailedLoop() {
             while (true) {
                 if (ReplayManager.CurrentState != ReplayState.RECORDING || !PlayerController.Instance.respawn.bail.bailed) {
@@ -150,92 +170,71 @@ namespace XLShredReplayEditor {
             }
         }
         public void ApplyRecordedFrame(int frame) {
-            this.recordedFrames[frame].ApplyTo(this.transformsToBeRecorded);
+            this.ClipFrames[frame].ApplyTo(this.transformsToBeRecorded);
         }
 
         public void SaveLastFrame() {
-            lastFrame = this.recordedFrames[recordedFrames.Count - 1];
+            lastFrame = this.RecordedFrames[RecordedFrames.Count - 1];
         }
 
         public void ApplyLastFrame() {
             lastFrame.ApplyTo(this.transformsToBeRecorded);
         }
-
-
+        
         private void RecordFrame() {
-            this.recordedFrames.Add(new ReplayRecordedFrame(this.transformsToBeRecorded, this.endTime));
+            this.RecordedFrames.Add(new ReplayRecordedFrame(this.transformsToBeRecorded, this.endTime));
         }
-
-
-        public void OnGUI() {
-            if (ReplayManager.CurrentState == ReplayState.RECORDING && Main.settings.showRecGUI) {
-                this.recSkin = new GUIStyle(GUI.skin.label);
-                this.recSkin.fontSize = 20;
-                this.recSkin.normal.textColor = Color.red;
-                string text = "● Rec";
-                Vector2 vector = this.recSkin.CalcSize(new GUIContent(text));
-                GUI.Label(new Rect((float)Screen.width - vector.x - 10f, 10f, vector.x, vector.y), text, this.recSkin);
-            }
-        }
-
 
         public int GetFrameIndex(float time, int lastFrame = 0) {
-            if (recordedFrames.Count == 0) {
+            if (ClipFrames.Count == 0) {
                 Main.modEntry.Logger.Error("RecordedFramse is empty");
                 return -1;
             }
             int index;
             if (lastFrame < 0) {
                 index = 0;
-            } else if (lastFrame > this.recordedFrames.Count - 2) {
-                index = this.recordedFrames.Count - 2;
+            } else if (lastFrame > this.ClipFrames.Count - 2) {
+                index = this.ClipFrames.Count - 2;
             } else {
                 index = lastFrame;
             }
-            if (time < this.recordedFrames[index].time) {
-                while (index > 0 && this.recordedFrames[index].time > time) {
+            if (time < this.ClipFrames[index].time) {
+                while (index > 0 && this.ClipFrames[index].time > time) {
                     index--;
                 }
                 return index;
             }
-            while (index < this.recordedFrames.Count - 2 && this.recordedFrames[index + 1].time < time) {
+            while (index < this.ClipFrames.Count - 2 && this.ClipFrames[index + 1].time < time) {
                 index++;
             }
             return index;
         }
-
-
+        
         public void ApplyRecordedTime(int frameIndex, float time) {
-            if (this.recordedFrames.Count != 0) {
-                if (this.recordedFrames.Count == 1) {
-                    this.recordedFrames[0].ApplyTo(this.transformsToBeRecorded);
+            if (this.ClipFrames.Count != 0) {
+                if (this.ClipFrames.Count == 1) {
+                    this.ClipFrames[0].ApplyTo(this.transformsToBeRecorded);
                     return;
                 }
-                if (frameIndex > 0 && frameIndex + 1 < this.recordedFrames.Count) {
-                    ReplayRecordedFrame.Lerp(this.recordedFrames[frameIndex], this.recordedFrames[frameIndex + 1], time).ApplyTo(this.transformsToBeRecorded);
+                if (frameIndex > 0 && frameIndex + 1 < this.ClipFrames.Count) {
+                    ReplayRecordedFrame.Lerp(this.ClipFrames[frameIndex], this.ClipFrames[frameIndex + 1], time).ApplyTo(this.transformsToBeRecorded);
                 }
             }
         }
 
         public void LoadFrames(List<ReplayRecordedFrame> frames) {
-            recordedFrames = frames;
+            ClipFrames = frames;
             _startTime =
-            _startTime = this.recordedFrames[0].time;
-            _endTime = this.recordedFrames[this.recordedFrames.Count - 1].time;
+            _startTime = this.ClipFrames[0].time;
+            _endTime = this.ClipFrames[this.ClipFrames.Count - 1].time;
         }
 
-
-        public List<Transform> transformsToBeRecorded;
-
-
-        public List<ReplayRecordedFrame> recordedFrames;
-
-
-
-
-        private GUIStyle recSkin;
-
-
+        void printTransformsToBeRecorded() {
+            print("transformsToBeRecorded: ");
+            foreach (Transform t in transformsToBeRecorded) {
+                print(t.name);
+            }
+        }
     }
 
 }

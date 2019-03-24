@@ -10,10 +10,9 @@ namespace XLShredReplayEditor {
     [Serializable]
     public class ReplayData {
         public ReplayData() {
-            this.recordedFrames = ReplayManager.Instance.recorder.recordedFrames.ToArray();
-            testFrame = recordedFrames[0];
-            float startTime = this.recordedFrames[0].time;
-            float endTime = this.recordedFrames[this.recordedFrames.Length - 1].time;
+            this.recordedFrames = ReplayManager.Instance.recorder.ClipFrames.ToArray();
+            float startTime = ReplayManager.Instance.recorder.startTime;
+            float endTime = ReplayManager.Instance.recorder.endTime;
             this.recordedTime = endTime - startTime;
             for (int i = 0; i < this.recordedFrames.Length; i++) {
                 this.recordedFrames[i].time -= startTime;
@@ -35,7 +34,7 @@ namespace XLShredReplayEditor {
             ReplayManager.Instance.clipEndTime = this.recordedTime;
             ReplayManager.Instance.playbackTime = 0f;
             ReplayManager.Instance.previousFrameIndex = 0;
-            //ReplayManager.Instance.cameraController.LoadKeyFrames(this.cameraKeyFrames);
+            ReplayManager.Instance.cameraController.LoadKeyFrames(this.cameraKeyFrames);
         }
 
         public void SaveToFile(string path) {
@@ -68,7 +67,6 @@ namespace XLShredReplayEditor {
             yield return ReplayManager.Instance.audioRecorder.LoadReplayAudio(audioPath);
         }
         
-        public ReplayRecordedFrame testFrame;
         public ReplayRecordedFrame[] recordedFrames;
 
         //TODO: change keyframe data to serializable data

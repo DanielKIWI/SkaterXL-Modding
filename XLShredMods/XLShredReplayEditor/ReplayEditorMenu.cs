@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
@@ -9,9 +10,11 @@ namespace XLShredReplayEditor {
 
     public class ReplayEditorMenu : MonoBehaviour {
         private enum MenuState {
-            MainMenu, SaveMenu, Saving, LoadMenu, Loading, SettingsMenu
+            MainMenu = -1,
+            SaveMenu = 0, LoadMenu = 1, SettingsMenu = 2,
+            Saving = 10, Loading = 11
         }
-        private MenuState _state;
+        private MenuState _state = MenuState.MainMenu;
         private MenuState State {
             get { return _state; }
             set {
@@ -22,36 +25,92 @@ namespace XLShredReplayEditor {
             }
         }
         private string fileName;
-        private Rect DialogeBoxRect;
+        private Rect MenuRect;
+        private Rect SaveRect;
+        private Rect LoadRect;
+        private Rect SettingsRect;
+        private Rect CurrentRect {
+            get {
+                switch (this.State) {
+                    case MenuState.MainMenu:
+                        return MenuRect;
+                    case MenuState.LoadMenu:
+                        return LoadRect;
+                    case MenuState.SaveMenu:
+                        return SaveRect;
+                    case MenuState.SettingsMenu:
+                        return SettingsRect;
+                    default: return new Rect();
+                }
+            }
+        }
+
         Vector2 scrollPosition = Vector2.zero;
 
-        private IEnumerable<string> replayDirectories;
+        private IEnumerable<string> replayNames;
         public void FetchReplayFiles() {
             try {
-                replayDirectories = Directory.EnumerateDirectories(Main.settings.ReplaysDirectory);
+                replayNames = Directory.EnumerateDirectories(Main.settings.ReplaysDirectory).Select(delegate(string path) {
+                    int i = path.LastIndexOf('\\');
+                    return path.Substring(i + 1);
+                });
+                LoadRect.height = Mathf.Max(500f, replayNames.Count() * 20f + 80f);
             } catch (Exception e) {
                 Main.modEntry.Logger.Error("Error fetching saved Replays from " + Main.settings.ReplaysDirectory + ": " + e.Message);
             }
         }
 
-        public void Awake() {
-            //this.camera = Camera.main;
-            this.DialogeBoxRect = new Rect {
-                center = new Vector2((float)Screen.width / 2f, (float)Screen.height / 2f),
-                width = 330f,
-                height = 200f
-            };
-            //this.renderTexture = new RenderTexture(Screen.width, Screen.height, 24);
-            //this.fps = 30;
-            //this.videoDir = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
-            //this.movieFileEnding = ".avi";
+        public static string getFilePath(string filename) {
+            string dir = Main.settings.ReplaysDirectory;
+            if (dir.EndsWith("/") || dir.EndsWith("\\")) {
+                return dir + filename;
+            }
+            return dir + "/" + filename;
         }
+
+        public void Awake() {
+            Vector2 center = new Vector2((float)Screen.width / 2f, (float)Screen.height / 2f);
+            MenuRect = new Rect(0, 0, 330f, 200f) {
+                center = center
+            };
+            SaveRect = new Rect(0, 0, 330f, 200f) {
+                center = center
+            };
+            LoadRect = new Rect(0, 0, 330f, 400f) {
+                center = center
+            };
+            SettingsRect = new Rect(0, 0, 1000f, 400f) {
+                center = center
+            };
+        }
+
+        public void Update() {
+            if (Input.GetKeyDown(KeyCode.Escape) || PlayerController.Instance.inputController.player.GetButtonDown("B")) {
+                if (State == MenuState.MainMenu) {
+                    Close();
+                }
+                if ((int)State < 10) {  //Not loading or saving
+                    State = MenuState.MainMenu;
+                }
+            }
+        }
+
         public void Toggle() {
             if (enabled)
                 Close();
             else
                 Open();
         }
+
+        public void Save() {
+            if (!enabled) {
+                State = MenuState.SaveMenu;
+                Open();
+            } else if ((int)State < 10) {
+                State = MenuState.SaveMenu;
+            }
+        }
+
         public void Open() {
             if (enabled) return;
             enabled = true;
@@ -71,30 +130,23 @@ namespace XLShredReplayEditor {
         public void OnGUI() {
             switch (this.State) {
                 case MenuState.MainMenu:
-                    GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), DialogeBoxRect, MenuWindow, "ReplayEditor Menu");
+                    MenuRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), MenuRect, MenuWindow, "ReplayEditor Menu");
                     break;
                 case MenuState.LoadMenu:
-                    GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), DialogeBoxRect, LoadWindow, "Load Replay");
+                    LoadRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), LoadRect, LoadWindow, "Load Replay");
                     break;
                 case MenuState.SaveMenu:
-                    GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), DialogeBoxRect, SaveWindow, "Save Replay");
+                    SaveRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), SaveRect, SaveWindow, "Save Replay");
                     break;
                 case MenuState.SettingsMenu:
-                    GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), DialogeBoxRect, SettingsWindow, "Settings");
+                    SettingsRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), SettingsRect, SettingsWindow, "Settings");
                     break;
             }
-            if (GUI.Button(new Rect(DialogeBoxRect.xMax - 20, DialogeBoxRect.y, 30, 30), "X")) {
+            if (GUI.Button(new Rect(CurrentRect.xMax, CurrentRect.y, 30, 30), "X")) {
                 Close();
             }
         }
 
-        public static string getFilePath(string filename) {
-            string dir = Main.settings.ReplaysDirectory;
-            if (dir.EndsWith("/") || dir.EndsWith("\\")) {
-                return dir + filename;
-            }
-            return dir + "/" + filename;
-        }
         #region GUI Windows
         public void MenuWindow(int id) {
             if (GUILayout.Button("Save")) {
@@ -115,11 +167,23 @@ namespace XLShredReplayEditor {
         public void SaveWindow(int id) {
             GUILayout.Label("Directory: " + Main.settings.ReplaysDirectory);
             this.fileName = GUILayout.TextField(this.fileName);
-            if (GUILayout.Button("Save")) {
-                State = MenuState.Saving;
-                var replayData = new ReplayData();
-                replayData.SaveToFile(Main.settings.ReplaysDirectory + "\\" + this.fileName);
-                State = MenuState.MainMenu;
+            if (fileName.Contains("/") || 
+                fileName.Contains("\\") || 
+                fileName.Contains(":") || 
+                fileName.Contains("*") || 
+                fileName.Contains("?") || 
+                fileName.Contains("\"") || 
+                fileName.Contains("<") || 
+                fileName.Contains(">") || 
+                fileName.Contains("|")) {
+                GUILayout.Label("Invalid Filename!!!");
+            } else {
+                if (GUILayout.Button("Save")) {
+                    State = MenuState.Saving;
+                    var replayData = new ReplayData();
+                    replayData.SaveToFile(Main.settings.ReplaysDirectory + "\\" + this.fileName);
+                    State = MenuState.MainMenu;
+                }
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
@@ -130,11 +194,13 @@ namespace XLShredReplayEditor {
 
         public void LoadWindow(int id) {
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
-            foreach (string path in replayDirectories) {
-                if (GUILayout.Button(path)) {
+            foreach (string replayName in replayNames) {
+                if (GUILayout.Button(replayName, GUILayout.Height(25))) {
+                    string path = Main.settings.ReplaysDirectory + "\\" + replayName;
                     StartCoroutine(LoadReplayFromPath(path));
                 }
             }
+            GUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
                 State = MenuState.MainMenu;
@@ -149,5 +215,4 @@ namespace XLShredReplayEditor {
         }
         #endregion
     }
-
 }

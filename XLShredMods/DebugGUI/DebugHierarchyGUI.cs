@@ -87,8 +87,8 @@ namespace DebugGUI {
             var transformIndex = XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.IndexOf(SelectedGameObject.transform);
             if (transformIndex >= 0) {
                 int prevIndex = XLShredReplayEditor.ReplayManager.Instance.previousFrameIndex;
-                var prevFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.recordedFrames[prevIndex];
-                var nextFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.recordedFrames[prevIndex + 1];
+                var prevFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex];
+                var nextFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex + 1];
                 var prevFrameTransformInfo = prevFrame.transformInfos[transformIndex];
                 var nextFrameTransformInfo = nextFrame.transformInfos[transformIndex];
 

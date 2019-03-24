@@ -33,6 +33,10 @@ namespace SmoothKeyframeCurves {
             CalculateCurveControlPoints();
         }
 
+        public void Clear() {
+            Keys.Clear();
+        }
+
         public void CalculateCurveControlPoints() {
             for (int i = 0; i < Keys.Count - 1; i++) {
                 CalculateKeyControlPoints(i);

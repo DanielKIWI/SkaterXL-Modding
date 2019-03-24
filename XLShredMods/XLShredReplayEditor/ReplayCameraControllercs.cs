@@ -12,6 +12,28 @@ namespace XLShredReplayEditor {
     }
     public class ReplayCameraController : MonoBehaviour {
 
+        private Transform cameraTransform;
+        public Camera camera;
+        public CameraMode mode;
+        
+        public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
+        public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
+        public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
+        public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
+        
+        public List<KeyFrame> keyFrames;
+        public CameraCurve cameraCurve;
+        public bool CamFollowKeyFrames;
+
+        public float FocusOffsetY;
+
+        private Vector3Radial orbitRadialCoord;
+        private float defaultCameraFOV;
+        private ReplayManager manager;
+        private Transform cameraParent;
+        private const float KeyFrameDeleteTolerance = 0.1f;
+        private float xDownTime;
+
         #region From Unity called Functions
         public void Awake() {
             this.manager = base.GetComponent<ReplayManager>();
@@ -67,8 +89,9 @@ namespace XLShredReplayEditor {
             }
         }
 
-        internal void LoadKeyFrames(IEnumerable<KeyFrame> cameraKeyFrames) {
-            keyFrames = new List<KeyFrame>(cameraKeyFrames);
+        internal void LoadKeyFrames(IEnumerable<SerializableKeyFrame> cameraKeyFrames) {
+            cameraCurve.Clear();
+            keyFrames = new List<KeyFrame>(cameraKeyFrames.Select(k => k.GetKeyFrame(cameraCurve)));
             cameraCurve.CalculateCurveControlPoints();
         }
 
@@ -155,7 +178,7 @@ namespace XLShredReplayEditor {
 
         private bool FindKeyFrameDeleteIndex(out int index) {
             for (int i = 0; i < this.keyFrames.Count; i++) {
-                if (Mathf.Abs(this.manager.playbackTime - this.keyFrames[i].time) < this.keyFrameDeleteTolerance) {
+                if (Mathf.Abs(this.manager.playbackTime - this.keyFrames[i].time) < KeyFrameDeleteTolerance) {
                     index = i;
                     return true;
                 }
@@ -301,39 +324,5 @@ namespace XLShredReplayEditor {
                 this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.transform.position);
             }
         }
-
-        private Transform cameraTransform;
-
-        public Camera camera;
-
-        public CameraMode mode;
-
-        public Vector3 lookDirection;
-
-        public Vector3Radial orbitRadialCoord;
-
-        public float FocusOffsetY;
-
-        public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
-        public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
-
-        public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
-        public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
-        private float defaultCameraFOV;
-
-        private float xDownTime;
-
-        private float keyFrameDeleteTolerance = 0.1f;
-
-        public List<KeyFrame> keyFrames;
-
-        public CameraCurve cameraCurve;
-
-        private Transform cameraParent;
-
-        public bool CamFollowKeyFrames;
-
-        private ReplayManager manager;
-
     }
 }

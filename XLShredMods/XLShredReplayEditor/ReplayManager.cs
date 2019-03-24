@@ -17,28 +17,25 @@ namespace XLShredReplayEditor {
 
     public class ReplayManager : MonoBehaviour {
         private static ReplayState _currentState = ReplayState.DISABLED;
-        public static ReplayState CurrentState { get { return _currentState; } }
-        public static void SetState(ReplayState s) {
-            if (_currentState == s) return;
-            Debug.Log("Changed ReplayState to " + s.ToString());
-            ReplayState oldState = _currentState;
-            _currentState = s;
-            StateChangedEvent?.Invoke(s, oldState);
+        public static ReplayState CurrentState {
+            get { return _currentState; }
+            private set {
+                if (_currentState == value) return;
+                Debug.Log("Changed ReplayState to " + value.ToString());
+                ReplayState oldState = _currentState;
+                _currentState = value;
+                StateChangedEvent?.Invoke(value, oldState);
+            }
         }
         public delegate void ReplayStateChangedEventHandler(ReplayState newState, ReplayState oldState);
         public static event ReplayStateChangedEventHandler StateChangedEvent;
-
-        public static ReplayManager Instance {
-            get {
-                return ReplayManager._instance;
-            }
-        }
-        private static ReplayManager _instance;
-
-
-
+        
+        public static ReplayManager Instance { get; private set; }
+        
         public ReplayRecorder recorder;
         public ReplayAudioRecorder audioRecorder;
+        public ReplayCameraController cameraController;
+        public ReplayEditorMenu menu;
 
         public float playbackTime;
         public float displayedPlaybackTime {
@@ -58,38 +55,28 @@ namespace XLShredReplayEditor {
         }
 
         public int previousFrameIndex;
-        public ReplayRecordedFrame CurrentFrame {
-            get {
-                return recorder.recordedFrames[previousFrameIndex];
-            }
-        }
 
         public bool guiHidden;
         bool clipEditMode;
-
-        public ReplayCameraController cameraController;
-
+        
         private bool isPlaying;
 
         public float clipStartTime;
-
         public float clipEndTime;
 
         private float timeScaleAddend;
 
         /// <summary>
-        /// Time = |lastDpadTick|
+        /// Time = |lastDpadTick|, 
         /// lastDirection = sign(lastDpadTick)
         /// </summary>
         private float lastDpadTick;
-
-        public ReplayEditorMenu menu;
-
+        
         public void Awake() {
             DontDestroyOnLoad(gameObject);
-            ReplayManager._instance = this;
+            ReplayManager.Instance = this;
             this.recorder = gameObject.AddComponent<ReplayRecorder>();
-            this.cameraController = base.gameObject.AddComponent<ReplayCameraController>();
+            this.cameraController = gameObject.AddComponent<ReplayCameraController>();
             this.cameraController.enabled = false;
             this.menu = gameObject.AddComponent<ReplayEditorMenu>();
             this.menu.enabled = false;
@@ -98,13 +85,21 @@ namespace XLShredReplayEditor {
         }
         public void Start() {
             if (Main.enabled) {
-                ReplayManager.SetState(ReplayState.RECORDING);
+                ReplayManager.CurrentState = ReplayState.RECORDING;
                 audioRecorder.StartRecording();
             }
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
+
+        public void Destroy() {
+            recorder.Destroy();
+            audioRecorder.Destroy();
+            ReplayManager.CurrentState = ReplayState.DISABLED;
+            Destroy(gameObject);
+        }
+
         public IEnumerator StartReplayEditor() {
-            ReplayManager.SetState(ReplayState.LOADING);
+            ReplayManager.CurrentState = ReplayState.LOADING;
             Debug.Log("Started Replay Editor");
             Cursor.visible = true;
 
@@ -113,51 +108,46 @@ namespace XLShredReplayEditor {
             PlayerController.Instance.cameraController.enabled = false;
             InputController.Instance.enabled = false;
             PlayerController.Instance.enabled = false;
-            
             PlayerController.Instance.respawn.pin.gameObject.SetActive(false);
 
-            this.cameraController.OnStartReplayEditor();
+            recorder.OnStartReplayEditor();
+            cameraController.OnStartReplayEditor();
             audioRecorder.StopRecording();
             yield return audioRecorder.StartPlayback();
-            recorder.SaveLastFrame();
 
             this.playbackSpeed = 1f;
             Time.timeScale = 0f;
-            this.previousFrameIndex = this.recorder.recordedFrames.Count - 1;
+            this.previousFrameIndex = this.recorder.ClipFrames.Count - 1;
             this.playbackTime = this.recorder.endTime;
             this.clipStartTime = this.recorder.startTime;
             this.clipEndTime = this.recorder.endTime;
 
-            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
             ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.PLAYBACK && !guiHidden) ? 1 : 0);
-            ReplayManager.SetState(ReplayState.PLAYBACK);
+            ReplayManager.CurrentState = ReplayState.PLAYBACK;
+            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
         }
-
-
+        
         public void ExitReplayEditor() {
             try {
-                ReplayManager.SetState(ReplayState.LOADING);
-
-                PlayerController.Instance.respawn.pin.gameObject.SetActive(true);
+                ReplayManager.CurrentState = ReplayState.LOADING;
                 
                 audioRecorder.StopPlayback();
                 audioRecorder.StartRecording();
-                //PlayerController.Instance.animationController.skaterAnim.enabled = true;
-                //PlayerController.Instance.animationController.enabled = true;
-                //PlayerController.Instance.skaterController.enabled = true;
+                cameraController.OnExitReplayEditor();
+                recorder.OnExitReplayEditor();
+
+                PlayerController.Instance.respawn.pin.gameObject.SetActive(true);
                 PlayerController.Instance.cameraController.enabled = true;
                 InputController.Instance.enabled = true;
-                //PlayerController.Instance.ikController.enabled = true;
                 PlayerController.Instance.enabled = true;
-
-                this.cameraController.OnExitReplayEditor();
-                this.recorder.ApplyLastFrame();
                 SoundManager.Instance.deckSounds.UnMuteAll();
-                XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
+
                 ModMenu.Instance.UnregisterTimeScaleTarget(Main.modId);
                 Time.timeScale = 1f;
-                ReplayManager.SetState(ReplayState.RECORDING);
+
+                ReplayManager.CurrentState = ReplayState.RECORDING;
+                XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
             } catch (Exception e) {
                 Debug.LogException(e);
             }
@@ -184,16 +174,19 @@ namespace XLShredReplayEditor {
             if (CurrentState == ReplayState.RECORDING && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
                 StartCoroutine(StartReplayEditor());
                 return;
-            } else if (CurrentState == ReplayState.PLAYBACK && PlayerController.Instance.inputController.player.GetButtonDown("Start")) {
-                menu.Toggle();
             }
             if (CurrentState == ReplayState.PLAYBACK) {
-                if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.Return)) {
-                    this.guiHidden = !this.guiHidden;
-                }
                 if (PlayerController.Instance.inputController.player.GetButtonDown("B") || Input.GetKeyDown(KeyCode.Escape)) {
                     this.ExitReplayEditor();
                     return;
+                }
+
+                if (CurrentState == ReplayState.PLAYBACK && PlayerController.Instance.inputController.player.GetButtonDown("Start")) {
+                    menu.Toggle();
+                }
+
+                if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.Return)) {
+                    this.guiHidden = !this.guiHidden;
                 }
                 if (PlayerController.Instance.inputController.player.GetButtonDown("A") || Input.GetKeyDown(KeyCode.Space)) {
                     if (this.playbackTime == this.clipEndTime) {
@@ -201,6 +194,13 @@ namespace XLShredReplayEditor {
                     }
                     this.isPlaying = !this.isPlaying;
                 }
+                
+                //Save
+                if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKey(KeyCode.S)) {
+                    //TODO
+                }
+
+                //ClipEdit
                 if (clipEditMode && PlayerController.Instance.inputController.player.GetButton("LB")) {
                     this.isPlaying = false;
                     float axis = PlayerController.Instance.inputController.player.GetAxis("LeftStickX") * recorder.recordedTime / 3f;
@@ -215,14 +215,17 @@ namespace XLShredReplayEditor {
                         SetPlaybackTime(clipEndTime);
                     }
                 }
+
+                //TimeScaleManipulation
                 float f = PlayerController.Instance.inputController.player.GetAxis("RT") - PlayerController.Instance.inputController.player.GetAxis("LT");
                 if ((double)Mathf.Abs(f) > 0.001) {
                     this.timeScaleAddend = f;
                 } else {
                     this.timeScaleAddend = 0f;
                 }
-                float dpadX = PlayerController.Instance.inputController.player.GetAxis("DPadX");
 
+                //JumpByTime
+                float dpadX = PlayerController.Instance.inputController.player.GetAxis("DPadX");
                 if (Mathf.Abs(dpadX) > 0.3f) {
                     if (Time.unscaledTime - Mathf.Abs(lastDpadTick) > Main.settings.DpadTickRate || Mathf.Sign(dpadX) != Mathf.Sign(lastDpadTick)) {
                         //KeyFrame keyFrame = this.cameraController.FindNextKeyFrame(this.playbackTime, dpadX < 0f);
@@ -238,9 +241,6 @@ namespace XLShredReplayEditor {
                 if (Input.GetKeyDown(KeyCode.LeftArrow)) {
                     JumpByTime(-Main.settings.PlaybackTimeJumpDelta, true);
                 }
-                //if (PlayerController.Instance.inputController.player.GetButtonDown("Start") || ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKeyDown(KeyCode.S))) {
-                //    this.saver.StartSaving();
-                //}
             }
         }
 
@@ -264,12 +264,6 @@ namespace XLShredReplayEditor {
         public void CutClip() {
             recorder.startTime = clipStartTime;
             recorder.endTime = clipEndTime;
-        }
-        public void Destroy() {
-            Destroy(recorder);
-            audioRecorder.Destroy();
-            SetState(ReplayState.DISABLED);
-            Destroy(gameObject);
         }
 
         #region GUI
@@ -408,57 +402,6 @@ namespace XLShredReplayEditor {
             GUI.Box(clipRects[2], "", ReplaySkin.DefaultSkin.clipBoxStyle);
             GUI.Box(clipStartRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
             GUI.Box(clipEndRect, "", ReplaySkin.DefaultSkin.clipCutStyle);
-
-            //GUIHelper.DraggableArea(
-            //    "clipStart",
-            //    clipStartRect,
-            //    delegate (out bool beginDrag) {  //GUI Draw
-            //        GUILayout.BeginVertical();
-            //        beginDrag = GUILayout.RepeatButton("O", ReplaySkin.DefaultSkin.markerStyle);
-            //        GUILayout.Label("|", ReplaySkin.DefaultSkin.markerStyle, GUILayout.ExpandHeight(true));
-            //        GUILayout.EndVertical();
-            //    }, delegate () { //OnClick
-            //        SetPlaybackTime(clipStartTime);
-            //    },
-            //    delegate (ref Rect r) {  //OnDragUpdate
-            //        float xmin = ReplaySkin.DefaultSkin.sliderRect.xMin + (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
-            //        float xmax = ReplaySkin.DefaultSkin.sliderRect.xMax - (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
-            //        r.center = new Vector2(Mathf.Clamp(r.center.x, xmin, xmax), clipStartRect.center.y);
-            //        float time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
-            //        SetPlaybackTime(time);
-            //    },
-            //    delegate (Rect r) {  //OnDrop
-            //        clipStartTime = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
-            //        //TODO remove keyframe cache
-            //    },
-            //    this,
-            //    true);
-
-            //GUIHelper.DraggableArea(
-            //    "clipStart",
-            //    clipStartRect,
-            //    delegate (out bool beginDrag) {  //GUI Draw
-            //        GUILayout.BeginVertical();
-            //        beginDrag = GUILayout.RepeatButton("O", ReplaySkin.DefaultSkin.markerStyle);
-            //        GUILayout.Label("|", ReplaySkin.DefaultSkin.markerStyle, GUILayout.ExpandHeight(true));
-            //        GUILayout.EndVertical();
-            //    }, delegate () { //OnClick
-            //        SetPlaybackTime(clipEndTime);
-            //    },
-            //    delegate (ref Rect r) {  //OnDragUpdate
-            //        float xmin = ReplaySkin.DefaultSkin.sliderRect.xMin + (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
-            //        float xmax = ReplaySkin.DefaultSkin.sliderRect.xMax - (float)ReplaySkin.DefaultSkin.sliderPadding / 2f;
-            //        r.center = new Vector2(Mathf.Clamp(r.center.x, xmin, xmax), clipStartRect.center.y);
-            //        float time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
-            //        SetPlaybackTime(time);
-            //    },
-            //    delegate (Rect r) {  //OnDrop
-            //        clipEndTime = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
-            //        //TODO remove keyframe cache
-            //    },
-            //    this,
-            //    true);
-
         }
         private void DrawTimeLineSliders() {
 
