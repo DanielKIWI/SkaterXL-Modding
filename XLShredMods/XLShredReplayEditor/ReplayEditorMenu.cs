@@ -22,6 +22,14 @@ namespace XLShredReplayEditor {
                 _state = value;
                 if (value == MenuState.LoadMenu)
                     FetchReplayFiles();
+                if (value == MenuState.SaveMenu)
+                    fileName = "Replay_" + 
+                        DateTime.Now.Year   + "-" + 
+                        DateTime.Now.Month  + "-" + 
+                        DateTime.Now.Day    + "_" + 
+                        DateTime.Now.Hour   + "-" + 
+                        DateTime.Now.Minute + "-" + 
+                        DateTime.Now.Second;
             }
         }
         private string fileName;
@@ -54,7 +62,7 @@ namespace XLShredReplayEditor {
                     int i = path.LastIndexOf('\\');
                     return path.Substring(i + 1);
                 });
-                LoadRect.height = Mathf.Max(500f, replayNames.Count() * 20f + 80f);
+                LoadRect.height = Mathf.Max(500f, replayNames.Count() * 25f + 80f);
             } catch (Exception e) {
                 Main.modEntry.Logger.Error("Error fetching saved Replays from " + Main.settings.ReplaysDirectory + ": " + e.Message);
             }
@@ -66,6 +74,19 @@ namespace XLShredReplayEditor {
                 return dir + filename;
             }
             return dir + "/" + filename;
+        }
+        public static bool isValidFileName(string fileName) {
+            return !(
+                fileName.Contains("/") ||
+                fileName.Contains("\\") ||
+                fileName.Contains(":") ||
+                fileName.Contains("*") ||
+                fileName.Contains("?") ||
+                fileName.Contains("\"") ||
+                fileName.Contains("<") ||
+                fileName.Contains(">") ||
+                fileName.Contains("|")
+                );
         }
 
         public void Awake() {
@@ -93,6 +114,11 @@ namespace XLShredReplayEditor {
                     State = MenuState.MainMenu;
                 }
             }
+            if (State == MenuState.SaveMenu) {
+                if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return)) {
+                    Save();
+                }
+            }
         }
 
         public void Toggle() {
@@ -102,7 +128,7 @@ namespace XLShredReplayEditor {
                 Open();
         }
 
-        public void Save() {
+        public void OpenSaveMenu() {
             if (!enabled) {
                 State = MenuState.SaveMenu;
                 Open();
@@ -149,13 +175,13 @@ namespace XLShredReplayEditor {
 
         #region GUI Windows
         public void MenuWindow(int id) {
-            if (GUILayout.Button("Save")) {
+            if (GUILayout.Button("Save", GUILayout.Height(25))) {
                 State = MenuState.SaveMenu;
             }
-            if (GUILayout.Button("Load")) {
+            if (GUILayout.Button("Load", GUILayout.Height(25))) {
                 State = MenuState.LoadMenu;
             }
-            if (GUILayout.Button("Settings")) {
+            if (GUILayout.Button("Settings", GUILayout.Height(25))) {
                 State = MenuState.SettingsMenu;
             }
         }
@@ -166,30 +192,27 @@ namespace XLShredReplayEditor {
 
         public void SaveWindow(int id) {
             GUILayout.Label("Directory: " + Main.settings.ReplaysDirectory);
-            this.fileName = GUILayout.TextField(this.fileName);
-            if (fileName.Contains("/") || 
-                fileName.Contains("\\") || 
-                fileName.Contains(":") || 
-                fileName.Contains("*") || 
-                fileName.Contains("?") || 
-                fileName.Contains("\"") || 
-                fileName.Contains("<") || 
-                fileName.Contains(">") || 
-                fileName.Contains("|")) {
+            this.fileName = GUILayout.TextField(this.fileName, GUILayout.Height(25));
+            if (!isValidFileName(fileName)) {
                 GUILayout.Label("Invalid Filename!!!");
             } else {
-                if (GUILayout.Button("Save")) {
-                    State = MenuState.Saving;
-                    var replayData = new ReplayData();
-                    replayData.SaveToFile(Main.settings.ReplaysDirectory + "\\" + this.fileName);
-                    State = MenuState.MainMenu;
+                if (GUILayout.Button("Save", GUILayout.Height(25))) {
+                    Save();
                 }
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
                 State = MenuState.MainMenu;
-                return;
             }
+        }
+
+        private void Save() {
+            if (State != MenuState.SaveMenu)
+                return;
+            State = MenuState.Saving;
+            var replayData = new ReplayData();
+            replayData.SaveToFile(Main.settings.ReplaysDirectory + "\\" + this.fileName);
+            State = MenuState.MainMenu;
         }
 
         public void LoadWindow(int id) {
@@ -204,7 +227,6 @@ namespace XLShredReplayEditor {
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
                 State = MenuState.MainMenu;
-                return;
             }
         }
 

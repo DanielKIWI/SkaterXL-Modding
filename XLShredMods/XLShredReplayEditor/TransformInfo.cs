@@ -8,15 +8,15 @@ namespace XLShredReplayEditor {
     public class TransformInfo {
 
         public TransformInfo(Transform t) {
-            _position = new SerializableVector3(t.position);
-            _rotation = new SerializableQuaternion(t.rotation);
+            _position = new SerializableVector3(t.localPosition);
+            _rotation = new SerializableQuaternion(t.localRotation);
             _scale = new SerializableVector3(t.localScale);
         }
 
 
         public void ApplyTo(Transform t) {
-            t.position = position;
-            t.rotation = rotation;
+            t.localPosition = position;
+            t.localRotation = rotation;
             t.localScale = scale;
         }
 

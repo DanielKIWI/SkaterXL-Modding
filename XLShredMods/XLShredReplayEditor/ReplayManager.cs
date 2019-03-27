@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace XLShredReplayEditor {
-    using UnityEngine.Experimental.Rendering;
     using Utils;
 
     public enum ReplayState {
@@ -29,9 +28,9 @@ namespace XLShredReplayEditor {
         }
         public delegate void ReplayStateChangedEventHandler(ReplayState newState, ReplayState oldState);
         public static event ReplayStateChangedEventHandler StateChangedEvent;
-        
+
         public static ReplayManager Instance { get; private set; }
-        
+
         public ReplayRecorder recorder;
         public ReplayAudioRecorder audioRecorder;
         public ReplayCameraController cameraController;
@@ -58,7 +57,6 @@ namespace XLShredReplayEditor {
 
         public bool guiHidden;
         bool clipEditMode;
-        
         private bool isPlaying;
 
         public float clipStartTime;
@@ -82,13 +80,8 @@ namespace XLShredReplayEditor {
             this.menu.enabled = false;
             audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
             audioRecorder.enabled = true;
-        }
-        public void Start() {
-            if (Main.enabled) {
-                ReplayManager.CurrentState = ReplayState.RECORDING;
-                audioRecorder.StartRecording();
-            }
-            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
+            ReplayManager.CurrentState = ReplayState.RECORDING;
+            audioRecorder.StartRecording();
         }
 
         public void Destroy() {
@@ -165,10 +158,17 @@ namespace XLShredReplayEditor {
                 this.isPlaying = false;
                 this.playbackTime = this.clipEndTime;
             }
-            //Settin SkaterTransforms
             this.previousFrameIndex = this.recorder.GetFrameIndex(this.playbackTime, this.previousFrameIndex);
+
             this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
         }
+
+        //public void LateUpdate() {
+        //    if (CurrentState != ReplayState.PLAYBACK) return;
+
+        //    //Setting SkaterTransforms
+        //    this.recorder.ApplyRecordedTime(this.previousFrameIndex, this.playbackTime);
+        //}
 
         private void CheckInput() {
             if (CurrentState == ReplayState.RECORDING && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
@@ -197,7 +197,7 @@ namespace XLShredReplayEditor {
                 
                 //Save
                 if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKey(KeyCode.S)) {
-                    //TODO
+                    menu.OpenSaveMenu();
                 }
 
                 //ClipEdit

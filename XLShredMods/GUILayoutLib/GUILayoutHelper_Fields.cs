@@ -222,7 +222,9 @@ namespace GUILayoutLib {
             GUILayout.BeginHorizontal();
             GUILayout.Label(name);
             GUILayout.FlexibleSpace();
-            GUILayout.Label(String.Format("x: {0,-10} y: {1,-10} z: {2,-10}", value.x, value.y, value.z));
+            GUILayout.Label(String.Format("x: {0:0.###}", value.x), GUILayout.Width(100f));
+            GUILayout.Label(String.Format("y: {0:0.###}", value.y), GUILayout.Width(100f));
+            GUILayout.Label(String.Format("z: {0:0.###}", value.z), GUILayout.Width(100f));
             GUILayout.EndHorizontal();
         }
 

@@ -85,23 +85,27 @@ namespace DebugGUI {
             GUILayoutHelper.QuaternionLabel("Rotation", SelectedGameObject.transform.rotation);
             GUILayoutHelper.Vector3Label("Scale", SelectedGameObject.transform.lossyScale);
             var transformIndex = XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.IndexOf(SelectedGameObject.transform);
-            if (transformIndex >= 0) {
                 int prevIndex = XLShredReplayEditor.ReplayManager.Instance.previousFrameIndex;
+            if (transformIndex >= 0 && transformIndex < XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.Count && 
+                prevIndex >= 0 && prevIndex < XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames.Count) {
                 var prevFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex];
-                var nextFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex + 1];
                 var prevFrameTransformInfo = prevFrame.transformInfos[transformIndex];
-                var nextFrameTransformInfo = nextFrame.transformInfos[transformIndex];
 
-                GUILayout.Space(2);
+                GUILayout.Space(10);
                 GUILayout.Label("PreviousFrame");
-                GUILayoutHelper.Vector3Label("Position", prevFrameTransformInfo.position);
-                GUILayoutHelper.QuaternionLabel("Rotation", prevFrameTransformInfo.rotation);
-                GUILayoutHelper.Vector3Label("Scale", prevFrameTransformInfo.scale);
+                GUILayoutHelper.Vector3Label("LocalPosition", prevFrameTransformInfo.position);
+                GUILayoutHelper.QuaternionLabel("LocalRotation", prevFrameTransformInfo.rotation);
+                GUILayoutHelper.Vector3Label("LocalScale", prevFrameTransformInfo.scale);
 
-                GUILayout.Label("NextFrame");
-                GUILayoutHelper.Vector3Label("Position", nextFrameTransformInfo.position);
-                GUILayoutHelper.QuaternionLabel("Rotation", nextFrameTransformInfo.rotation);
-                GUILayoutHelper.Vector3Label("Scale", nextFrameTransformInfo.scale);
+                if ((prevIndex + 1) < XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames.Count) {
+                    var nextFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex + 1];
+                    var nextFrameTransformInfo = nextFrame.transformInfos[transformIndex];
+
+                    GUILayout.Label("NextFrame");
+                    GUILayoutHelper.Vector3Label("LocalPosition", nextFrameTransformInfo.position);
+                    GUILayoutHelper.QuaternionLabel("LocalRotation", nextFrameTransformInfo.rotation);
+                    GUILayoutHelper.Vector3Label("LocalScale", nextFrameTransformInfo.scale);
+                }
             }
             GUILayout.Space(10);
             GUILayout.Label("Components");

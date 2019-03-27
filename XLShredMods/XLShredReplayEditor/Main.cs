@@ -61,6 +61,7 @@ namespace XLShredReplayEditor {
             ModMenu.Instance.RegisterShowCursor(modId, () => {
                 return (ReplayManager.CurrentState == ReplayState.PLAYBACK) ? 1 : 0;
             });
+            XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             if (value == enabled) return true;

@@ -71,7 +71,7 @@ namespace XLShredReplayEditor {
             transformsToBeRecorded.Add(t);
         }
 
-        public void RecordTransforms(IEnumerable<Transform> ts) {
+        public void AddTransformsToRecordedList(IEnumerable<Transform> ts) {
             foreach (Transform t in ts) {
                 AddTransformToRecordedList(t);
             }
@@ -82,6 +82,8 @@ namespace XLShredReplayEditor {
             this.transformsToBeRecorded = new List<Transform>();
             this.RecordedFrames = new List<ReplayRecordedFrame>();
             
+            AddTransformToRecordedList(PlayerController.Instance.transform);
+
             //Board
             AddTransformToRecordedList(PlayerController.Instance.boardController.boardTransform);
             AddTransformToRecordedList(PlayerController.Instance.boardController.backTruckRigidbody.transform);
@@ -91,9 +93,10 @@ namespace XLShredReplayEditor {
             AddTransformToRecordedList(SoundManager.Instance.wheel3);
             AddTransformToRecordedList(SoundManager.Instance.wheel4);
 
-            ////Bones
+            //Bones
             AddTransformToRecordedList(PlayerController.Instance.skaterController.skaterTransform);
             AddTransformToRecordedList(PlayerController.Instance.skaterController.skaterRigidbody.transform);
+
             foreach (object obj in Enum.GetValues(typeof(HumanBodyBones))) {
                 HumanBodyBones humanBodyBones = (HumanBodyBones)obj;
                 if (humanBodyBones < HumanBodyBones.Hips || humanBodyBones >= HumanBodyBones.LastBone)
@@ -112,12 +115,17 @@ namespace XLShredReplayEditor {
             AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikLeftFootPositionOffset").Value);
             AddTransformToRecordedList(ikcTraverse.Field<Transform>("ikRightFootPositionOffset").Value);
 
-            var bailTraverse = Traverse.Create(PlayerController.Instance.respawn.bail);
-            RecordTransforms(bailTraverse.Field<RootMotion.Dynamics.PuppetMaster>("_puppetMaster").Value.GetComponentsInChildren<Transform>());
-            //RecordTransform(ikcInstance.Field<Transform>());
+            transformsToBeRecorded.OrderBy(delegate (Transform t) {
+                int i = 0;
+                while (t.parent != null) {
+                    i++;
+                    t = t.parent;
+                }
+                return i;
+            });
+
             this._startTime = 0f;
             this._endTime = 0f;
-            //printTransformsToBeRecorded();
         }
 
         public void OnStartReplayEditor() {
@@ -146,7 +154,7 @@ namespace XLShredReplayEditor {
                 return;
             }
             this._endTime += Time.fixedDeltaTime;
-            
+
             //Recording at FixedUpdate when skating.  <->  Physics determinates the Movement
             if (!PlayerController.Instance.respawn.bail.bailed) {
                 this.RecordFrame();
@@ -180,7 +188,7 @@ namespace XLShredReplayEditor {
         public void ApplyLastFrame() {
             lastFrame.ApplyTo(this.transformsToBeRecorded);
         }
-        
+
         private void RecordFrame() {
             this.RecordedFrames.Add(new ReplayRecordedFrame(this.transformsToBeRecorded, this.endTime));
         }
@@ -209,7 +217,7 @@ namespace XLShredReplayEditor {
             }
             return index;
         }
-        
+
         public void ApplyRecordedTime(int frameIndex, float time) {
             if (this.ClipFrames.Count != 0) {
                 if (this.ClipFrames.Count == 1) {
@@ -217,7 +225,18 @@ namespace XLShredReplayEditor {
                     return;
                 }
                 if (frameIndex > 0 && frameIndex + 1 < this.ClipFrames.Count) {
-                    ReplayRecordedFrame.Lerp(this.ClipFrames[frameIndex], this.ClipFrames[frameIndex + 1], time).ApplyTo(this.transformsToBeRecorded);
+                    //var a = this.ClipFrames[frameIndex];
+                    //var b = this.ClipFrames[frameIndex + 1];
+                    //float t = (time - a.time) / (b.time - a.time);
+                    //if (t < 0.5) {
+                    //    Debug.Log("between " + frameIndex + " and (" + t + ") " + (frameIndex + 1) + " -> " + frameIndex);
+                    //    a.ApplyTo(this.transformsToBeRecorded);
+                    //} else {
+                    //    Debug.Log("between " + frameIndex + " and (" + t + ") " + (frameIndex + 1) + " -> " + (frameIndex + 1));
+                    //    b.ApplyTo(this.transformsToBeRecorded);
+                    //}
+                    var currentframe = ReplayRecordedFrame.Lerp(ClipFrames[frameIndex], ClipFrames[frameIndex + 1], time);
+                    currentframe.ApplyTo(transformsToBeRecorded);
                 }
             }
         }

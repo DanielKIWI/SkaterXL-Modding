@@ -13,7 +13,6 @@ namespace XLShredReplayEditor {
             }
         }
 
-
         public ReplayRecordedFrame(List<Transform> transforms, float time) {
             this.time = time;
             this.transformInfos = new TransformInfo[transforms.Count];
@@ -21,7 +20,6 @@ namespace XLShredReplayEditor {
                 this.transformInfos[i] = new TransformInfo(transforms[i]);
             }
         }
-
 
         public ReplayRecordedFrame(TransformInfo[] transforms, float time) {
             this.time = time;

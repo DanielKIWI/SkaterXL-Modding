@@ -9,6 +9,9 @@ namespace XLShredReplayEditor {
     using Utils;
     [Serializable]
     public class ReplayData {
+        public ReplayRecordedFrame[] recordedFrames;
+        public SerializableKeyFrame[] cameraKeyFrames;
+        public float recordedTime;
         public ReplayData() {
             this.recordedFrames = ReplayManager.Instance.recorder.ClipFrames.ToArray();
             float startTime = ReplayManager.Instance.recorder.startTime;
@@ -41,16 +44,13 @@ namespace XLShredReplayEditor {
             if (Directory.Exists(path))
                 Directory.Delete(path, true);
             Directory.CreateDirectory(path);
-
             string dataPath = path + "\\Data.replay";
-
+            string audioPath = path + "\\Audio.wav";
             try {
                 BinarySerialization.WriteToBinaryFile<ReplayData>(dataPath, this, false);
             } catch (Exception e) {
                 Main.modEntry.Logger.Error("Error saving ReplayData to file at " + path + " Error: " + e.Message);
             }
-
-            string audioPath = path + "\\Audio.wav";
             ReplayManager.Instance.audioRecorder.WriteTmpStreamToPath(audioPath, ReplayManager.Instance.recorder.startTime, ReplayManager.Instance.recorder.endTime);
         }
 
@@ -66,14 +66,6 @@ namespace XLShredReplayEditor {
             
             yield return ReplayManager.Instance.audioRecorder.LoadReplayAudio(audioPath);
         }
-        
-        public ReplayRecordedFrame[] recordedFrames;
-
-        //TODO: change keyframe data to serializable data
-        public SerializableKeyFrame[] cameraKeyFrames;
-
-
-        public float recordedTime;
     }
     [Serializable]
     public class SerializableKeyFrame {
