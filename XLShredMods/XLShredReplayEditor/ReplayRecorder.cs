@@ -225,27 +225,19 @@ namespace XLShredReplayEditor {
                     return;
                 }
                 if (frameIndex > 0 && frameIndex + 1 < this.ClipFrames.Count) {
-                    //var a = this.ClipFrames[frameIndex];
-                    //var b = this.ClipFrames[frameIndex + 1];
-                    //float t = (time - a.time) / (b.time - a.time);
-                    //if (t < 0.5) {
-                    //    Debug.Log("between " + frameIndex + " and (" + t + ") " + (frameIndex + 1) + " -> " + frameIndex);
-                    //    a.ApplyTo(this.transformsToBeRecorded);
-                    //} else {
-                    //    Debug.Log("between " + frameIndex + " and (" + t + ") " + (frameIndex + 1) + " -> " + (frameIndex + 1));
-                    //    b.ApplyTo(this.transformsToBeRecorded);
-                    //}
                     var currentframe = ReplayRecordedFrame.Lerp(ClipFrames[frameIndex], ClipFrames[frameIndex + 1], time);
                     currentframe.ApplyTo(transformsToBeRecorded);
                 }
             }
         }
 
-        public void LoadFrames(List<ReplayRecordedFrame> frames) {
-            ClipFrames = frames;
-            _startTime =
+        public void LoadFrames(IEnumerable<ReplayRecordedFrame> frames) {
+            ClipFrames = new List<ReplayRecordedFrame>(frames);
             _startTime = this.ClipFrames[0].time;
             _endTime = this.ClipFrames[this.ClipFrames.Count - 1].time;
+            ReplayManager.Instance.playbackTime = startTime;
+            ReplayManager.Instance.clipStartTime = startTime;
+            ReplayManager.Instance.clipEndTime = endTime;
         }
 
         void printTransformsToBeRecorded() {
@@ -255,5 +247,4 @@ namespace XLShredReplayEditor {
             }
         }
     }
-
 }

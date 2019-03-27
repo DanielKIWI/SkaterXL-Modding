@@ -32,7 +32,7 @@ namespace XLShredReplayEditor {
         }
 
         public void Load() {
-            ReplayManager.Instance.recorder.LoadFrames(new List<ReplayRecordedFrame>(this.recordedFrames));
+            ReplayManager.Instance.recorder.LoadFrames(this.recordedFrames);
             ReplayManager.Instance.clipStartTime = 0f;
             ReplayManager.Instance.clipEndTime = this.recordedTime;
             ReplayManager.Instance.playbackTime = 0f;
