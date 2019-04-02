@@ -187,7 +187,6 @@ namespace XLShredReplayEditor {
                 fileStreamThread = null;
             }
             SaveToWavFile();
-            audioStartTime = ReplayManager.Instance.recorder.startTime;
         }
         public IEnumerator StartPlayback() {
             yield return LoadWavFileToAudioSource(wavFilePath);
@@ -268,6 +267,7 @@ namespace XLShredReplayEditor {
             long samplesToBytes = (BITS_PER_SAMPLE * channels) / 8;
             
             long numberOfSamples = tmpMemoryStream.Length * 8 / (BITS_PER_SAMPLE * channels);
+            audioStartTime = ReplayManager.Instance.recorder.endTime - ((float)numberOfSamples * sampleRate);
 
             BinaryWriter writer = new BinaryWriter(fileOutputStream);
 
@@ -286,10 +286,12 @@ namespace XLShredReplayEditor {
             long bytesTillEndOfStream = tmpMemoryStream.Length - tmpMemoryStream.Position;
             long requestedBytes = numberOfSamples * samplesToBytes;
 
+            //FIXME: add offset corresponding to startTime - audioStartTime
+
             if (bytesTillEndOfStream > requestedBytes) {
                 CopyStream(tmpMemoryStream, fileOutputStream, (int)(requestedBytes));
             } else {
-                this.tmpMemoryStream.CopyTo(fileOutputStream);
+                this.tmpMemoryStream.CopyTo(fileOutputStream);      //FIXME: not sure if onle from position till end is copied (should be)
                 tmpMemoryStream.Position = 0;
                 long byteCountLeft = requestedBytes - bytesTillEndOfStream;
                 if (byteCountLeft > 0) {
@@ -386,15 +388,15 @@ namespace XLShredReplayEditor {
                 i++;
                 dspEndTime = samplesWritten * sampleDeltaTime;
             }
-            //if (i != 0)
-            //    Debug.Log("Added " + i + " empty samples for syncing");
+            if (i != 0)
+                Debug.Log("Added " + i + " empty samples for syncing");
             return 0f;
         }
         public static void CopyStream(Stream input, Stream output, long byteCount) {
             try {
                 byte[] buffer = new byte[32768];
                 int read;
-                while (byteCount > 0 && (read = input.Read(buffer, 0, (buffer.Length < byteCount ? buffer.Length : (int)byteCount))) > 0) {
+                while (byteCount > 0 && (read = input.Read(buffer, 0, (buffer.Length < byteCount ? buffer.Length : (int)byteCount))) > 0) { //????  //FIXME:
                     output.Write(buffer, 0, read);
                     byteCount -= read;
                 }

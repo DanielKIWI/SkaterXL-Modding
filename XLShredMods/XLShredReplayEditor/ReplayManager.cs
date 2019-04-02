@@ -80,6 +80,9 @@ namespace XLShredReplayEditor {
             this.menu.enabled = false;
             audioRecorder = PlayerController.Instance.skaterController.skaterTransform.gameObject.AddComponent<ReplayAudioRecorder>();
             audioRecorder.enabled = true;
+        }
+
+        public void Start() {
             ReplayManager.CurrentState = ReplayState.RECORDING;
             audioRecorder.StartRecording();
         }
