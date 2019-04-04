@@ -37,6 +37,21 @@ namespace XLShredReplayEditor {
             }
             return true;
         }
+        public static bool NeedsCursor(this ReplayState state) {
+            switch (state) {
+                case ReplayState.SavingReplay:
+                    return false;
+                case ReplayState.LoadingReplay:
+                    return false;
+                case ReplayState.LoadingEditor:
+                    return false;
+                case ReplayState.Disabled:
+                    return false;
+                case ReplayState.Recording:
+                    return false;
+            }
+            return true;
+        }
     }
 
     public enum ReplayState {
@@ -159,7 +174,7 @@ namespace XLShredReplayEditor {
             this.clipEndTime = this.recorder.endTime;
 
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
-            ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState == ReplayState.Playback && !guiHidden) ? 1 : 0);
+            ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState.NeedsCursor() && !guiHidden) ? 1 : 0);
             ReplayManager.CurrentState = ReplayState.Playback;
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
         }
