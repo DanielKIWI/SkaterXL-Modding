@@ -46,17 +46,13 @@ namespace XLShredReplayEditor {
         /// timesSamples Count used for current buffer
         /// </summary>
         public int firstAudioSourceID = -1;
-
-        private Thread fileStreamThread;
-        EventWaitHandle fileThreadWait = new EventWaitHandle(false, EventResetMode.ManualReset);
-        EventWaitHandle audioThreadWait = new EventWaitHandle(true, EventResetMode.ManualReset);
+        
         object timeScaleLock = new object();
 
         float timeScale;
         double dspEndTime = 0.0;
-        private AudioBuffer audioBufferW;
-        private AudioBuffer audioBufferFS;
-        
+        private AudioBuffer audioBuffer;
+
 
         public class AudioBuffer {
             public float[] data;
@@ -99,14 +95,9 @@ namespace XLShredReplayEditor {
             }
             audioSourceDataForwarders = new AudioSourceDataForwarder[0];
 
-            //tempAudioPath = tempAudioDirectory + "\\RecordedAudio.wav.temp";
-            //if (!File.Exists(tempAudioPath)) {
-            //    File.Create(tempAudioPath);
-            //}
-            tmpMemoryStream = new MemoryStream();//new FileStream(tempAudioPath, FileMode.Truncate, FileAccess.ReadWrite, FileShare.ReadWrite, 2 << 22, true);
-            tmpStreamWriter = new BinaryWriter(tmpMemoryStream);
             dspEndTime = 0f;
         }
+
 
         internal IEnumerator LoadReplayAudio(string path) {
             yield return LoadWavFileToAudioSource(path);
@@ -117,34 +108,18 @@ namespace XLShredReplayEditor {
         public void OnDisable() {
             if (tmpMemoryStream != null)
                 tmpMemoryStream.Close();
-
-            if (fileStreamThread != null) {
-                fileStreamThread.Abort();
-                fileStreamThread = null;
-            }
         }
         public void Update() {
             lock (timeScaleLock) {
                 timeScale = Time.timeScale;
             }
-            if (ReplayManager.CurrentState == ReplayState.PLAYBACK) {
+            if (ReplayManager.CurrentState == ReplayState.Playback) {
                 playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
                         SetPlaybackTime(ReplayManager.Instance.playbackTime);
                     } catch (Exception e) { Debug.LogException(e); }
                 }
-            }
-        }
-
-        private void WriteLoop() {
-            while (true) {
-                fileThreadWait.WaitOne();
-                fileThreadWait.Reset();
-                if (audioBufferFS != null && audioBufferFS.Length > 0 && tmpMemoryStream != null) {
-                    WriteAudioBufferToMemoryStream();
-                }
-                audioThreadWait.Set();
             }
         }
         /// Write a chunk of data to the output stream.
@@ -155,14 +130,14 @@ namespace XLShredReplayEditor {
             }
             if (scale <= 0.0001f) return;
             float sampleOffset = getSyncingOffset();
-            int sampleCount = audioBufferFS.Length / channels;
-            //Console.WriteLine("sampleCount: " + sampleCount + ", audioBufferFS.Length: " + audioBufferFS.Length + "sampleOffset: " + sampleOffset + ", samplesWritten: " + samplesWritten);
+            int sampleCount = audioBuffer.Length / channels;
+            //Console.WriteLine("sampleCount: " + sampleCount + ", audioBuffer.Length: " + audioBuffer.Length + "sampleOffset: " + sampleOffset + ", samplesWritten: " + samplesWritten);
             float sample = sampleOffset;
             int sampleIndex = (int)sampleOffset;
             if (sampleIndex < 0) sampleIndex = 0;
             while (sampleIndex < sampleCount) {
                 for (int c = 0; c < channels; c++) {
-                    short value = (short)(Mathf.Clamp(audioBufferFS.data[sampleIndex * channels + c] * volumeFactor, -1f, 1f) * (float)Int16.MaxValue);
+                    short value = (short)(Mathf.Clamp(audioBuffer.data[sampleIndex * channels + c] * volumeFactor, -1f, 1f) * (float)Int16.MaxValue);
                     this.tmpStreamWriter.Write(value);
                     if (tmpMemoryStream.Position > maxTmpStreamLength) {
                         tmpMemoryStream.Position = 0;
@@ -178,14 +153,12 @@ namespace XLShredReplayEditor {
         }
 
         public void StartRecording() {
-            fileStreamThread = new Thread(new ThreadStart(this.WriteLoop));
-            fileStreamThread.Start();
+            if (tmpMemoryStream == null) {
+                tmpMemoryStream = new MemoryStream();
+                tmpStreamWriter = new BinaryWriter(tmpMemoryStream);
+            }
         }
         public void StopRecording() {
-            if (fileStreamThread != null) {
-                fileStreamThread.Abort();
-                fileStreamThread = null;
-            }
             SaveToWavFile();
         }
         public IEnumerator StartPlayback() {
@@ -213,25 +186,24 @@ namespace XLShredReplayEditor {
         }
 
         public void ReceivedAudioData(float[] data, int channels, int id) {
-            if (ReplayManager.CurrentState != ReplayState.RECORDING) {
-                audioBufferW = null;
+            if (ReplayManager.CurrentState != ReplayState.Recording) {
+                audioBuffer = null;
                 return;
             }
             this.channels = channels;
-            if ((firstAudioSourceID == id) || (audioBufferW == null)) {
-                audioThreadWait.WaitOne();
-                audioThreadWait.Reset();
-                HandleBufferExchange();
-                fileThreadWait.Set();
-                audioBufferW = new AudioBuffer(data);
+            if (audioBuffer == null) {
+                audioBuffer = new AudioBuffer(data);
                 firstAudioSourceID = id;
+            } else if (firstAudioSourceID == id) {
+                if (audioBuffer.Length > 0) {
+                    WriteAudioBufferToMemoryStream();
+                } else {
+                    Debug.LogError("audioBuffer.Length= " + audioBuffer.Length);
+                }
+                audioBuffer = new AudioBuffer(data);
             } else {
-                audioBufferW.AddData(data);
+                audioBuffer.AddData(data);
             }
-        }
-        private void HandleBufferExchange() {
-            audioBufferFS = audioBufferW;
-            audioBufferW = null;
         }
 
         #region File I/O
@@ -254,24 +226,28 @@ namespace XLShredReplayEditor {
                 Debug.LogWarning("There is no audio data to save!");
                 return false;
             }
-            if (fileStreamThread != null) {
-                fileStreamThread.Abort();
-                fileStreamThread = null;
-            }
             if (File.Exists(path)) {
                 File.Delete(path);
             }
             fileOutputStream = File.OpenWrite(path);
             int prevPos = (int)tmpMemoryStream.Position;
-            
+            Debug.Log("prevPos: " + prevPos);
             long samplesToBytes = (BITS_PER_SAMPLE * channels) / 8;
-            
+
             long numberOfSamples = tmpMemoryStream.Length * 8 / (BITS_PER_SAMPLE * channels);
-            audioStartTime = ReplayManager.Instance.recorder.endTime - ((float)numberOfSamples * sampleRate);
+            Debug.Log("dspEndTime(" + dspEndTime + ") - ((float)numberOfSamples * sampleRate)(" + ((float)numberOfSamples / (float)sampleRate) + ") = " + (dspEndTime - ((float)numberOfSamples / (float)sampleRate)));
+            audioStartTime = (float)Math.Max(0.0, dspEndTime - ((double)numberOfSamples / (double)sampleRate));
 
             BinaryWriter writer = new BinaryWriter(fileOutputStream);
 
+            endTime = Mathf.Min(ReplayManager.Instance.recorder.endTime, endTime);
             if (startTime > audioStartTime || endTime < ReplayManager.Instance.recorder.endTime) {
+                if (startTime > audioStartTime) {
+                    Debug.Log("Mathf.RoundToInt((startTime(" + startTime + ") - audioStartTime(" + audioStartTime + ")) * sampleRate(" + sampleRate + ")) = " + (Mathf.RoundToInt((startTime - audioStartTime) * sampleRate)));
+                    int startPos = (int)tmpMemoryStream.Position + Mathf.RoundToInt((startTime - audioStartTime) * sampleRate);
+                    Debug.Log("startPos < tmpMemoryStream.Length ? startPos : 0: " + (startPos < tmpMemoryStream.Length ? startPos : 0));
+                    tmpMemoryStream.Position = startPos < tmpMemoryStream.Length ? startPos : 0;
+                }
                 startTime = Mathf.Max(startTime, audioStartTime);
                 long targetNoS = (long)((endTime - startTime) * sampleRate);
                 if (targetNoS < numberOfSamples) {
@@ -289,9 +265,10 @@ namespace XLShredReplayEditor {
             //FIXME: add offset corresponding to startTime - audioStartTime
 
             if (bytesTillEndOfStream > requestedBytes) {
-                CopyStream(tmpMemoryStream, fileOutputStream, (int)(requestedBytes));
+                CopyStream(tmpMemoryStream, fileOutputStream, requestedBytes);
             } else {
-                this.tmpMemoryStream.CopyTo(fileOutputStream);      //FIXME: not sure if onle from position till end is copied (should be)
+                if (bytesTillEndOfStream > 0)
+                    CopyStream(tmpMemoryStream, fileOutputStream, bytesTillEndOfStream);
                 tmpMemoryStream.Position = 0;
                 long byteCountLeft = requestedBytes - bytesTillEndOfStream;
                 if (byteCountLeft > 0) {
@@ -304,7 +281,7 @@ namespace XLShredReplayEditor {
 
             tmpMemoryStream.Position = prevPos;
 
-            Debug.Log("Finished saving to " + path + ", outputStream.Length: " + tmpMemoryStream.Length + ", prevPos: " + prevPos );
+            Debug.Log("Finished saving to " + path + ", outputStream.Length: " + tmpMemoryStream.Length + ", prevPos: " + prevPos);
             return true;
         }
 
@@ -400,7 +377,7 @@ namespace XLShredReplayEditor {
                     output.Write(buffer, 0, read);
                     byteCount -= read;
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 Main.modEntry.Logger.Error("CopyStream Error byteCount = " + byteCount + ": " + e);
             }
         }
@@ -412,12 +389,9 @@ namespace XLShredReplayEditor {
                 Destroy(playBackAudioSource);
             if (tmpMemoryStream != null)
                 tmpMemoryStream.Close();
-            if (fileStreamThread != null)
-                fileStreamThread.Abort();
             if (fileOutputStream != null)
                 fileOutputStream.Close();
             Destroy(this);
         }
     }
-
 }

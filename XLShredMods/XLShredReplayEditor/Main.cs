@@ -59,7 +59,7 @@ namespace XLShredReplayEditor {
             uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
             uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
             ModMenu.Instance.RegisterShowCursor(modId, () => {
-                return (ReplayManager.CurrentState == ReplayState.PLAYBACK) ? 1 : 0;
+                return (ReplayManager.CurrentState == ReplayState.Playback) ? 1 : 0;
             });
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }

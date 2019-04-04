@@ -8,29 +8,18 @@ using UnityEngine;
 namespace XLShredReplayEditor {
 
 
-    public class ReplayEditorMenu : MonoBehaviour {
-        private enum MenuState {
-            MainMenu = -1,
-            SaveMenu = 0, LoadMenu = 1, SettingsMenu = 2,
-            Saving = 10, Loading = 11
-        }
-        private MenuState _state = MenuState.MainMenu;
-        private MenuState State {
-            get { return _state; }
-            set {
-                if (_state == value) return;
-                _state = value;
-                if (value == MenuState.LoadMenu)
+    public class ReplayEditorMenu {
+        public void OnStateChanged(ReplayState newState, ReplayState oldState) {
+                if (newState == ReplayState.LoadMenu)
                     FetchReplayFiles();
-                if (value == MenuState.SaveMenu)
+                if (newState == ReplayState.SaveMenu)
                     fileName = "Replay_" + 
-                        DateTime.Now.Year   + "-" + 
-                        DateTime.Now.Month  + "-" + 
-                        DateTime.Now.Day    + "_" + 
-                        DateTime.Now.Hour   + "-" + 
-                        DateTime.Now.Minute + "-" + 
-                        DateTime.Now.Second;
-            }
+                        DateTime.Now.Year.ToString("0000")   + "-" + 
+                        DateTime.Now.Month.ToString("00") + "-" + 
+                        DateTime.Now.Day.ToString("00") + "_" + 
+                        DateTime.Now.Hour.ToString("00") + "-" + 
+                        DateTime.Now.Minute.ToString("00") + "-" + 
+                        DateTime.Now.Second.ToString("00");
         }
         private string fileName;
         private Rect MenuRect;
@@ -39,14 +28,14 @@ namespace XLShredReplayEditor {
         private Rect SettingsRect;
         private Rect CurrentRect {
             get {
-                switch (this.State) {
-                    case MenuState.MainMenu:
+                switch (ReplayManager.CurrentState) {
+                    case ReplayState.MainMenu:
                         return MenuRect;
-                    case MenuState.LoadMenu:
+                    case ReplayState.LoadMenu:
                         return LoadRect;
-                    case MenuState.SaveMenu:
+                    case ReplayState.SaveMenu:
                         return SaveRect;
-                    case MenuState.SettingsMenu:
+                    case ReplayState.SettingsMenu:
                         return SettingsRect;
                     default: return new Rect();
                 }
@@ -89,7 +78,7 @@ namespace XLShredReplayEditor {
                 );
         }
 
-        public void Awake() {
+        public ReplayEditorMenu() {
             Vector2 center = new Vector2((float)Screen.width / 2f, (float)Screen.height / 2f);
             MenuRect = new Rect(0, 0, 330f, 200f) {
                 center = center
@@ -105,84 +94,52 @@ namespace XLShredReplayEditor {
             };
         }
 
-        public void Update() {
+        public void CheckInput(ReplayState state) {
             if (Input.GetKeyDown(KeyCode.Escape) || PlayerController.Instance.inputController.player.GetButtonDown("B")) {
-                if (State == MenuState.MainMenu) {
-                    Close();
+                if (state == ReplayState.MainMenu) {
+                    ReplayManager.Instance.CloseMenu();
                 }
-                if ((int)State < 10) {  //Not loading or saving
-                    State = MenuState.MainMenu;
+                if (state.CanBeChange()) {  //Not loading or saving
+                    state = ReplayState.MainMenu;
                 }
             }
-            if (State == MenuState.SaveMenu) {
+            if (state == ReplayState.SaveMenu) {
                 if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return)) {
                     Save();
                 }
             }
         }
 
-        public void Toggle() {
-            if (enabled)
-                Close();
-            else
-                Open();
-        }
-
-        public void OpenSaveMenu() {
-            if (!enabled) {
-                State = MenuState.SaveMenu;
-                Open();
-            } else if ((int)State < 10) {
-                State = MenuState.SaveMenu;
-            }
-        }
-
-        public void Open() {
-            if (enabled) return;
-            enabled = true;
-            FetchReplayFiles();
-            ReplayManager.Instance.cameraController.enabled = false;
-            ReplayManager.Instance.enabled = false;
-        }
-
-        public void Close() {
-            if (!enabled) return;
-            State = MenuState.MainMenu;
-            ReplayManager.Instance.cameraController.enabled = true;
-            ReplayManager.Instance.enabled = true;
-            enabled = false;
-        }
-
-        public void OnGUI() {
-            switch (this.State) {
-                case MenuState.MainMenu:
+        public void DrawGUI(ReplayState state) {
+            switch (state) {
+                case ReplayState.MainMenu:
                     MenuRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), MenuRect, MenuWindow, "ReplayEditor Menu");
                     break;
-                case MenuState.LoadMenu:
+                case ReplayState.LoadMenu:
                     LoadRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), LoadRect, LoadWindow, "Load Replay");
                     break;
-                case MenuState.SaveMenu:
+                case ReplayState.SaveMenu:
                     SaveRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), SaveRect, SaveWindow, "Save Replay");
                     break;
-                case MenuState.SettingsMenu:
+                case ReplayState.SettingsMenu:
                     SettingsRect = GUILayout.Window(GUIUtility.GetControlID(FocusType.Passive), SettingsRect, SettingsWindow, "Settings");
                     break;
             }
             if (GUI.Button(new Rect(CurrentRect.xMax, CurrentRect.y, 30, 30), "X")) {
-                Close();
+                ReplayManager.CurrentState = ReplayState.Playback;
             }
         }
 
         #region GUI Windows
         public void MenuWindow(int id) {
             if (GUILayout.Button("Save", GUILayout.Height(25))) {
-                State = MenuState.SaveMenu;
+                ReplayManager.CurrentState = ReplayState.SaveMenu;
             }
             if (GUILayout.Button("Load", GUILayout.Height(25))) {
-                State = MenuState.LoadMenu;
+                ReplayManager.CurrentState = ReplayState.LoadMenu;
             }
             if (GUILayout.Button("Settings", GUILayout.Height(25))) {
-                State = MenuState.SettingsMenu;
+                ReplayManager.CurrentState = ReplayState.SettingsMenu;
             }
         }
 
@@ -202,17 +159,15 @@ namespace XLShredReplayEditor {
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
-                State = MenuState.MainMenu;
+                ReplayManager.CurrentState = ReplayState.MainMenu;
             }
         }
 
         private void Save() {
-            if (State != MenuState.SaveMenu)
-                return;
-            State = MenuState.Saving;
+            ReplayManager.CurrentState = ReplayState.SavingReplay;
             var replayData = new ReplayData();
             replayData.SaveToFile(Main.settings.ReplaysDirectory + "\\" + this.fileName);
-            State = MenuState.MainMenu;
+            ReplayManager.CurrentState = ReplayState.MainMenu;
         }
 
         public void LoadWindow(int id) {
@@ -220,20 +175,20 @@ namespace XLShredReplayEditor {
             foreach (string replayName in replayNames) {
                 if (GUILayout.Button(replayName, GUILayout.Height(25))) {
                     string path = Main.settings.ReplaysDirectory + "\\" + replayName;
-                    StartCoroutine(LoadReplayFromPath(path));
+                    ReplayManager.Instance.StartCoroutine(LoadReplayFromPath(path));
                 }
             }
             GUILayout.EndScrollView();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Back")) {
-                State = MenuState.MainMenu;
+                ReplayManager.CurrentState = ReplayState.MainMenu;
             }
         }
 
         IEnumerator LoadReplayFromPath(string path) {
-            State = MenuState.Loading;
+            ReplayManager.CurrentState = ReplayState.LoadingReplay;
             yield return ReplayData.LoadFromFile(path);
-            Close();
+            ReplayManager.CurrentState = ReplayState.Playback;
         }
         #endregion
     }

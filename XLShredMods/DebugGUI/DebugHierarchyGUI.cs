@@ -164,8 +164,8 @@ namespace DebugGUI {
         public void DrawObjectHirarchy(GameObject go, int indentLevel, bool canExtend = true) {
             if (!showInactiveObjects && !go.activeSelf) return;
 
-            var gizmosComponent = go.GetComponent<DebugGizmosComponent>();
-            bool gizmosShown = gizmosComponent != null;
+            //var gizmosComponent = go.GetComponent<DebugGizmosComponent>();
+            //bool gizmosShown = gizmosComponent != null;
             bool extended = objectsWithExtendedHierarchy.Contains(go);
 
             GUILayout.BeginHorizontal();

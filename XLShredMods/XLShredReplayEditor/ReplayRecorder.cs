@@ -14,7 +14,9 @@ namespace XLShredReplayEditor {
 
         public List<ReplayRecordedFrame> ClipFrames;
         public List<ReplayRecordedFrame> RecordedFrames;
-        
+
+        public HeadIK PlayerHeadIK;
+
         public float _startTime;
         public float startTime {
             get { return _startTime; }
@@ -78,6 +80,7 @@ namespace XLShredReplayEditor {
         }
 
         public void Awake() {
+            PlayerHeadIK = PlayerController.Instance.GetComponentInChildren<HeadIK>();
             StartCoroutine(RecordBailedLoop());
             this.transformsToBeRecorded = new List<Transform>();
             this.RecordedFrames = new List<ReplayRecordedFrame>();
@@ -129,13 +132,17 @@ namespace XLShredReplayEditor {
         }
 
         public void OnStartReplayEditor() {
+            PlayerHeadIK.enabled = false;
             SaveLastFrame();
             ClipFrames = new List<ReplayRecordedFrame>(RecordedFrames);
-            startTime = ClipFrames[0].time;
-            endTime = ClipFrames[ClipFrames.Count - 1].time;
+            _startTime = RecordedFrames[0].time;
+            _endTime = RecordedFrames[ClipFrames.Count - 1].time;
         }
 
         public void OnExitReplayEditor() {
+            PlayerHeadIK.enabled = true;
+            _startTime = RecordedFrames[0].time;
+            _endTime = RecordedFrames[RecordedFrames.Count - 1].time;
             ApplyLastFrame();
         }
 
@@ -150,7 +157,7 @@ namespace XLShredReplayEditor {
         }
 
         public void FixedUpdate() {
-            if (ReplayManager.CurrentState != ReplayState.RECORDING) {
+            if (ReplayManager.CurrentState != ReplayState.Recording) {
                 return;
             }
             this._endTime += Time.fixedDeltaTime;
@@ -169,8 +176,8 @@ namespace XLShredReplayEditor {
         /// </summary>
         private IEnumerator RecordBailedLoop() {
             while (true) {
-                if (ReplayManager.CurrentState != ReplayState.RECORDING || !PlayerController.Instance.respawn.bail.bailed) {
-                    yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.RECORDING && PlayerController.Instance.respawn.bail.bailed);
+                if (ReplayManager.CurrentState != ReplayState.Recording || !PlayerController.Instance.respawn.bail.bailed) {
+                    yield return new WaitUntil(() => ReplayManager.CurrentState == ReplayState.Recording && PlayerController.Instance.respawn.bail.bailed);
                 }
                 yield return new WaitForEndOfFrame();
 
@@ -190,7 +197,18 @@ namespace XLShredReplayEditor {
         }
 
         private void RecordFrame() {
-            this.RecordedFrames.Add(new ReplayRecordedFrame(this.transformsToBeRecorded, this.endTime));
+            var transformInfos = new TransformInfo[transformsToBeRecorded.Count];
+            for (int i = 0; i < transformsToBeRecorded.Count; i++) {
+                Transform t = transformsToBeRecorded[i];
+                transformInfos[i] = new TransformInfo(t);
+                if (!PlayerController.Instance.respawn.bail.bailed && t == PlayerHeadIK.head)
+                    transformInfos[i].rotation = Quaternion.Inverse(t.parent.rotation) * PlayerHeadIK.currentRot.rotation;  //Fixes Head jitter
+            }
+            ReplayRecordedFrame newFrame = new ReplayRecordedFrame() {
+                time = this.endTime,
+                transformInfos = transformInfos
+            };
+            this.RecordedFrames.Add(newFrame);
         }
 
         public int GetFrameIndex(float time, int lastFrame = 0) {

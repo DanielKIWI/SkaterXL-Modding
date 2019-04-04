@@ -47,6 +47,8 @@ namespace XLShredReplayEditor {
         }
 
         public void Update() {
+            if (ReplayManager.CurrentState != ReplayState.Playback)
+                return;
             this.InputModeChange();
             this.InputKeyFrameControll();
             if (this.CamFollowKeyFrames) {
