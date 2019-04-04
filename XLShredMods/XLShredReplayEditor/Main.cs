@@ -58,9 +58,6 @@ namespace XLShredReplayEditor {
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
             uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
             uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
-            ModMenu.Instance.RegisterShowCursor(modId, () => {
-                return (ReplayManager.CurrentState == ReplayState.Playback) ? 1 : 0;
-            });
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
@@ -69,7 +66,9 @@ namespace XLShredReplayEditor {
             if (enabled) {
                 PromptController.Instance.menuthing.enabled = false; //Disabling the Tutorial
                 ReplayManager rm = new GameObject("ReplayEditor").AddComponent<ReplayManager>();
+                ModMenu.Instance.RegisterShowCursor(Main.modId, () => (ReplayManager.CurrentState.NeedsCursor() && !ReplayManager.Instance.guiHidden) ? 1 : 0);
             } else {
+                ModMenu.Instance.UnregisterShowCursor(Main.modId);
                 PromptController.Instance.menuthing.enabled = true;
                 ReplayManager.Instance?.Destroy();
             }

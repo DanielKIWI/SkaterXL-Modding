@@ -146,7 +146,6 @@ namespace XLShredReplayEditor {
         public IEnumerator StartReplayEditor() {
             ReplayManager.CurrentState = ReplayState.LoadingEditor;
             Debug.Log("Started Replay Editor. endTime(" + recorder.endTime + ") - startTime(" + recorder.startTime + ") = " + (recorder.endTime - recorder.startTime));
-            Cursor.visible = true;
 
             //Disabling core Game Input and animation that would interfer
             SoundManager.Instance.deckSounds.MuteAll();
@@ -174,7 +173,6 @@ namespace XLShredReplayEditor {
             this.clipEndTime = this.recorder.endTime;
 
             ModMenu.Instance.RegisterTimeScaleTarget(Main.modId, () => 0f);
-            ModMenu.Instance.RegisterShowCursor(Main.modId, () => (CurrentState.NeedsCursor() && !guiHidden) ? 1 : 0);
             ReplayManager.CurrentState = ReplayState.Playback;
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", true);
         }
