@@ -15,12 +15,12 @@ namespace XLShredReplayEditor {
         private Transform cameraTransform;
         public Camera camera;
         public CameraMode mode;
-        
+
         public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
         public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
         public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
         public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
-        
+
         public List<KeyFrame> keyFrames;
         public CameraCurve cameraCurve;
         public bool CamFollowKeyFrames;
@@ -159,7 +159,7 @@ namespace XLShredReplayEditor {
                 this.xDownTime = Time.unscaledTime;
             }
             if (Input.GetKeyDown(KeyCode.Delete) || PlayerController.Instance.inputController.player.GetButton("X") && Time.unscaledTime - this.xDownTime > 1.5f) {
-                this.DeleteKeyFrame();
+                this.DeleteKeyFrameAtCurrentPosition();
             }
             if (Input.GetKeyDown(KeyCode.K) || PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 0.5f) {
                 this.AddKeyFrame(this.manager.playbackTime);
@@ -169,13 +169,28 @@ namespace XLShredReplayEditor {
 
         #region KeyFrame Functions
 
-        private void DeleteKeyFrame() {
+        private void DeleteKeyFrameAtCurrentPosition() {
             int index;
             if (!this.FindKeyFrameDeleteIndex(out index)) {
                 return;
             }
-            this.keyFrames.RemoveAt(index);
-            cameraCurve.DeleteCurveKeys(index);
+            DeleteKeyFrame(index);
+        }
+
+        private void DeleteKeyFrame(int i) {
+            this.keyFrames.RemoveAt(i);
+            cameraCurve.DeleteCurveKeys(i);
+        }
+
+        public void DeleteKeyFramesOutside(float start, float end) {
+            int i = 0;
+            while (i < keyFrames.Count) {
+                if (keyFrames[i].time < start || keyFrames[i].time > end)
+                    DeleteKeyFrame(i);
+                else
+                    i++;
+            }
+            cameraCurve.CalculateCurveControlPoints();
         }
 
         private bool FindKeyFrameDeleteIndex(out int index) {
@@ -245,7 +260,7 @@ namespace XLShredReplayEditor {
             }
             return this.keyFrames.Count;
         }
-        
+
         public KeyFrame FindNextKeyFrame(float time, bool left) {
             if (this.keyFrames.Count == 0) {
                 return null;
@@ -265,7 +280,7 @@ namespace XLShredReplayEditor {
             }
             return null;
         }
-        
+
         public KeyFrame SearchKeyFrameInRange(float start, float end) {
             if (this.keyFrames.Count == 0) {
                 return null;

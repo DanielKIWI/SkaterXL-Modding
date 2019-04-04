@@ -222,9 +222,9 @@ namespace XLShredReplayEditor {
 
         public void ToggleMenu() {
             if (CurrentState.IsMenuOpen())
-                OpenMenu();
-            else
                 CloseMenu();
+            else
+                OpenMenu();
         }
 
         public void Update() {
@@ -356,8 +356,8 @@ namespace XLShredReplayEditor {
         }
 
         public void CutClip() {
-            recorder.startTime = clipStartTime;
-            recorder.endTime = clipEndTime;
+            recorder.CutClip(clipStartTime, clipEndTime);
+            cameraController.DeleteKeyFramesOutside(clipStartTime, clipEndTime);
         }
 
         #region GUI

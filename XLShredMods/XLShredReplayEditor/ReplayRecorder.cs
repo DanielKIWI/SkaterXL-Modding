@@ -17,39 +17,34 @@ namespace XLShredReplayEditor {
 
         public HeadIK PlayerHeadIK;
 
-        public float _startTime;
-        public float startTime {
-            get { return _startTime; }
-            set {
-                if (value <= _startTime) return;
+        public float startTime { get; private set; }
+        public float endTime { get; private set; }
+
+        public void CutClip(float newStartTime, float newEndTime) {
+            if (newStartTime > startTime) {
                 int i = 0;
-                while (i < ClipFrames.Count && ClipFrames[i].time < value) {
-                    i++;
-                }
-                if (i == ClipFrames.Count) { 
-                    ClipFrames.Clear();
-                    _startTime = endTime;
-                } else {
-                    ClipFrames.RemoveRange(0, i);
-                    _startTime = ClipFrames[0].time;
-                }
-            }
-        }
-        public float _endTime;
-        public float endTime {
-            get { return _endTime; }
-            set {
-                if (value >= _endTime) return;
-                int i = 0;
-                while (i < ClipFrames.Count && ClipFrames[ClipFrames.Count - 1 - i].time > value) {
+                while (i < ClipFrames.Count && ClipFrames[i].time < newStartTime) {
                     i++;
                 }
                 if (i == ClipFrames.Count) {
                     ClipFrames.Clear();
-                    _endTime = startTime;
+                    startTime = endTime;
+                } else {
+                    ClipFrames.RemoveRange(0, i);
+                    startTime = ClipFrames[0].time;
+                }
+            }
+            if (newEndTime < endTime) {
+                int i = 0;
+                while (i < ClipFrames.Count && ClipFrames[ClipFrames.Count - 1 - i].time > newEndTime) {
+                    i++;
+                }
+                if (i == ClipFrames.Count) {
+                    ClipFrames.Clear();
+                    endTime = newStartTime;
                 } else {
                     ClipFrames.RemoveRange(ClipFrames.Count - i, i);
-                    _endTime = ClipFrames[ClipFrames.Count - 1].time;
+                    endTime = ClipFrames[ClipFrames.Count - 1].time;
                 }
             }
         }
@@ -84,7 +79,7 @@ namespace XLShredReplayEditor {
             StartCoroutine(RecordBailedLoop());
             this.transformsToBeRecorded = new List<Transform>();
             this.RecordedFrames = new List<ReplayRecordedFrame>();
-            
+
             AddTransformToRecordedList(PlayerController.Instance.transform);
 
             //Board
@@ -127,22 +122,22 @@ namespace XLShredReplayEditor {
                 return i;
             });
 
-            this._startTime = 0f;
-            this._endTime = 0f;
+            this.startTime = 0f;
+            this.endTime = 0f;
         }
 
         public void OnStartReplayEditor() {
             PlayerHeadIK.enabled = false;
             SaveLastFrame();
             ClipFrames = new List<ReplayRecordedFrame>(RecordedFrames);
-            _startTime = RecordedFrames[0].time;
-            _endTime = RecordedFrames[ClipFrames.Count - 1].time;
+            startTime = RecordedFrames[0].time;
+            endTime = RecordedFrames[ClipFrames.Count - 1].time;
         }
 
         public void OnExitReplayEditor() {
             PlayerHeadIK.enabled = true;
-            _startTime = RecordedFrames[0].time;
-            _endTime = RecordedFrames[RecordedFrames.Count - 1].time;
+            startTime = RecordedFrames[0].time;
+            endTime = RecordedFrames[RecordedFrames.Count - 1].time;
             ApplyLastFrame();
         }
 
@@ -153,14 +148,14 @@ namespace XLShredReplayEditor {
 
         private void ClearRecording() {
             this.ClipFrames.Clear();
-            this._startTime = this._endTime;
+            this.startTime = this.endTime;
         }
 
         public void FixedUpdate() {
             if (ReplayManager.CurrentState != ReplayState.Recording) {
                 return;
             }
-            this._endTime += Time.fixedDeltaTime;
+            this.endTime += Time.fixedDeltaTime;
 
             //Recording at FixedUpdate when skating.  <->  Physics determinates the Movement
             if (!PlayerController.Instance.respawn.bail.bailed) {
@@ -251,8 +246,8 @@ namespace XLShredReplayEditor {
 
         public void LoadFrames(IEnumerable<ReplayRecordedFrame> frames) {
             ClipFrames = new List<ReplayRecordedFrame>(frames);
-            _startTime = this.ClipFrames[0].time;
-            _endTime = this.ClipFrames[this.ClipFrames.Count - 1].time;
+            startTime = this.ClipFrames[0].time;
+            endTime = this.ClipFrames[this.ClipFrames.Count - 1].time;
             ReplayManager.Instance.playbackTime = startTime;
             ReplayManager.Instance.clipStartTime = startTime;
             ReplayManager.Instance.clipEndTime = endTime;
