@@ -381,7 +381,7 @@ namespace XLShredReplayEditor {
             try {
                 byte[] buffer = new byte[32768];
                 int read;
-                while (byteCount > 0 && (read = input.Read(buffer, 0, (buffer.Length < byteCount ? buffer.Length : (int)byteCount))) > 0) { //????  //FIXME:
+                while (byteCount > 0 && (read = input.Read(buffer, 0, (buffer.Length < byteCount ? buffer.Length : (int)byteCount))) > 0) {
                     output.Write(buffer, 0, read);
                     byteCount -= read;
                 }

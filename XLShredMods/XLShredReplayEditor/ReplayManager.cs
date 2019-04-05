@@ -19,6 +19,8 @@ namespace XLShredReplayEditor {
                     return true;
                 case ReplayState.LoadMenu:
                     return true;
+                case ReplayState.SettingsMenu:
+                    return true;
                 case ReplayState.SavingReplay:
                     return true;
                 case ReplayState.LoadingReplay:
@@ -260,7 +262,7 @@ namespace XLShredReplayEditor {
         //}
 
         private void CheckRecordingInput() {
-            if (CurrentState == ReplayState.Recording && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return))) {
+            if (CurrentState == ReplayState.Recording && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))) {
                 StartCoroutine(StartReplayEditor());
                 return;
             }
@@ -272,11 +274,11 @@ namespace XLShredReplayEditor {
                 return;
             }
 
-            if (CurrentState == ReplayState.Playback && PlayerController.Instance.inputController.player.GetButtonDown("Start")) {
-                CurrentState = ReplayState.MainMenu;
+            if (CurrentState == ReplayState.Playback && (PlayerController.Instance.inputController.player.GetButtonDown("Start") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))) {
+                OpenMenu();
             }
 
-            if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.Return)) {
+            if (PlayerController.Instance.inputController.player.GetButtonDown("Right Stick Button") || Input.GetKeyDown(KeyCode.H)) {
                 this.guiHidden = !this.guiHidden;
             }
             if (PlayerController.Instance.inputController.player.GetButtonDown("A") || Input.GetKeyDown(KeyCode.Space)) {
@@ -552,9 +554,6 @@ namespace XLShredReplayEditor {
                     },
                     this,
                     true);
-
-                //TODO: Finish Draggable KeyFrames
-                //TODO: Update Curves on KeyFrame move
                 i++;
             }
         }
@@ -579,6 +578,7 @@ namespace XLShredReplayEditor {
             DrawControllGUI("Use KeyFrame Animation (" + (cameraController.CamFollowKeyFrames ? "On" : "Off") + ")", "", "select", "share");
             DrawControllGUI("Show/Hide GUI", "Return", "RS", "R3");
             DrawControllGUI("Change Mode", "M", "Y", "\u25B3");
+            DrawControllGUI("Open Menu", "Enter", "Start", "Start");
             DrawControllGUI("Add KeyFrame", "K", "X", "\u25A1");
             DrawControllGUI("Delete KeyFrame", "Delete", "Hold X", "Hold \u25A1");
             DrawControllGUI(String.Format("DPadX: Jump to next KeyFrame or max {0:0.#} s", Main.settings.PlaybackTimeJumpDelta), "Arrows", "DPadX", "DPadX");

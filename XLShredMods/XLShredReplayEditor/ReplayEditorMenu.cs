@@ -49,21 +49,21 @@ namespace XLShredReplayEditor {
         }
 
         public void OnStateChanged(ReplayState newState, ReplayState oldState) {
-                if (newState == ReplayState.LoadMenu)
-                    FetchReplayFiles();
-                if (newState == ReplayState.SaveMenu)
-                    fileName = "Replay_" + 
-                        DateTime.Now.Year.ToString("0000")   + "-" + 
-                        DateTime.Now.Month.ToString("00") + "-" + 
-                        DateTime.Now.Day.ToString("00") + "_" + 
-                        DateTime.Now.Hour.ToString("00") + "-" + 
-                        DateTime.Now.Minute.ToString("00") + "-" + 
-                        DateTime.Now.Second.ToString("00");
+            if (newState == ReplayState.LoadMenu)
+                FetchReplayFiles();
+            if (newState == ReplayState.SaveMenu)
+                fileName = "Replay_" +
+                    DateTime.Now.Year.ToString("0000") + "-" +
+                    DateTime.Now.Month.ToString("00") + "-" +
+                    DateTime.Now.Day.ToString("00") + "_" +
+                    DateTime.Now.Hour.ToString("00") + "-" +
+                    DateTime.Now.Minute.ToString("00") + "-" +
+                    DateTime.Now.Second.ToString("00");
         }
 
         public void FetchReplayFiles() {
             try {
-                replayNames = Directory.EnumerateDirectories(Main.settings.ReplaysDirectory).Select(delegate(string path) {
+                replayNames = Directory.EnumerateDirectories(Main.settings.ReplaysDirectory).Select(delegate (string path) {
                     int i = path.LastIndexOf('\\');
                     return path.Substring(i + 1);
                 });
@@ -98,9 +98,8 @@ namespace XLShredReplayEditor {
             if (Input.GetKeyDown(KeyCode.Escape) || PlayerController.Instance.inputController.player.GetButtonDown("B")) {
                 if (state == ReplayState.MainMenu) {
                     ReplayManager.Instance.CloseMenu();
-                }
-                if (state.CanBeChange()) {  //Not loading or saving
-                    state = ReplayState.MainMenu;
+                } else if (state.IsMenuOpen() && state.CanBeChange()) {
+                    ReplayManager.CurrentState = ReplayState.MainMenu;
                 }
             }
             if (state == ReplayState.SaveMenu) {
