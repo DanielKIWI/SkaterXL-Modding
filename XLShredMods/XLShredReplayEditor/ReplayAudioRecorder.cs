@@ -24,8 +24,10 @@ namespace XLShredReplayEditor {
 
         // constants for the wave file header
         private const int HEADER_SIZE = 44;
-        private const short BITS_PER_SAMPLE = 16;
-
+        private const short BITS_PER_WAVE_VALUE = 16;   //16 because each sample value is saved as short = int16 -> 16
+        private int BITS_PER_SAMPLE {
+            get { return BITS_PER_WAVE_VALUE * channels; }
+        }
         private int sampleRate = 0;
         private int channels = 2;
         private int samplesWritten = 0;
@@ -50,7 +52,7 @@ namespace XLShredReplayEditor {
         object timeScaleLock = new object();
 
         float timeScale;
-        double dspEndTime = 0.0;
+        double audioEndTime = 0.0;
         private AudioBuffer audioBuffer;
 
 
@@ -73,7 +75,7 @@ namespace XLShredReplayEditor {
             }
         }
         public void CalcMaxTmpStreamLength() {
-            maxTmpStreamLength = (long)(Main.settings.MaxRecordedTime * sampleRate) * (BITS_PER_SAMPLE / 8 * channels);
+            maxTmpStreamLength = (long)(Main.settings.MaxRecordedTime * sampleRate) * (BITS_PER_SAMPLE / 8);
         }
 
         public void Awake() {
@@ -95,7 +97,7 @@ namespace XLShredReplayEditor {
             }
             audioSourceDataForwarders = new AudioSourceDataForwarder[0];
 
-            dspEndTime = 0f;
+            audioEndTime = 0f;
         }
 
 
@@ -149,7 +151,7 @@ namespace XLShredReplayEditor {
                 sampleIndex = (int)sample;
             }
             //Console.WriteLine("dspEndTime: " + dspEndTime + ", sampleDeltaTime: " + sampleDeltaTime + "Recorder.endTime: " + ReplayManager.Instance.recorder.endTime + ", samplesWritten: " + samplesWritten);
-            dspEndTime = samplesWritten * sampleDeltaTime;
+            audioEndTime = samplesWritten * sampleDeltaTime;
         }
 
         public void StartRecording() {
@@ -231,27 +233,33 @@ namespace XLShredReplayEditor {
             }
             fileOutputStream = File.OpenWrite(path);
             int prevPos = (int)tmpMemoryStream.Position;
-            Debug.Log("prevPos: " + prevPos);
-            long samplesToBytes = (BITS_PER_SAMPLE * channels) / 8;
 
-            long numberOfSamples = tmpMemoryStream.Length * 8 / (BITS_PER_SAMPLE * channels);
-            Debug.Log("dspEndTime(" + dspEndTime + ") - ((float)numberOfSamples * sampleRate)(" + ((float)numberOfSamples / (float)sampleRate) + ") = " + (dspEndTime - ((float)numberOfSamples / (float)sampleRate)));
-            audioStartTime = (float)Math.Max(0.0, dspEndTime - ((double)numberOfSamples / (double)sampleRate));
+            long samplesToBytes = (BITS_PER_SAMPLE) / 8;
+
+            long numberOfSamples = tmpMemoryStream.Length * 8 / BITS_PER_SAMPLE;
+
+            audioStartTime = (float)Math.Max(0.0, audioEndTime - ((double)numberOfSamples / (double)sampleRate));
 
             BinaryWriter writer = new BinaryWriter(fileOutputStream);
 
-            endTime = Mathf.Min(ReplayManager.Instance.recorder.endTime, endTime);
+            endTime = Mathf.Min((float)audioEndTime, endTime);
+            startTime = Mathf.Max(startTime, audioStartTime);
             if (startTime > audioStartTime || endTime < ReplayManager.Instance.recorder.endTime) {
                 if (startTime > audioStartTime) {
-                    Debug.Log("Mathf.RoundToInt((startTime(" + startTime + ") - audioStartTime(" + audioStartTime + ")) * sampleRate(" + sampleRate + ")) = " + (Mathf.RoundToInt((startTime - audioStartTime) * sampleRate)));
-                    int startPos = (int)tmpMemoryStream.Position + Mathf.RoundToInt((startTime - audioStartTime) * sampleRate);
-                    Debug.Log("startPos < tmpMemoryStream.Length ? startPos : 0: " + (startPos < tmpMemoryStream.Length ? startPos : 0));
-                    tmpMemoryStream.Position = startPos < tmpMemoryStream.Length ? startPos : 0;
+                    Main.modEntry.Logger.Log("Mathf.RoundToInt((startTime(" + startTime + ") - audioStartTime(" + audioStartTime + ")) * sampleRate(" + sampleRate + ")) = " + (Mathf.RoundToInt((startTime - audioStartTime) * sampleRate)));
+                    int startOffset = Mathf.RoundToInt((startTime - audioStartTime) * sampleRate) * (int)samplesToBytes;
+                    Main.modEntry.Logger.Log("startOffset: " + startOffset + "(=" + (startTime - audioStartTime) + "s), tmpMemoryStream.Position: " + tmpMemoryStream.Position + ", tmpMemoryStream.Length: " + tmpMemoryStream.Length);
+                    if (tmpMemoryStream.Length - tmpMemoryStream.Position > startOffset) {
+                        tmpMemoryStream.Position = tmpMemoryStream.Position + startOffset;
+                        Main.modEntry.Logger.Log("tmpMemoryStream.Length - tmpMemoryStream.Position > startOffset -> tmpMemoryStream.Position = " + tmpMemoryStream.Position);
+                    } else {
+                        tmpMemoryStream.Position = startOffset - (tmpMemoryStream.Length - tmpMemoryStream.Position);
+                        Main.modEntry.Logger.Log("tmpMemoryStream.Length - tmpMemoryStream.Position <= startOffset -> tmpMemoryStream.Position = " + tmpMemoryStream.Position);
+                    }
                 }
-                startTime = Mathf.Max(startTime, audioStartTime);
                 long targetNoS = (long)((endTime - startTime) * sampleRate);
                 if (targetNoS < numberOfSamples) {
-                    Debug.Log("numberOfSamples: " + numberOfSamples + " set to " + targetNoS + ", because startTime: " + startTime + ", endTime: " + endTime);
+                    Main.modEntry.Logger.Log("numberOfSamples: " + numberOfSamples + " set to " + targetNoS + ", because clipStartTime: " + startTime + " > audioStartTime: " + audioStartTime + ", endTime: " + endTime + " < audioEndTime: " + audioEndTime);
                     numberOfSamples = targetNoS;
                 }
             }
@@ -262,8 +270,7 @@ namespace XLShredReplayEditor {
             long bytesTillEndOfStream = tmpMemoryStream.Length - tmpMemoryStream.Position;
             long requestedBytes = numberOfSamples * samplesToBytes;
 
-            //FIXME: add offset corresponding to startTime - audioStartTime
-
+            //Write Audio Data
             if (bytesTillEndOfStream > requestedBytes) {
                 CopyStream(tmpMemoryStream, fileOutputStream, requestedBytes);
             } else {
@@ -275,13 +282,11 @@ namespace XLShredReplayEditor {
                     CopyStream(tmpMemoryStream, fileOutputStream, byteCountLeft);
                 }
             }
-            // copy over the actual audio data
+
+            Main.modEntry.Logger.Log("Finished saving to " + path + ", fileOutputStream.Length: " + fileOutputStream.Length + " = " + (double)(fileOutputStream.Length * 8 / (BITS_PER_WAVE_VALUE * channels)) * sampleDeltaTime + "s, prevPos: " + prevPos);
 
             fileOutputStream.Close();
-
             tmpMemoryStream.Position = prevPos;
-
-            Debug.Log("Finished saving to " + path + ", outputStream.Length: " + tmpMemoryStream.Length + ", prevPos: " + prevPos);
             return true;
         }
 
@@ -297,7 +302,7 @@ namespace XLShredReplayEditor {
             writer.Write(0x46464952); // "RIFF" in ASCII
 
             // write the number of bytes in the entire file
-            writer.Write((int)(HEADER_SIZE + (numberOfSamples * BITS_PER_SAMPLE * channels / 8)) - 8);
+            writer.Write((int)(HEADER_SIZE + (numberOfSamples * BITS_PER_WAVE_VALUE * channels / 8)) - 8);
 
             writer.Write(0x45564157); // "WAVE" in ASCII
             writer.Write(0x20746d66); // "fmt " in ASCII
@@ -312,33 +317,33 @@ namespace XLShredReplayEditor {
             // write the sample rate. 44100 in this case. The number of audio samples per second
             writer.Write(sampleRate);
 
-            writer.Write(sampleRate * channels * (BITS_PER_SAMPLE / 8));
-            writer.Write((short)(channels * (BITS_PER_SAMPLE / 8)));
+            writer.Write(sampleRate * (BITS_PER_SAMPLE / 8));
+            writer.Write((short)(BITS_PER_SAMPLE / 8));
 
             // 16 bits per sample
-            writer.Write(BITS_PER_SAMPLE);
+            writer.Write(BITS_PER_WAVE_VALUE);
 
             // "data" in ASCII. Start the data chunk.
             writer.Write(0x61746164);
 
             // write the number of bytes in the data portion
-            writer.Write((int)(numberOfSamples * BITS_PER_SAMPLE * channels / 8));
+            writer.Write((int)(numberOfSamples * BITS_PER_WAVE_VALUE * channels / 8));
 
         }
 
         public IEnumerator LoadWavFileToAudioSource(string path, AudioType type = AudioType.WAV) {
             UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file:///" + path, type);
-            Debug.Log("Starting Request to " + www.url);
+            Main.modEntry.Logger.Log("Starting Request to " + www.url);
             yield return www.SendWebRequest();
             if (www.isHttpError || www.isNetworkError) {
                 Debug.LogError(www.error);
             } else {
-                Debug.Log("Request finished");
+                Main.modEntry.Logger.Log("Request finished");
                 try {
                     playBackAudioClip = DownloadHandlerAudioClip.GetContent(www);
-                    Debug.Log("Audio LoadState: " + playBackAudioClip.loadState.ToString());
+                    Main.modEntry.Logger.Log("Audio LoadState: " + playBackAudioClip.loadState.ToString());
                     playBackAudioSource.clip = playBackAudioClip;
-                    Debug.Log("Loaded Clip: " + playBackAudioSource.clip + ", length: " + playBackAudioSource.clip.length);
+                    Main.modEntry.Logger.Log("Loaded Clip: " + playBackAudioSource.clip + ", length: " + playBackAudioSource.clip.length);
                     playBackAudioSource.Play();
                     playBackAudioSource.time = ReplayManager.Instance.displayedPlaybackTime;
                 } catch (Exception e) {
@@ -350,23 +355,23 @@ namespace XLShredReplayEditor {
 
         private float getSyncingOffset() {
             //Synchronising if more audio than visual recorded
-            if ((float)dspEndTime - ReplayManager.Instance.recorder.endTime > desyncTolerance) {
-                float offset = (float)(dspEndTime - ReplayManager.Instance.recorder.endTime) * sampleRate;
-                //Debug.Log("Cut of " + offset.ToString("0.##") + " samples of Audio for syncing");
+            if ((float)audioEndTime - ReplayManager.Instance.recorder.endTime > desyncTolerance) {
+                float offset = (float)(audioEndTime - ReplayManager.Instance.recorder.endTime) * sampleRate;
+                //Main.modEntry.Logger.Log("Cut of " + offset.ToString("0.##") + " samples of Audio for syncing");
                 return offset;
             }
             //Synchronising if more visual than audio recorded
             int i = 0;
-            while (ReplayManager.Instance.recorder.endTime - (float)dspEndTime > desyncTolerance) {
+            while (ReplayManager.Instance.recorder.endTime - (float)audioEndTime > desyncTolerance) {
                 for (int c = 0; c < channels; c++) {
                     this.tmpStreamWriter.Write((short)(0f * (float)Int16.MaxValue));
                 }
                 samplesWritten++;
                 i++;
-                dspEndTime = samplesWritten * sampleDeltaTime;
+                audioEndTime = samplesWritten * sampleDeltaTime;
             }
             if (i != 0)
-                Debug.Log("Added " + i + " empty samples for syncing");
+                Main.modEntry.Logger.Log("Added " + i + " empty samples for syncing");
             return 0f;
         }
         public static void CopyStream(Stream input, Stream output, long byteCount) {
