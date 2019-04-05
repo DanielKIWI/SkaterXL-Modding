@@ -95,6 +95,7 @@ namespace XLShredReplayEditor {
 
         public bool guiHidden;
         bool clipEditMode;
+        bool deleteKeyFramesSecurityCheck;
         private bool isPlaying;
 
         public float clipStartTime;
@@ -404,6 +405,23 @@ namespace XLShredReplayEditor {
             } else {
                 if (GUILayout.Button("Edit Clip Length")) {
                     clipEditMode = true;
+                }
+            }
+
+            if (deleteKeyFramesSecurityCheck) {
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Really Clear all KeyFrames!")) {
+                    deleteKeyFramesSecurityCheck = false;
+                    cameraController.keyFrames.Clear();
+                    cameraController.cameraCurve.Clear();
+                }
+                if (GUILayout.Button("Cancel")) {
+                    deleteKeyFramesSecurityCheck = false;
+                }
+                GUILayout.EndHorizontal();
+            } else {
+                if (GUILayout.Button("Clear KeyFrames")) {
+                    deleteKeyFramesSecurityCheck = true;
                 }
             }
 
