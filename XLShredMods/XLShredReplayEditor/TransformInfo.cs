@@ -19,14 +19,16 @@ namespace XLShredReplayEditor {
             t.localRotation = rotation;
             t.localScale = scale;
         }
-
-
+        
         private TransformInfo(Vector3 pos, Quaternion rot, Vector3 scale) {
             _position = new SerializableVector3(pos);
             _rotation = new SerializableQuaternion(rot);
             _scale = new SerializableVector3(scale);
         }
 
+        public TransformInfo Copy() {
+            return new TransformInfo(position, rotation, scale);
+        }
 
         public static TransformInfo Lerp(TransformInfo a, TransformInfo b, float t) {
             return new TransformInfo(Vector3.Lerp(a.position, b.position, t), Quaternion.Lerp(a.rotation, b.rotation, t), Vector3.Lerp(a.scale, b.scale, t));

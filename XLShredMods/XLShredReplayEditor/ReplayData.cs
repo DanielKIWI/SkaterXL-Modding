@@ -13,7 +13,7 @@ namespace XLShredReplayEditor {
         public SerializableKeyFrame[] cameraKeyFrames;
         public float recordedTime;
         public ReplayData() {
-            this.recordedFrames = ReplayManager.Instance.recorder.ClipFrames.ToArray();
+            this.recordedFrames = ReplayManager.Instance.recorder.ClipFrames.Select(f => f.Copy()).ToArray();
             float startTime = ReplayManager.Instance.recorder.startTime;
             float endTime = ReplayManager.Instance.recorder.endTime;
             this.recordedTime = endTime - startTime;
