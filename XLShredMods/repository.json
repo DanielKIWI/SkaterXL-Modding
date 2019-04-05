@@ -16,6 +16,11 @@
       "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.0.5/XLShredReplayEditor-0.0.5.zip"
     },
     {
+      "Id": "kiwi.XLShredReplayEditor",
+      "Version": "0.1.0",
+      "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.1.0/XLShredReplayEditor-0.1.0.zip"
+    },
+    {
       "Id": "kiwi.XLShredAdjustAudioPitch",
       "Version": "0.0.1",
       "DownloadUrl": "https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredAdjustAudioPitch-0.0.1/XLShredAdjustAudioPitch-0.0.1.zip"
