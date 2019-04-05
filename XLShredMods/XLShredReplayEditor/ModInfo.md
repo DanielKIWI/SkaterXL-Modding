@@ -3,7 +3,7 @@
 ## Features:
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
 - Changing camera field of view (NEW)
-- Using KeyStones for animated Camera Movement
+- Using KeyFrames for animated Camera Movement
 - Audio Recording and Playback 
 - Changing Focus Center
 

@@ -30,18 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Standalone|AnyCPU'">
-    <OutputPath>bin\Standalone\</OutputPath>
-    <DefineConstants>TRACE;STANDALONE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony12">
-      <HintPath>..\..\..\..\Downloads\SkaterXL\UnityModManager\0Harmony12.dll</HintPath>
+      <HintPath>..\references\0Harmony12.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -52,7 +43,7 @@
       <HintPath>..\references\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="Rewired_Core">
-      <HintPath>D:\Games\SteamLibrary\steamapps\common\Skater XL\SkaterXL_Data\Managed\Rewired_Core.dll</HintPath>
+      <HintPath>..\references\Rewired_Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -89,6 +80,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.TextRenderingModule.dll</HintPath>
@@ -105,12 +97,19 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityModManager">
+      <HintPath>..\references\UnityModManager.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AudioSourceDataForwarder.cs" />
-    <Compile Include="Extensions\DeckSoundsExtension.cs" />
-    <Compile Include="KeyStoneClasses.cs" />
+    <Compile Include="CameraCurves.cs" />
+    <Compile Include="KeyFrameClasses.cs" />
+    <Compile Include="ReplayEditorMenu.cs" />
+    <Compile Include="SmoothKeyframeCurves.cs" />
     <Compile Include="SoundLoader.cs" />
+    <Compile Include="Utils\BinarySerialization.cs" />
+    <Compile Include="Utils\DeckSoundsExtension.cs" />
     <Compile Include="Vector3Radial.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ReplayManager.cs" />
@@ -119,7 +118,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayCameraControllercs.cs" />
     <Compile Include="ReplayRecorder.cs" />
-    <Compile Include="ReplaySaver.cs" />
     <Compile Include="ReplayRecordedFrame.cs" />
     <Compile Include="ReplaySkin.cs" />
     <Compile Include="TransformInfo.cs" />
@@ -133,12 +131,16 @@
       <Project>{421325e5-d304-4b9b-b207-e511e4423f56}</Project>
       <Name>XLShredLib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GUILayoutLib\GUILayoutLib.csproj">
+      <Project>{7fdb6c70-4111-40c1-8d29-5f10ef6b252f}</Project>
+      <Name>GUILayoutLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="IdeasForFeatures.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -LoadLib -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)"</PostBuildEvent>
+    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)" -LibNames GUILayoutLib</PostBuildEvent>
   </PropertyGroup>
 </Project>

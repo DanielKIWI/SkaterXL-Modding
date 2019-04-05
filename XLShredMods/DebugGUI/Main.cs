@@ -3,6 +3,7 @@ using Harmony12;
 using System.Reflection;
 using UnityModManagerNet;
 using System;
+using GUILayoutLib;
 
 namespace DebugGUI {
 
@@ -31,8 +32,15 @@ namespace DebugGUI {
             modId = modEntry.Info.Id;
 
             modEntry.OnSaveGUI = OnSaveGUI;
+            modEntry.OnGUI += OnGUI;
             modEntry.OnToggle = OnToggle;
         }
+        private static GUIValueCache _cache = new GUIValueCache();
+        private static void OnGUI(UnityModManager.ModEntry obj) {
+            GUILayoutHelper.FloatField("MessageLifeTime", _cache, () => settings.MessageLifeTime, v => settings.MessageLifeTime = v, 0, 600);
+            GUILayoutHelper.IntField("MaxLogsCount", _cache, () => settings.MaxLogsCount, v => settings.MaxLogsCount = v, 0, 600);
+        }
+
         static bool OnToggle(UnityModManager.ModEntry modEntry, bool value) {
             enabled = value;
             if (enabled) {

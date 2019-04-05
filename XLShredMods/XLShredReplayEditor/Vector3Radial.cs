@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-
+    [Serializable]
     public struct Vector3Radial {
         public Vector3Radial(float p, float t, float r) {
             this.phi = p;

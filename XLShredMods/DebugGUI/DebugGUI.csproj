@@ -40,12 +40,6 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\references\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
-    <Reference Include="GUILayoutLib">
-      <HintPath>..\references\GUILayoutLib.dll</HintPath>
-    </Reference>
-    <Reference Include="Popcron.Gizmos">
-      <HintPath>..\references\Popcron.Gizmos.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -69,11 +63,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\references\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityModManager">
+      <HintPath>..\references\UnityModManager.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugConsoleGUI.cs" />
     <Compile Include="DebugGizmosComponent.cs" />
     <Compile Include="DebugHierarchyGUI.cs" />
+    <Compile Include="LineDrawer.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="Patches\LoggerPatch.cs" />
     <Compile Include="Profiler.cs" />
@@ -82,8 +80,18 @@
   <ItemGroup>
     <None Include="Resources\Info.json" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GUILayoutLib\GUILayoutLib.csproj">
+      <Project>{7fdb6c70-4111-40c1-8d29-5f10ef6b252f}</Project>
+      <Name>GUILayoutLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XLShredReplayEditor\XLShredReplayEditor.csproj">
+      <Project>{22526bff-fe10-4710-934c-98da78f7125e}</Project>
+      <Name>XLShredReplayEditor</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -LoadLib -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)"</PostBuildEvent>
+    <PostBuildEvent>powershell.exe -ExecutionPolicy Unrestricted -File "$(SolutionDir)post_build.ps1" -TargetName "$(TargetName)" -TargetPath "$(TargetPath)" -TargetDir "$(TargetDir)\" -ProjectDir "$(ProjectDir)\" -SolutionDir "$(SolutionDir)\" -ConfigurationName "$(ConfigurationName)" -LibNames GUILayoutLib</PostBuildEvent>
   </PropertyGroup>
 </Project>

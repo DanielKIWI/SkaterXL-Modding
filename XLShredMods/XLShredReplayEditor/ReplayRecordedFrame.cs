@@ -7,21 +7,14 @@ namespace XLShredReplayEditor {
     [Serializable]
     public class ReplayRecordedFrame {
 
-        public void ApplyTo(Transform[] transforms) {
-            for (int i = 0; i < transforms.Length; i++) {
+        public void ApplyTo(List<Transform> transforms) {
+            for (int i = 0; i < transforms.Count; i++) {
                 this.transformInfos[i].ApplyTo(transforms[i]);
             }
         }
 
-
-        public ReplayRecordedFrame(Transform[] transforms, float time) {
-            this.time = time;
-            this.transformInfos = new TransformInfo[transforms.Length];
-            for (int i = 0; i < transforms.Length; i++) {
-                this.transformInfos[i] = new TransformInfo(transforms[i]);
-            }
+        public ReplayRecordedFrame() {
         }
-
 
         public ReplayRecordedFrame(TransformInfo[] transforms, float time) {
             this.time = time;
@@ -48,10 +41,9 @@ namespace XLShredReplayEditor {
                 this.transformInfos[i] = TransformInfo.Lerp(a.transformInfos[i], b.transformInfos[i], t);
             }
         }
-
-
+        
         public TransformInfo[] transformInfos;
-
+        
         public float time;
     }
 }

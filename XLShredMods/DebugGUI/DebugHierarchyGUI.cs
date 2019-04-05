@@ -5,13 +5,15 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using GUILayoutLib;
 
 namespace DebugGUI {
     class DebugHierarchyGUI : MonoBehaviour {
         public static DebugHierarchyGUI Instance { get; private set; }
-        static float pixelPerIndentLevel = 8;
+        static float pixelPerIndentLevel = 20;
         private List<GameObject> objectsWithExtendedHierarchy;
-        private Rect windowRect = new Rect(10, 10, 300, 800);
+        private Rect hierarchyWindowRect = new Rect(10, 10, 300, 800);
+        private Rect inspectorWindowRect = new Rect(Screen.width - 310, 10, 300, 800);
         bool showInactiveObjects = true;
         bool resizingWindow = false;
         private string _objectNameFilter = "";
@@ -26,12 +28,29 @@ namespace DebugGUI {
             }
         }
         GameObject[] filteredObjects;
+        public GameObject SelectedGameObject;
+        Vector2 hierarchyScrollPosition;
+
+        LineDrawer lineDrawer;
+        LineDrawer lineDrawer2;
+        LineDrawer lineDrawer3;
+
         public void Awake() {
+            lineDrawer = new LineDrawer(0.02f);
+            lineDrawer2 = new LineDrawer(0.02f);
+            lineDrawer3 = new LineDrawer(0.02f);
             objectsWithExtendedHierarchy = new List<GameObject>();
             Instance = this;
             FilterChanged();
         }
 
+        public void Update() {
+            if (Main.guiVisible && SelectedGameObject != null) {
+                lineDrawer.DrawLineInGameView(SelectedGameObject.transform.position, SelectedGameObject.transform.right, Color.red);
+                lineDrawer.DrawLineInGameView(SelectedGameObject.transform.position, SelectedGameObject.transform.up, Color.green);
+                lineDrawer.DrawLineInGameView(SelectedGameObject.transform.position, SelectedGameObject.transform.forward, Color.blue);
+            }
+        }
         void FilterChanged() {
             if (objectNameFilter != null && objectNameFilter.Length > 0) {
                 filteredObjects = FindObjectsOfType<Transform>().Where(go => go.name.Contains(objectNameFilter)).Select(t => t.gameObject).ToArray();
@@ -43,7 +62,71 @@ namespace DebugGUI {
         }
         public void OnGUI() {
             if (!Main.guiVisible) return;
-            windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), windowRect, HierarchyWindow, "Hierarchy");
+            hierarchyWindowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), hierarchyWindowRect, HierarchyWindow, "Hierarchy");
+            if (SelectedGameObject != null) {
+                inspectorWindowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), inspectorWindowRect, InspectorWindow, "Inspector");
+            }
+        }
+
+        public void InspectorWindow(int windowID) {
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("X")) {
+                SelectedGameObject = null;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Transform");
+            GUILayoutHelper.Vector3Label("LocalPosition", SelectedGameObject.transform.localPosition);
+            GUILayoutHelper.QuaternionLabel("LocalRotation", SelectedGameObject.transform.localRotation);
+            GUILayoutHelper.Vector3Label("LocalScale", SelectedGameObject.transform.localScale);
+            GUILayout.Space(2);
+            GUILayoutHelper.Vector3Label("Position", SelectedGameObject.transform.position);
+            GUILayoutHelper.QuaternionLabel("Rotation", SelectedGameObject.transform.rotation);
+            GUILayoutHelper.Vector3Label("Scale", SelectedGameObject.transform.lossyScale);
+            var transformIndex = XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.IndexOf(SelectedGameObject.transform);
+                int prevIndex = XLShredReplayEditor.ReplayManager.Instance.previousFrameIndex;
+            if (transformIndex >= 0 && transformIndex < XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.Count && 
+                prevIndex >= 0 && prevIndex < XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames.Count) {
+                var prevFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex];
+                var prevFrameTransformInfo = prevFrame.transformInfos[transformIndex];
+
+                GUILayout.Space(10);
+                GUILayout.Label("PreviousFrame");
+                GUILayoutHelper.Vector3Label("LocalPosition", prevFrameTransformInfo.position);
+                GUILayoutHelper.QuaternionLabel("LocalRotation", prevFrameTransformInfo.rotation);
+                GUILayoutHelper.Vector3Label("LocalScale", prevFrameTransformInfo.scale);
+
+                if ((prevIndex + 1) < XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames.Count) {
+                    var nextFrame = XLShredReplayEditor.ReplayManager.Instance.recorder.ClipFrames[prevIndex + 1];
+                    var nextFrameTransformInfo = nextFrame.transformInfos[transformIndex];
+
+                    GUILayout.Label("NextFrame");
+                    GUILayoutHelper.Vector3Label("LocalPosition", nextFrameTransformInfo.position);
+                    GUILayoutHelper.QuaternionLabel("LocalRotation", nextFrameTransformInfo.rotation);
+                    GUILayoutHelper.Vector3Label("LocalScale", nextFrameTransformInfo.scale);
+                }
+            }
+            GUILayout.Space(10);
+            GUILayout.Label("Components");
+            GUILayout.Space(5);
+            foreach (Component component in SelectedGameObject.GetComponents<Component>()) {
+                GUILayout.Label("  " + component.GetType().ToString()); 
+            }
+
+
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.RepeatButton("+")) {
+                if (!resizingWindow)
+                    StartCoroutine(ChangeInspectorWindowSize(true));
+            }
+            GUILayout.FlexibleSpace();
+            if (GUILayout.RepeatButton("+")) {
+                if (!resizingWindow)
+                    StartCoroutine(ChangeInspectorWindowSize(false));
+            }
+            GUILayout.EndHorizontal();
         }
 
         public void HierarchyWindow(int windowID) {
@@ -57,21 +140,22 @@ namespace DebugGUI {
 
             objectNameFilter = GUILayout.TextField(objectNameFilter);
             GUILayout.EndHorizontal();
-
+            hierarchyScrollPosition = GUILayout.BeginScrollView(hierarchyScrollPosition);
             foreach (GameObject go in filteredObjects) {
                 DrawObjectHirarchy(go, 0);
             }
-
+            GUILayout.EndScrollView();
 
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            //GUIStyle style = new GUIStyle(GUI.skin.button);
-            //style.fontSize = 20;
-            //style.clipping = TextClipping.Overflow;
             if (GUILayout.RepeatButton("+")) {
                 if (!resizingWindow)
-                    StartCoroutine(ChangeWindowSize());
+                    StartCoroutine(ChangeHierarchyWindowSize(true));
+            }
+            GUILayout.FlexibleSpace();
+            if (GUILayout.RepeatButton("+")) {
+                if (!resizingWindow)
+                    StartCoroutine(ChangeHierarchyWindowSize(false));
             }
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -80,8 +164,8 @@ namespace DebugGUI {
         public void DrawObjectHirarchy(GameObject go, int indentLevel, bool canExtend = true) {
             if (!showInactiveObjects && !go.activeSelf) return;
 
-            var gizmosComponent = go.GetComponent<DebugGizmosComponent>();
-            bool gizmosShown = gizmosComponent != null;
+            //var gizmosComponent = go.GetComponent<DebugGizmosComponent>();
+            //bool gizmosShown = gizmosComponent != null;
             bool extended = objectsWithExtendedHierarchy.Contains(go);
 
             GUILayout.BeginHorizontal();
@@ -99,17 +183,24 @@ namespace DebugGUI {
                     }
                 }
             }
-            string labelText = (go.activeSelf ? "" : "[Inactive] ") + go.name;
-            GUILayout.Label(labelText);
-            GUILayout.FlexibleSpace();
-            bool showGizmos = GUILayout.Toggle(gizmosShown, "G");
-            GUILayout.EndHorizontal();
-
-            if (showGizmos && !gizmosShown) {
-                gizmosComponent = go.AddComponent<DebugGizmosComponent>();
-            } else if (!showGizmos && gizmosShown) {
-                Destroy(gizmosComponent);
+            string labelText =
+                (XLShredReplayEditor.ReplayManager.Instance.recorder.transformsToBeRecorded.Contains(go.transform) ? "[●Rec●] " : "") +
+                (go.activeSelf ? "" : "[Inactive] ") + 
+                go.name;
+            if (GUILayout.Button(labelText)) {
+                SelectedGameObject = go;
             }
+            
+            //Draw Button that shows the Transform Space
+            //Sets Debug Gizmos Target to that transform
+            //IDea: Display local rotation to see lagging there 
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Gizmos")) {
+                SelectedGameObject = go;
+            }
+            GUILayout.EndHorizontal();
+            
 
             if (extended && canExtend) {
                 for (int i = 0; i < go.transform.childCount; i++) {
@@ -118,19 +209,48 @@ namespace DebugGUI {
                 }
             }
         }
-        public IEnumerator ChangeWindowSize() {
+        public IEnumerator ChangeHierarchyWindowSize(bool left) {
             resizingWindow = true;
             Vector2 mousGUIPos = (Vector2)Input.mousePosition;
             mousGUIPos.y = Screen.height - mousGUIPos.y;
-            var offset = windowRect.max - mousGUIPos;
+            float xMax = hierarchyWindowRect.xMax;
+            Vector2 edge = left ? new Vector2(hierarchyWindowRect.xMin, hierarchyWindowRect.yMax) : hierarchyWindowRect.max;
+            var offset = edge - mousGUIPos;
             yield return null;
             while (Input.GetKey(KeyCode.Mouse0)) {
                 mousGUIPos = (Vector2)Input.mousePosition;
                 mousGUIPos.y = Screen.height - mousGUIPos.y;
                 mousGUIPos += offset;
-
-                windowRect.width = Mathf.Max(200, mousGUIPos.x - windowRect.x);
-                windowRect.height = Mathf.Max(200, mousGUIPos.y - windowRect.y);
+                if (left) {
+                    hierarchyWindowRect.xMin = Mathf.Min(xMax - 200, mousGUIPos.x);
+                    hierarchyWindowRect.xMax = xMax;
+                } else {
+                    hierarchyWindowRect.width = Mathf.Max(200, mousGUIPos.x - hierarchyWindowRect.x);
+                }
+                hierarchyWindowRect.height = Mathf.Max(200, mousGUIPos.y - hierarchyWindowRect.y);
+                yield return null;
+            }
+            resizingWindow = false;
+        }
+        public IEnumerator ChangeInspectorWindowSize(bool left) {
+            resizingWindow = true;
+            Vector2 mousGUIPos = (Vector2)Input.mousePosition;
+            mousGUIPos.y = Screen.height - mousGUIPos.y;
+            float xMax = inspectorWindowRect.xMax;
+            Vector2 edge = left ? new Vector2(inspectorWindowRect.xMin, inspectorWindowRect.yMax) : inspectorWindowRect.max;
+            var offset = edge - mousGUIPos;
+            yield return null;
+            while (Input.GetKey(KeyCode.Mouse0)) {
+                mousGUIPos = (Vector2)Input.mousePosition;
+                mousGUIPos.y = Screen.height - mousGUIPos.y;
+                mousGUIPos += offset;
+                if (left) {
+                    inspectorWindowRect.xMin = Mathf.Min(xMax - 200, mousGUIPos.x);
+                    inspectorWindowRect.xMax = xMax;
+                } else {
+                    inspectorWindowRect.width = Mathf.Max(200, mousGUIPos.x - inspectorWindowRect.x);
+                }
+                inspectorWindowRect.height = Mathf.Max(200, mousGUIPos.y - inspectorWindowRect.y);
                 yield return null;
             }
             resizingWindow = false;
