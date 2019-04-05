@@ -163,6 +163,9 @@ namespace XLShredReplayEditor {
             }
             if (this.endTime - startTime > Main.settings.MaxRecordedTime) {
                 this.startTime = this.endTime - Main.settings.MaxRecordedTime;
+                while (RecordedFrames.Count > 0 && RecordedFrames[0].time < startTime) {
+                    RecordedFrames.RemoveAt(0);
+                }
             }
         }
 
