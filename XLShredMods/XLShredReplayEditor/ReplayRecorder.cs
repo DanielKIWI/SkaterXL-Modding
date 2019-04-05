@@ -62,7 +62,7 @@ namespace XLShredReplayEditor {
 
         public void AddTransformToRecordedList(Transform t) {
             if (transformsToBeRecorded.Contains(t)) {
-                Debug.Log("Transform " + t.name + " is already being recorded.");
+                Main.modEntry.Logger.Log("Transform " + t.name + " is already being recorded.");
                 return;
             }
             transformsToBeRecorded.Add(t);

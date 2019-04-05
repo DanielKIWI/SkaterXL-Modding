@@ -6,21 +6,7 @@ using System.Linq;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
-
-
     public class ReplayEditorMenu {
-        public void OnStateChanged(ReplayState newState, ReplayState oldState) {
-                if (newState == ReplayState.LoadMenu)
-                    FetchReplayFiles();
-                if (newState == ReplayState.SaveMenu)
-                    fileName = "Replay_" + 
-                        DateTime.Now.Year.ToString("0000")   + "-" + 
-                        DateTime.Now.Month.ToString("00") + "-" + 
-                        DateTime.Now.Day.ToString("00") + "_" + 
-                        DateTime.Now.Hour.ToString("00") + "-" + 
-                        DateTime.Now.Minute.ToString("00") + "-" + 
-                        DateTime.Now.Second.ToString("00");
-        }
         private string fileName;
         private Rect MenuRect;
         private Rect SaveRect;
@@ -45,6 +31,36 @@ namespace XLShredReplayEditor {
         Vector2 scrollPosition = Vector2.zero;
 
         private IEnumerable<string> replayNames;
+
+        public ReplayEditorMenu() {
+            Vector2 center = new Vector2((float)Screen.width / 2f, (float)Screen.height / 2f);
+            MenuRect = new Rect(0, 0, 330f, 200f) {
+                center = center
+            };
+            SaveRect = new Rect(0, 0, 330f, 200f) {
+                center = center
+            };
+            LoadRect = new Rect(0, 0, 330f, 400f) {
+                center = center
+            };
+            SettingsRect = new Rect(0, 0, 1000f, 400f) {
+                center = center
+            };
+        }
+
+        public void OnStateChanged(ReplayState newState, ReplayState oldState) {
+                if (newState == ReplayState.LoadMenu)
+                    FetchReplayFiles();
+                if (newState == ReplayState.SaveMenu)
+                    fileName = "Replay_" + 
+                        DateTime.Now.Year.ToString("0000")   + "-" + 
+                        DateTime.Now.Month.ToString("00") + "-" + 
+                        DateTime.Now.Day.ToString("00") + "_" + 
+                        DateTime.Now.Hour.ToString("00") + "-" + 
+                        DateTime.Now.Minute.ToString("00") + "-" + 
+                        DateTime.Now.Second.ToString("00");
+        }
+
         public void FetchReplayFiles() {
             try {
                 replayNames = Directory.EnumerateDirectories(Main.settings.ReplaysDirectory).Select(delegate(string path) {
@@ -76,22 +92,6 @@ namespace XLShredReplayEditor {
                 fileName.Contains(">") ||
                 fileName.Contains("|")
                 );
-        }
-
-        public ReplayEditorMenu() {
-            Vector2 center = new Vector2((float)Screen.width / 2f, (float)Screen.height / 2f);
-            MenuRect = new Rect(0, 0, 330f, 200f) {
-                center = center
-            };
-            SaveRect = new Rect(0, 0, 330f, 200f) {
-                center = center
-            };
-            LoadRect = new Rect(0, 0, 330f, 400f) {
-                center = center
-            };
-            SettingsRect = new Rect(0, 0, 1000f, 400f) {
-                center = center
-            };
         }
 
         public void CheckInput(ReplayState state) {

@@ -143,7 +143,7 @@ namespace XLShredReplayEditor {
                     this.tmpStreamWriter.Write(value);
                     if (tmpMemoryStream.Position > maxTmpStreamLength) {
                         tmpMemoryStream.Position = 0;
-                        Debug.Log("Reset tmpMemoryStream.Position to 0");
+                        Main.modEntry.Logger.Log("Reset tmpMemoryStream.Position to 0");
                     }
                 }
                 samplesWritten++;
@@ -183,8 +183,11 @@ namespace XLShredReplayEditor {
             if (!playBackAudioSource.isPlaying) {
                 playBackAudioSource.Play();
             }
-            //Debug.Log("Changing PlaybackTime from " + playBackAudioSource.time + " to " + t + ", length: " + playBackAudioClip.length + ", " + (playBackAudioSource.clip == playBackAudioClip) + "," + (playBackAudioClip != null));
-            playBackAudioSource.time = Mathf.Clamp(t, 0, playBackAudioClip.length);
+            try {
+                playBackAudioSource.time = Mathf.Clamp(t, 0, playBackAudioClip.length);
+            } catch {
+                Main.modEntry.Logger.Log("Error could not set playBackAudioSource.time to " + Mathf.Clamp(t, 0, playBackAudioClip.length) + ", clip is " + playBackAudioSource.clip.length + "s long");
+            }
         }
 
         public void ReceivedAudioData(float[] data, int channels, int id) {

@@ -66,7 +66,7 @@ namespace XLShredReplayEditor {
             get { return _currentState; }
             set {
                 if (_currentState == value) return;
-                Debug.Log("Changed ReplayState to " + value.ToString());
+                Main.modEntry.Logger.Log("Changed ReplayState to " + value.ToString());
                 ReplayState oldState = _currentState;
                 _currentState = value;
                 StateChangedEvent?.Invoke(value, oldState);
@@ -145,7 +145,7 @@ namespace XLShredReplayEditor {
 
         public IEnumerator StartReplayEditor() {
             ReplayManager.CurrentState = ReplayState.LoadingEditor;
-            Debug.Log("Started Replay Editor. endTime(" + recorder.endTime + ") - startTime(" + recorder.startTime + ") = " + (recorder.endTime - recorder.startTime));
+            Main.modEntry.Logger.Log("Started Replay Editor. endTime(" + recorder.endTime + ") - startTime(" + recorder.startTime + ") = " + (recorder.endTime - recorder.startTime));
 
             //Disabling core Game Input and animation that would interfer
             SoundManager.Instance.deckSounds.MuteAll();
@@ -156,7 +156,6 @@ namespace XLShredReplayEditor {
 
             disabledAnimators = PlayerController.Instance.GetComponentsInChildren<Animator>().Where(a => a.isActiveAndEnabled).ToArray();
             foreach (var anim in disabledAnimators) {
-                Debug.Log("Disabeling Animator on GameObject: " + anim.name);
                 anim.enabled = false;
             }
 
@@ -185,9 +184,7 @@ namespace XLShredReplayEditor {
                 audioRecorder.StartRecording();
                 cameraController.OnExitReplayEditor();
                 recorder.OnExitReplayEditor();
-
-                //FIXME change endTime
-
+                
                 PlayerController.Instance.respawn.pin.gameObject.SetActive(true);
                 PlayerController.Instance.cameraController.enabled = true;
                 InputController.Instance.enabled = true;
@@ -195,7 +192,6 @@ namespace XLShredReplayEditor {
                 SoundManager.Instance.deckSounds.UnMuteAll();
 
                 foreach (var anim in disabledAnimators) {
-                    Debug.Log("Enabled Animator on GameObject: " + anim.name);
                     anim.enabled = true;
                 }
                 disabledAnimators = null;

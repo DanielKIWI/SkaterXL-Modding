@@ -28,10 +28,10 @@ namespace XLShredReplayEditor {
             foreach (var keyFrame in cameraKeyFrames) {
                 keyFrame.time -= startTime;
             }
-            Debug.Log(this);
         }
 
         public void Load() {
+            Main.modEntry.Logger.Log("Loading ReplayFrames, Recorded Time: " + recordedTime);
             ReplayManager.Instance.recorder.LoadFrames(this.recordedFrames);
             ReplayManager.Instance.clipStartTime = 0f;
             ReplayManager.Instance.clipEndTime = this.recordedTime;
