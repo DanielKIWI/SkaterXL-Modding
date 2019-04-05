@@ -98,6 +98,14 @@ namespace XLShredReplayEditor {
             tripodCamCurve.Clear();
         }
 
+        public void Refresh(IEnumerable<KeyFrame> keyFrames) {
+            Clear();
+            foreach (var kf in keyFrames) {
+                kf.AddKeyframes(this);
+            }
+            CalculateCurveControlPoints();
+        }
+
         public void DeleteCurveKeys(int i) {
             orientationCurve.DeleteCurveKey(i);
             focusYOffsetCurve.DeleteCurveKey(i);

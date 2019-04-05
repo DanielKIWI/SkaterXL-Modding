@@ -169,6 +169,10 @@ namespace XLShredReplayEditor {
 
         #region KeyFrame Functions
 
+        public void RefreshCameraCurve() {
+            cameraCurve.Refresh(keyFrames);
+        }
+
         private void DeleteKeyFrameAtCurrentPosition() {
             int index;
             if (!this.FindKeyFrameDeleteIndex(out index)) {

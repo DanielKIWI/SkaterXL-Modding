@@ -14,15 +14,10 @@ namespace XLShredReplayEditor {
         public static bool IsMenuOpen(this ReplayState state) {
             switch (state) {
                 case ReplayState.MainMenu:
-                    return true;
                 case ReplayState.SaveMenu:
-                    return true;
                 case ReplayState.LoadMenu:
-                    return true;
                 case ReplayState.SettingsMenu:
-                    return true;
                 case ReplayState.SavingReplay:
-                    return true;
                 case ReplayState.LoadingReplay:
                     return true;
             }
@@ -30,10 +25,9 @@ namespace XLShredReplayEditor {
         }
         public static bool CanBeChange(this ReplayState state) {
             switch (state) {
+                case ReplayState.Recording:
                 case ReplayState.SavingReplay:
-                    return false;
                 case ReplayState.LoadingReplay:
-                    return false;
                 case ReplayState.LoadingEditor:
                     return false;
             }
@@ -42,13 +36,9 @@ namespace XLShredReplayEditor {
         public static bool NeedsCursor(this ReplayState state) {
             switch (state) {
                 case ReplayState.SavingReplay:
-                    return false;
                 case ReplayState.LoadingReplay:
-                    return false;
                 case ReplayState.LoadingEditor:
-                    return false;
                 case ReplayState.Disabled:
-                    return false;
                 case ReplayState.Recording:
                     return false;
             }
@@ -289,7 +279,7 @@ namespace XLShredReplayEditor {
             }
 
             //Save
-            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKey(KeyCode.S)) {
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKey(KeyCode.S) && CurrentState.CanBeChange()) {
                 CurrentState = ReplayState.SaveMenu;
             }
 
@@ -412,7 +402,7 @@ namespace XLShredReplayEditor {
                 }
                 GUILayout.EndHorizontal();
             } else {
-                if (GUILayout.Button("Edit Clip Length (" + (clipEditMode ? "ON" : "OFF") + ")")) {
+                if (GUILayout.Button("Edit Clip Length")) {
                     clipEditMode = true;
                 }
             }
@@ -420,7 +410,9 @@ namespace XLShredReplayEditor {
             if (GUILayout.Button(CurrentState.IsMenuOpen() ? "Hide" : "Show" + " menu")) {
                 ToggleMenu();
             }
-
+            if (GUILayout.Button("Refresh CameraCurve")) {
+                cameraController.RefreshCameraCurve();
+            }
             if (GUILayout.Button("Show Help (" + (Main.settings.showControllsHelp ? "ON" : "OFF") + ")")) {
                 Main.settings.showControllsHelp = !Main.settings.showControllsHelp;
                 Main.settings.Save(Main.modEntry);
