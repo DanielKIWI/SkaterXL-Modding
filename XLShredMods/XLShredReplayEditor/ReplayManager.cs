@@ -411,7 +411,7 @@ namespace XLShredReplayEditor {
 
             if (deleteKeyFramesSecurityCheck) {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Really Clear all KeyFrames!")) {
+                if (GUILayout.Button("!Clear KeyFrames!")) {
                     deleteKeyFramesSecurityCheck = false;
                     cameraController.keyFrames.Clear();
                     cameraController.cameraCurve.Clear();

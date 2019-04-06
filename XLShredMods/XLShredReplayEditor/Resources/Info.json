@@ -2,7 +2,7 @@
   "Id": "kiwi.XLShredReplayEditor",
   "DisplayName": "XL Shred Replay Editor",
   "Author": "Kiwi",
-  "Version": "0.1.0",
+  "Version": "0.1.1",
   "ManagerVersion": "0.15.0",
   "Requirements": [ "blendermf.XLShredMenu-0.0.5" ],
   "AssemblyName": "XLShredReplayEditor.dll",

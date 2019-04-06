@@ -37,18 +37,18 @@ namespace XLShredReplayEditor {
         private string tempAudioDirectory;
         private string wavFilePath;
         //private string tempAudioPath;
-        
+
         private MemoryStream tmpMemoryStream;
         private FileStream fileOutputStream;
         private BinaryWriter tmpStreamWriter;
         private AudioSourceDataForwarder[] audioSourceDataForwarders;
-        public float desyncTolerance = 0.05f;
-        
+        public float desyncTolerance = 0.02f;
+
         /// <summary>
         /// timesSamples Count used for current buffer
         /// </summary>
         public int firstAudioSourceID = -1;
-        
+
         object timeScaleLock = new object();
 
         float timeScale;
@@ -111,12 +111,14 @@ namespace XLShredReplayEditor {
             if (tmpMemoryStream != null)
                 tmpMemoryStream.Close();
         }
+        private void OnAudioFilterRead(float[] data, int channels) {
+            playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
+        }
         public void Update() {
             lock (timeScaleLock) {
                 timeScale = Time.timeScale;
             }
             if (ReplayManager.CurrentState == ReplayState.Playback) {
-                playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
                         SetPlaybackTime(ReplayManager.Instance.playbackTime);
@@ -172,7 +174,6 @@ namespace XLShredReplayEditor {
             playBackAudioSource.clip = null;
         }
         public void SetPlaybackTime(float playbackTime) {
-            float t = playbackTime - audioStartTime;
             if (playBackAudioClip == null) {
                 Debug.LogWarning("playBackAudioClip is null");
                 return;
@@ -183,11 +184,11 @@ namespace XLShredReplayEditor {
             if (!playBackAudioSource.isPlaying) {
                 playBackAudioSource.Play();
             }
-            try {
-                playBackAudioSource.time = Mathf.Clamp(t, 0, playBackAudioClip.length);
-            } catch {
-                Main.modEntry.Logger.Log("Error could not set playBackAudioSource.time to " + Mathf.Clamp(t, 0, playBackAudioClip.length) + ", clip is " + playBackAudioSource.clip.length + "s long");
-            }
+
+            float t = playbackTime - audioStartTime;
+            t = Mathf.Clamp(t, 0, playBackAudioClip.length);
+            if (Mathf.Abs(playBackAudioSource.time - t) > desyncTolerance)
+                playBackAudioSource.time = t;
         }
 
         public void ReceivedAudioData(float[] data, int channels, int id) {
