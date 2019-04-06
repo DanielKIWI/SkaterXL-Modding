@@ -345,6 +345,7 @@ namespace XLShredReplayEditor {
         }
 
         public void CutClip() {
+            Main.modEntry.Logger.Log("Cutting clip from " + recorder.startTime + "-" + recorder.endTime + " to " + clipStartTime + "-" + clipEndTime);
             recorder.CutClip(clipStartTime, clipEndTime);
             cameraController.DeleteKeyFramesOutside(clipStartTime, clipEndTime);
         }
