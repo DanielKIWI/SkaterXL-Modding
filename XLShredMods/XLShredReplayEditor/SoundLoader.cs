@@ -4,7 +4,7 @@ using System.IO;
 using System;
 
 namespace XLShredReplayEditor {
-    public class SoundLoader {
+    public static class SoundLoader {
 
         public static AudioClip LoadWav(string path) {
             //Read all bytes of file

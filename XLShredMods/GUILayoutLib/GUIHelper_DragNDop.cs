@@ -19,8 +19,8 @@ namespace GUILayoutLib {
 
         //        if (GUI.RepeatButton(ReplaySkin.DefaultSkin.markerRect(t), ReplaySkin.DefaultSkin.markerContent, ReplaySkin.DefaultSkin.markerStyle)) {
         //            if (draggedKeyFrame == null) {
-        //                draggedKeyFrame = keyStone;
-        //                dragOverTime = keyStone.time;
+        //                draggedKeyFrame = keyFrame;
+        //                dragOverTime = keyFrame.time;
         //                this.playbackTime = dragOverTime;
         //                StartCoroutine(DragKeyFrameUpdate());
         //}

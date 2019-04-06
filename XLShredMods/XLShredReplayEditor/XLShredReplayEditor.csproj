@@ -104,10 +104,12 @@
   <ItemGroup>
     <Compile Include="AudioSourceDataForwarder.cs" />
     <Compile Include="CameraCurves.cs" />
-    <Compile Include="Extensions\DeckSoundsExtension.cs" />
     <Compile Include="KeyFrameClasses.cs" />
+    <Compile Include="ReplayEditorMenu.cs" />
     <Compile Include="SmoothKeyframeCurves.cs" />
     <Compile Include="SoundLoader.cs" />
+    <Compile Include="Utils\BinarySerialization.cs" />
+    <Compile Include="Utils\DeckSoundsExtension.cs" />
     <Compile Include="Vector3Radial.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ReplayManager.cs" />
@@ -116,7 +118,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayCameraControllercs.cs" />
     <Compile Include="ReplayRecorder.cs" />
-    <Compile Include="ReplaySaver.cs" />
     <Compile Include="ReplayRecordedFrame.cs" />
     <Compile Include="ReplaySkin.cs" />
     <Compile Include="TransformInfo.cs" />

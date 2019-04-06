@@ -4,14 +4,42 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
+
+    public enum CameraMode {
+        Free,
+        Orbit,
+        Tripod
+    }
     public class ReplayCameraController : MonoBehaviour {
+
+        private Transform cameraTransform;
+        public Camera camera;
+        public CameraMode mode;
+
+        public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
+        public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
+        public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
+        public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
+
+        public List<KeyFrame> keyFrames;
+        public CameraCurve cameraCurve;
+        public bool CamFollowKeyFrames;
+
+        public float FocusOffsetY;
+
+        private Vector3Radial orbitRadialCoord;
+        private float defaultCameraFOV;
+        private ReplayManager manager;
+        private Transform cameraParent;
+        private const float KeyFrameDeleteTolerance = 0.1f;
+        private float xDownTime;
 
         #region From Unity called Functions
         public void Awake() {
             this.manager = base.GetComponent<ReplayManager>();
             this.cameraTransform = PlayerController.Instance.cameraController._actualCam;
             this.camera = cameraTransform.GetComponent<Camera>();
-            this.mode = ReplayCameraController.CameraMode.Orbit;
+            this.mode = CameraMode.Orbit;
             this.keyFrames = new List<KeyFrame>();
             this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             this.FocusOffsetY = 0f;
@@ -19,6 +47,8 @@ namespace XLShredReplayEditor {
         }
 
         public void Update() {
+            if (ReplayManager.CurrentState != ReplayState.Playback)
+                return;
             this.InputModeChange();
             this.InputKeyFrameControll();
             if (this.CamFollowKeyFrames) {
@@ -27,7 +57,7 @@ namespace XLShredReplayEditor {
             }
             bool RBPressed = PlayerController.Instance.inputController.player.GetButton("RB");
             switch (this.mode) {
-                case ReplayCameraController.CameraMode.Free:
+                case CameraMode.Free:
                     if (RBPressed) {
                         InputRollRotation();
                         InputCameraFOV();
@@ -36,7 +66,7 @@ namespace XLShredReplayEditor {
                         this.InputFreeRotation();
                     }
                     break;
-                case ReplayCameraController.CameraMode.Orbit:
+                case CameraMode.Orbit:
                     if (RBPressed) {
                         InputFocusOffsetY();
                         InputCameraFOV();
@@ -49,7 +79,7 @@ namespace XLShredReplayEditor {
                         + this.orbitRadialCoord.cartesianCoords;
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
-                case ReplayCameraController.CameraMode.Tripod:
+                case CameraMode.Tripod:
                     if (RBPressed) {
                         InputFocusOffsetY();
                         InputCameraFOV();
@@ -59,6 +89,12 @@ namespace XLShredReplayEditor {
                     this.cameraTransform.LookAt(PlayerController.Instance.skaterController.skaterTransform.position + FocusOffsetY * Vector3.up, Vector3.up);
                     break;
             }
+        }
+
+        internal void LoadKeyFrames(IEnumerable<SerializableKeyFrame> cameraKeyFrames) {
+            cameraCurve.Clear();
+            keyFrames = new List<KeyFrame>(cameraKeyFrames.Select(k => k.GetKeyFrame(cameraCurve)));
+            cameraCurve.CalculateCurveControlPoints();
         }
 
         #endregion
@@ -111,7 +147,7 @@ namespace XLShredReplayEditor {
 
         private void InputModeChange() {
             if (PlayerController.Instance.inputController.player.GetButtonDown("Y") || Input.GetKeyDown(KeyCode.M)) {
-                this.mode = ((this.mode >= ReplayCameraController.CameraMode.Tripod) ? ReplayCameraController.CameraMode.Free : (this.mode + 1));
+                this.mode = ((this.mode >= CameraMode.Tripod) ? CameraMode.Free : (this.mode + 1));
             }
             if (PlayerController.Instance.inputController.player.GetButtonDown("Select")) {
                 this.CamFollowKeyFrames = !this.CamFollowKeyFrames;
@@ -123,7 +159,7 @@ namespace XLShredReplayEditor {
                 this.xDownTime = Time.unscaledTime;
             }
             if (Input.GetKeyDown(KeyCode.Delete) || PlayerController.Instance.inputController.player.GetButton("X") && Time.unscaledTime - this.xDownTime > 1.5f) {
-                this.DeleteKeyFrame();
+                this.DeleteKeyFrameAtCurrentPosition();
             }
             if (Input.GetKeyDown(KeyCode.K) || PlayerController.Instance.inputController.player.GetButtonUp("X") && Time.unscaledTime - this.xDownTime < 0.5f) {
                 this.AddKeyFrame(this.manager.playbackTime);
@@ -133,18 +169,37 @@ namespace XLShredReplayEditor {
 
         #region KeyFrame Functions
 
-        private void DeleteKeyFrame() {
+        public void RefreshCameraCurve() {
+            cameraCurve.Refresh(keyFrames);
+        }
+
+        private void DeleteKeyFrameAtCurrentPosition() {
             int index;
             if (!this.FindKeyFrameDeleteIndex(out index)) {
                 return;
             }
-            this.keyFrames.RemoveAt(index);
-            cameraCurve.DeleteCurveKeys(index);
+            DeleteKeyFrame(index);
+        }
+
+        private void DeleteKeyFrame(int i) {
+            this.keyFrames.RemoveAt(i);
+            cameraCurve.DeleteCurveKeys(i);
+        }
+
+        public void DeleteKeyFramesOutside(float start, float end) {
+            int i = 0;
+            while (i < keyFrames.Count) {
+                if (keyFrames[i].time < start || keyFrames[i].time > end)
+                    DeleteKeyFrame(i);
+                else
+                    i++;
+            }
+            cameraCurve.CalculateCurveControlPoints();
         }
 
         private bool FindKeyFrameDeleteIndex(out int index) {
             for (int i = 0; i < this.keyFrames.Count; i++) {
-                if (Mathf.Abs(this.manager.playbackTime - this.keyFrames[i].time) < this.keyFrameDeleteTolerance) {
+                if (Mathf.Abs(this.manager.playbackTime - this.keyFrames[i].time) < KeyFrameDeleteTolerance) {
                     index = i;
                     return true;
                 }
@@ -177,13 +232,13 @@ namespace XLShredReplayEditor {
             int index = this.FindKeyFrameInsertIndex(time);
             KeyFrame item;
             switch (this.mode) {
-                case ReplayCameraController.CameraMode.Free:
+                case CameraMode.Free:
                     item = new FreeCameraKeyFrame(this.cameraTransform, camera.fieldOfView, time, cameraCurve);
                     break;
-                case ReplayCameraController.CameraMode.Orbit:
+                case CameraMode.Orbit:
                     item = new OrbitCameraKeyFrame(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
-                case ReplayCameraController.CameraMode.Tripod:
+                case CameraMode.Tripod:
                     item = new TripodCameraKeyFrame(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
                     break;
                 default:
@@ -209,7 +264,7 @@ namespace XLShredReplayEditor {
             }
             return this.keyFrames.Count;
         }
-        
+
         public KeyFrame FindNextKeyFrame(float time, bool left) {
             if (this.keyFrames.Count == 0) {
                 return null;
@@ -229,7 +284,7 @@ namespace XLShredReplayEditor {
             }
             return null;
         }
-        
+
         public KeyFrame SearchKeyFrameInRange(float start, float end) {
             if (this.keyFrames.Count == 0) {
                 return null;
@@ -257,7 +312,7 @@ namespace XLShredReplayEditor {
                 this.keyFrames.RemoveAt(0);
             }
             base.enabled = true;
-            if (this.mode == ReplayCameraController.CameraMode.Orbit) {
+            if (this.mode == CameraMode.Orbit) {
                 this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.skaterTransform.position);
             }
             this.cameraParent = this.cameraTransform.parent;
@@ -280,54 +335,15 @@ namespace XLShredReplayEditor {
         }
 
 
-        private void SwitchModeTo(ReplayCameraController.CameraMode newValue) {
-            ReplayCameraController.CameraMode cameraMode = this.mode;
+        private void SwitchModeTo(CameraMode newValue) {
+            CameraMode cameraMode = this.mode;
             if (newValue == cameraMode) {
                 return;
             }
             this.mode = newValue;
-            if (newValue == ReplayCameraController.CameraMode.Orbit) {
+            if (newValue == CameraMode.Orbit) {
                 this.orbitRadialCoord = new Vector3Radial(this.cameraTransform.position - PlayerController.Instance.skaterController.transform.position);
             }
-        }
-
-        private Transform cameraTransform;
-
-        public Camera camera;
-
-        public ReplayCameraController.CameraMode mode;
-
-        public Vector3 lookDirection;
-
-        public Vector3Radial orbitRadialCoord;
-
-        public float FocusOffsetY;
-
-        public float RotateSpeed { get { return Main.settings.RotateSpeed; } }
-        public float TranslationSpeed { get { return Main.settings.TranslationSpeed; } }
-
-        public float OrbitMoveSpeed { get { return Main.settings.OrbitMoveSpeed; } }
-        public float FOVChangeSpeed { get { return Main.settings.FOVChangeSpeed; } }
-        private float defaultCameraFOV;
-
-        private float xDownTime;
-
-        private float keyFrameDeleteTolerance = 0.1f;
-
-        public List<KeyFrame> keyFrames;
-
-        public CameraCurve cameraCurve;
-
-        private Transform cameraParent;
-
-        public bool CamFollowKeyFrames;
-
-        private ReplayManager manager;
-
-        public enum CameraMode {
-            Free,
-            Orbit,
-            Tripod
         }
     }
 }

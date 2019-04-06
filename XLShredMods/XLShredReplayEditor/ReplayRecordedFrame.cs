@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace XLShredReplayEditor {
@@ -13,15 +14,15 @@ namespace XLShredReplayEditor {
             }
         }
 
-
-        public ReplayRecordedFrame(List<Transform> transforms, float time) {
-            this.time = time;
-            this.transformInfos = new TransformInfo[transforms.Count];
-            for (int i = 0; i < transforms.Count; i++) {
-                this.transformInfos[i] = new TransformInfo(transforms[i]);
-            }
+        public ReplayRecordedFrame() {
         }
 
+        public ReplayRecordedFrame Copy() {
+            return new ReplayRecordedFrame() {
+                time = this.time,
+                transformInfos = this.transformInfos.Select(t => t.Copy()).ToArray()
+            };
+        }
 
         public ReplayRecordedFrame(TransformInfo[] transforms, float time) {
             this.time = time;
@@ -48,10 +49,9 @@ namespace XLShredReplayEditor {
                 this.transformInfos[i] = TransformInfo.Lerp(a.transformInfos[i], b.transformInfos[i], t);
             }
         }
-
-
+        
         public TransformInfo[] transformInfos;
-
+        
         public float time;
     }
 }

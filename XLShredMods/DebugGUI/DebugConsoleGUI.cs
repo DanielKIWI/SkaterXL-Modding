@@ -69,6 +69,9 @@ namespace DebugGUI {
                 };
                 //GUI.Box(boxRect, "Console", this.boxStyle);
                 GUILayout.BeginArea(boxRect, "Console", boxStyle);
+                if (autoScroll) {
+                    scrollPosition.y = float.MaxValue;
+                }
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true);
                 lock (messages) {
                     foreach (var msg in messages) {
@@ -82,6 +85,7 @@ namespace DebugGUI {
             }
 
             GUILayout.BeginArea(new Rect(20f, boxMinY - 20f, Screen.width - 40f, 20f));
+            GUILayout.BeginHorizontal();
             LogType[] logTypes = Enum.GetValues(typeof(LogType)).Cast<LogType>().ToArray();
             foreach (var type in logTypes) {
                 showLogType[type] = GUILayout.Toggle(showLogType[type], Enum.GetName(typeof(LogType), type));
@@ -92,6 +96,7 @@ namespace DebugGUI {
                     this.messages.Clear();
                 }
             }
+            GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }
 
