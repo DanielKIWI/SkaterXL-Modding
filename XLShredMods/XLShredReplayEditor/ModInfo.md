@@ -20,7 +20,7 @@ You can change some Properties, like the Camera movement and rotation speed, in 
 
 Just open the Manager (default Shortcut is Ctrl + F10) go to the Mods Tab and click on the Settings-Icon next on the right of the 'XL Shred Replay Editor' Label. (Don't forget to save your Settings if you want to keep them between Sessions)
 
-## Requirements (for v0.1.0) - IMPORTANT!!!
+## Requirements IMPORTANT!!!
 Unity Mod Manager [v0.15.0](https://www.dropbox.com/s/wz8x8e4onjdfdbm/UnityModManager.zip?dl=1) ([or from Nexus](https://www.nexusmods.com/site/mods/21/))
 
 XLShredModMenu [v0.0.5](https://github.com/blendermf/XLShredLoader/releases/download/menu-mod-0.0.5/XLShredMenuMod-0.0.5.zip)
