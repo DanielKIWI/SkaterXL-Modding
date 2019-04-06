@@ -1,4 +1,4 @@
-﻿﻿# ReplayEditor
+# ReplayEditor
 
 ## Features:
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
@@ -24,6 +24,8 @@ Just open the Manager (default Shortcut is Ctrl + F10) go to the Mods Tab and cl
 Unity Mod Manager [v0.15.0](https://www.dropbox.com/s/wz8x8e4onjdfdbm/UnityModManager.zip?dl=1) ([or from Nexus](https://www.nexusmods.com/site/mods/21/))
 
 XLShredModMenu [v0.0.5](https://github.com/blendermf/XLShredLoader/releases/download/menu-mod-0.0.5/XLShredMenuMod-0.0.5.zip)
+
+## [Installation](https://github.com/DanielKIWI/SkaterXL-Modding#installation)
 
 ## Latest Release
 [0.1.0](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredReplayEditor-v0.1.0) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.1.0/XLShredReplayEditor-0.1.0.zip)
