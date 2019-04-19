@@ -18,7 +18,7 @@ namespace XLShredReplayEditor {
         private double sampleDeltaTime;
         public float volumeFactor = 1f;
         public AudioSource playBackAudioSource;
-        public AudioClip playBackAudioClip;
+        public AudioClip playBackAudioClip { get { return playBackAudioSource.clip; } set { playBackAudioSource.clip = value; } }
 
         public float audioStartTime;
 
@@ -50,8 +50,21 @@ namespace XLShredReplayEditor {
         public int firstAudioSourceID = -1;
 
         object timeScaleLock = new object();
-
-        float timeScale;
+        private float _timeScale;
+        private float timeScale {
+            get {
+                lock (timeScaleLock) {
+                    return _timeScale;
+                }
+            }
+            set {
+                if (_timeScale == value)
+                    return;
+                lock (timeScaleLock) {
+                    _timeScale = value;
+                }
+            }
+        }
         double audioEndTime = 0.0;
         private AudioBuffer audioBuffer;
 
@@ -111,13 +124,8 @@ namespace XLShredReplayEditor {
             if (tmpMemoryStream != null)
                 tmpMemoryStream.Close();
         }
-        private void OnAudioFilterRead(float[] data, int channels) {
-            playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
-        }
         public void Update() {
-            lock (timeScaleLock) {
-                timeScale = Time.timeScale;
-            }
+            timeScale = Time.timeScale;
             if (ReplayManager.CurrentState == ReplayState.Playback) {
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
@@ -129,9 +137,7 @@ namespace XLShredReplayEditor {
         /// Write a chunk of data to the output stream.
         public void WriteAudioBufferToMemoryStream() {
             float scale;
-            lock (timeScaleLock) {
-                scale = Time.timeScale;
-            }
+            scale = timeScale;
             if (scale <= 0.0001f) return;
             float sampleOffset = getSyncingOffset();
             int sampleCount = audioBuffer.Length / channels;
@@ -177,9 +183,6 @@ namespace XLShredReplayEditor {
             if (playBackAudioClip == null) {
                 Debug.LogWarning("playBackAudioClip is null");
                 return;
-            }
-            if (playBackAudioSource.clip == null) {
-                playBackAudioSource.clip = playBackAudioClip;
             }
             if (!playBackAudioSource.isPlaying) {
                 playBackAudioSource.Play();
@@ -346,7 +349,6 @@ namespace XLShredReplayEditor {
                 try {
                     playBackAudioClip = DownloadHandlerAudioClip.GetContent(www);
                     Main.modEntry.Logger.Log("Audio LoadState: " + playBackAudioClip.loadState.ToString());
-                    playBackAudioSource.clip = playBackAudioClip;
                     Main.modEntry.Logger.Log("Loaded Clip: " + playBackAudioSource.clip + ", length: " + playBackAudioSource.clip.length);
                     playBackAudioSource.Play();
                     playBackAudioSource.time = ReplayManager.Instance.displayedPlaybackTime;
