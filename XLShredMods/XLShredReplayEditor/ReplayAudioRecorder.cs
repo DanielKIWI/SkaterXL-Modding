@@ -98,7 +98,8 @@ namespace XLShredReplayEditor {
             wavFilePath = tempAudioDirectory + "\\RecordedAudio.wav";
             CalcMaxTmpStreamLength();
             playBackAudioSource = gameObject.AddComponent<AudioSource>();
-            var audioSources = DeckSounds.Instance.getAudioSources();
+            var audioSources = FindObjectsOfType<AudioSource>();
+            //DeckSounds.Instance.getAudioSources();
             audioSourceDataForwarders = new AudioSourceDataForwarder[audioSources.Length];
             int i = 0;
             foreach (AudioSource audioSource in audioSources) {
@@ -127,6 +128,7 @@ namespace XLShredReplayEditor {
         public void Update() {
             timeScale = Time.timeScale;
             if (ReplayManager.CurrentState == ReplayState.Playback) {
+                playBackAudioSource.pitch = ReplayManager.Instance.playbackTimeScale;
                 if (Mathf.Abs(playBackAudioSource.time - ReplayManager.Instance.displayedPlaybackTime) > 0.1f) {
                     try {
                         SetPlaybackTime(ReplayManager.Instance.playbackTime);
