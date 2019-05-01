@@ -28,4 +28,4 @@ XLShredModMenu [v0.0.5](https://github.com/blendermf/XLShredLoader/releases/down
 ## [Installation](https://github.com/DanielKIWI/SkaterXL-Modding#installation)
 
 ## Latest Release
-[0.1.1](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredReplayEditor-v0.1.1) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.1.1/XLShredReplayEditor-0.1.1.zip)
+[0.1.2](https://github.com/DanielKIWI/SkaterXL-Modding/releases/tag/XLShredReplayEditor-v0.1.2) - [Direct Download](https://github.com/DanielKIWI/SkaterXL-Modding/releases/download/XLShredReplayEditor-v0.1.2/XLShredReplayEditor-0.1.2.zip)
