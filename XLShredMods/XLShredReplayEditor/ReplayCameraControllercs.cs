@@ -29,6 +29,7 @@ namespace XLShredReplayEditor {
 
         private Vector3Radial orbitRadialCoord;
         private float defaultCameraFOV;
+        private float defaultNearClipPlane;
         private ReplayManager manager;
         private Transform cameraParent;
         private const float KeyFrameDeleteTolerance = 0.1f;
@@ -322,6 +323,8 @@ namespace XLShredReplayEditor {
                 cameraMovementController.enabled = false;
             }
             defaultCameraFOV = camera.fieldOfView;
+            defaultNearClipPlane = camera.nearClipPlane;
+            camera.nearClipPlane = Main.settings.defaultNearClipPlane;
         }
 
         public void OnExitReplayEditor() {
@@ -332,6 +335,7 @@ namespace XLShredReplayEditor {
                 cameraMovementController.enabled = true;
             }
             camera.fieldOfView = defaultCameraFOV;
+            camera.nearClipPlane = defaultNearClipPlane;
         }
 
 

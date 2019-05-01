@@ -15,6 +15,7 @@ namespace XLShredReplayEditor {
         public bool showLogo = true;
         public bool showControllsHelp = true;
 
+        public float defaultNearClipPlane = 0f;
         public float TranslationSpeed = 5f;
         public float OrbitMoveSpeed = 5f;
         public float RotateSpeed = 20f;
@@ -93,6 +94,7 @@ namespace XLShredReplayEditor {
             FloatSettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
 
             GUILayout.Space(8);
+            FloatSettingSliderGUI("Camera near clip plane distance", () => settings.defaultNearClipPlane, (v) => settings.defaultNearClipPlane = v, 0, 10);
             FloatSettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
             FloatSettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
             FloatSettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
