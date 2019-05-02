@@ -15,7 +15,7 @@ namespace XLShredReplayEditor {
         public bool showLogo = true;
         public bool showControllsHelp = true;
 
-        public float defaultNearClipPlane = 0f;
+        public float CameraNearClipPlane = 0.01f;
         public float TranslationSpeed = 5f;
         public float OrbitMoveSpeed = 5f;
         public float RotateSpeed = 20f;
@@ -35,7 +35,7 @@ namespace XLShredReplayEditor {
 
         public static bool enabled;
         public static Settings settings;
-        public static String modId;
+        public static string modId;
         public static UnityModManager.ModEntry modEntry;
 
         // Send a response to the mod manager about the launch status, success or not.
@@ -57,7 +57,7 @@ namespace XLShredReplayEditor {
             _replaysDirectory = settings.ReplaysDirectory;
 
             ModUIBox uiBoxKiwi = ModMenu.Instance.RegisterModMaker("com.kiwi", "Kiwi");
-            uiBoxKiwi.AddLabel("Start-Button/ R-Key - Open Replay Editor", Side.left, () => enabled);
+            uiBoxKiwi.AddLabel("Start-Button/ Enter - Open Replay Editor", Side.left, () => enabled);
             uiBoxKiwi.AddLabel("B-Button / Esc - Exit Replay Editor", Side.left, () => enabled);
             XLShredDataRegistry.SetData(Main.modId, "isReplayEditorActive", false);
         }
@@ -94,7 +94,7 @@ namespace XLShredReplayEditor {
             FloatSettingSliderGUI("Logo Size", () => settings.logoWidth, (v) => settings.logoWidth = v, 25, 100);
 
             GUILayout.Space(8);
-            FloatSettingSliderGUI("Camera near clip plane distance", () => settings.defaultNearClipPlane, (v) => settings.defaultNearClipPlane = v, 0, 10);
+            FloatSettingSliderGUI("Camera near clip plane distance", () => settings.CameraNearClipPlane, (v) => settings.CameraNearClipPlane = v, 0.01f, 10f, true);
             FloatSettingSliderGUI("Free Move Speed", () => settings.TranslationSpeed, (v) => settings.TranslationSpeed = v, 0, 100);
             FloatSettingSliderGUI("Free Rotate Speed", () => settings.RotateSpeed, (v) => settings.RotateSpeed = v, 0, 100);
             FloatSettingSliderGUI("Orbit Move Speed", () => settings.OrbitMoveSpeed, (v) => settings.OrbitMoveSpeed = v, 0, 100);
@@ -133,7 +133,7 @@ namespace XLShredReplayEditor {
         }
         private static bool ReplayDirectoryExists;
 
-        static void FloatSettingSliderGUI(string name, Func<float> getter, Action<float> setter, float min, float max) {
+        static void FloatSettingSliderGUI(string name, Func<float> getter, Action<float> setter, float min, float max, bool mandatoryMin = false, bool mandatoryMax = false) {
             GUILayout.BeginHorizontal();
             GUILayout.Label(name);
             GUILayout.FlexibleSpace();
@@ -141,6 +141,10 @@ namespace XLShredReplayEditor {
                 setter(value);
             }
             setter(GUILayout.HorizontalSlider(getter(), min, max, GUILayout.MinWidth(600f)));
+            if (mandatoryMin && getter() < min)
+                setter(min);
+            if (mandatoryMax && getter() > max)
+                setter(max);
             GUILayout.EndHorizontal();
         }
     }

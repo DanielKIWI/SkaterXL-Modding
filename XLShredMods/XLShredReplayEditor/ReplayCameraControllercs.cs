@@ -324,7 +324,7 @@ namespace XLShredReplayEditor {
             }
             defaultCameraFOV = camera.fieldOfView;
             defaultNearClipPlane = camera.nearClipPlane;
-            camera.nearClipPlane = Main.settings.defaultNearClipPlane;
+            camera.nearClipPlane = Main.settings.CameraNearClipPlane;
         }
 
         public void OnExitReplayEditor() {
