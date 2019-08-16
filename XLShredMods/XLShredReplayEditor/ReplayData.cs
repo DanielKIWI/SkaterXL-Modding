@@ -90,11 +90,17 @@ namespace XLShredReplayEditor {
         public KeyFrame GetKeyFrame(CameraCurve curve) {
             switch (cameraMode) {
                 case CameraMode.Free:
-                    return new FreeCameraKeyFrame(position.Value, rotation.Value, fov, time, curve);
+                    FreeCameraKeyFrame freeCameraKeyFrame = new FreeCameraKeyFrame(position.Value, rotation.Value, fov, time);
+                    freeCameraKeyFrame.AddCurveKeys(curve);
+                    return freeCameraKeyFrame;
                 case CameraMode.Orbit:
-                    return new OrbitCameraKeyFrame(radialPos, position.Value, rotation.Value, yOffset, fov, time, curve);
+                    OrbitCameraKeyFrame orbitCameraKeyFrame = new OrbitCameraKeyFrame(radialPos, position.Value, rotation.Value, yOffset, fov, time);
+                    orbitCameraKeyFrame.AddCurveKeys(curve);
+                    return orbitCameraKeyFrame;
                 case CameraMode.Tripod:
-                    return new TripodCameraKeyFrame(position.Value, rotation.Value, yOffset, fov, time, curve);
+                    TripodCameraKeyFrame tripodCameraKeyFrame = new TripodCameraKeyFrame(position.Value, rotation.Value, yOffset, fov, time);
+                    tripodCameraKeyFrame.AddCurveKeys(curve);
+                    return tripodCameraKeyFrame;
                 default:
                     throw new Exception("Unknown cameraMode: " + cameraMode);
             }

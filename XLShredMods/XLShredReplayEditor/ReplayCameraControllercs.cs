@@ -230,22 +230,33 @@ namespace XLShredReplayEditor {
         }
 
         private void AddKeyFrame(float time) {
-            int index = this.FindKeyFrameInsertIndex(time);
             KeyFrame item;
             switch (this.mode) {
                 case CameraMode.Free:
-                    item = new FreeCameraKeyFrame(this.cameraTransform, camera.fieldOfView, time, cameraCurve);
+                    item = new FreeCameraKeyFrame(this.cameraTransform, camera.fieldOfView, time);
                     break;
                 case CameraMode.Orbit:
-                    item = new OrbitCameraKeyFrame(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
+                    item = new OrbitCameraKeyFrame(this.orbitRadialCoord, FocusOffsetY, camera.fieldOfView, time);
                     break;
                 case CameraMode.Tripod:
-                    item = new TripodCameraKeyFrame(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time, cameraCurve);
+                    item = new TripodCameraKeyFrame(this.cameraTransform, FocusOffsetY, camera.fieldOfView, time);
                     break;
                 default:
                     return;
             }
+
+            int existingIndex = keyFrames.FindIndex(k => k.time == time);
+            if (existingIndex != -1) {
+                keyFrames[existingIndex] = item;
+                cameraCurve.DeleteCurveKeys(existingIndex);
+                item.AddCurveKeys(cameraCurve);
+                return;
+            }
+
+            int index = this.FindKeyFrameInsertIndex(time);
+        
             this.keyFrames.Insert(index, item);
+            item.AddCurveKeys(cameraCurve);
         }
 
         private int FindKeyFrameInsertIndex(float time) {

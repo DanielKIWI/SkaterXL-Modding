@@ -561,7 +561,7 @@ namespace XLShredReplayEditor {
                         float time = this.recorder.startTime + ReplaySkin.DefaultSkin.NormTForMarkerRect(r) * (this.recorder.endTime - this.recorder.startTime);
                         keyFrame.Update(cameraController.camera.transform, time);
                         cameraController.cameraCurve.DeleteCurveKeys(index);
-                        keyFrame.AddKeyframes(cameraController.cameraCurve);
+                        keyFrame.AddCurveKeys(cameraController.cameraCurve);
                     },
                     this,
                     true);
