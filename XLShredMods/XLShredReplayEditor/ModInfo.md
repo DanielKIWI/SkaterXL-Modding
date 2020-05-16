@@ -1,4 +1,6 @@
 # ReplayEditor
+## DEPRICATED:
+since SkaterXL 0.1.0.0b, the ReplayEditor is built in the main game and this mod is no longer required and won't work properly.
 
 ## Features:
 - Camera Controll with 3 Modes: Orbit around Player, Tripod, Free
