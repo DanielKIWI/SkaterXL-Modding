@@ -101,7 +101,7 @@ namespace XLShredReplayEditor {
         public void Refresh(IEnumerable<KeyFrame> keyFrames) {
             Clear();
             foreach (var kf in keyFrames) {
-                kf.AddKeyframes(this);
+                kf.AddCurveKeys(this);
             }
             CalculateCurveControlPoints();
         }
